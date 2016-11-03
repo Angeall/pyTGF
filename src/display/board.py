@@ -15,14 +15,16 @@ class Builder(metaclass=ABCMeta):
     Class used to instantiate a display board
     """
 
+    BASE_MARGIN = 33
+
     def __init__(self, surface: pygame.Surface, lines: int, columns: int) -> None:
         self._surface = surface
         self._width, self._height = surface.get_size()
         self._lines = lines
         self._columns = columns
-        self._margins = (50, 50)
-        self._pixelsPerLine = (self._height - self._margins[1]) // columns
-        self._pixelsPerCol = (self._width - self._margins[0]) // lines
+        self._margins = (self.BASE_MARGIN, self.BASE_MARGIN)
+        self._maxPixelsPerLine = (self._height - self._margins[1]) / lines
+        self._maxPixelsPerCol = (self._width - self._margins[0]) / columns
         self._backgroundColor = (255, 255, 255)
         self._tilesVisible = True
 
@@ -61,8 +63,7 @@ class Builder(metaclass=ABCMeta):
                     tile.draw(self._surface)
                 line_centers.append(tile.center)
                 line.append(tile)
-                print(current_center)
-                current_center = self._getNextCenter(current_center)
+                current_center = self._getNextCenter(current_center, i, j)
             tiles.append(line)
             centers.append(line_centers)
         return tiles, centers
@@ -84,20 +85,23 @@ class Builder(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _getNextCenter(self, current_center: tuple) -> tuple:
+    def _getNextCenter(self, current_center: tuple, column: int) -> tuple:
         """
         From the center of the current tile, get the center of the next tile
         Args:
             current_center: The center of the current tile
+            column: The column on which is placed the current center
         """
         pass
 
     @abstractmethod
-    def _generateTile(self, center: tuple) -> Tile:
+    def _generateTile(self, center: tuple, line: int, column: int) -> Tile:
         """
         Generates a tile for the grid
         Args:
             center: The equidistant center of the tile to build
+            line: The line on which the tile is placed in the grid
+            column: The column on which the tile is placed in the grid
 
         Returns: The tile built
         """
@@ -109,3 +113,4 @@ class Builder(metaclass=ABCMeta):
         Returns: The center of the first tile created
         """
         pass
+
