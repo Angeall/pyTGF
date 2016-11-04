@@ -14,10 +14,10 @@ class SquareBoard(Board):
         Returns:
 
         """
-        return self.tiles[identifier[0], identifier[1]]
+        return self.tiles[identifier[0]][identifier[1]]
 
 
-class SquareTilesBoardBuilder(Builder):
+class SquareBoardBuilder(Builder):
 
     BOARD_TYPE = SquareBoard
 
@@ -30,7 +30,6 @@ class SquareTilesBoardBuilder(Builder):
             columns: The number of columns wanted in the grid
         """
         super().__init__(surface, lines, columns)
-        self._borderLength = min(self._maxPixelsPerCol, self._maxPixelsPerLine)
 
     def _generateTile(self, center: tuple, identifier: tuple) -> Tile:
         """
@@ -108,17 +107,20 @@ if __name__ == "__main__":
     default = 700
     pygame.init()
     clock = pygame.time.Clock()
-    builder = SquareTilesBoardBuilder(pygame.Surface((1920, 1080)), 90, 160)
+    builder = SquareBoardBuilder(pygame.Surface((720, 480)), 2, 5)
 
-    screen = pygame.display.set_mode((1920, 1080), DOUBLEBUF + HWSURFACE)
+    screen = pygame.display.set_mode((720, 480), DOUBLEBUF + HWSURFACE)
     background = pygame.Surface(screen.get_size())
     background = background.convert()
     background.fill((255, 255, 255))
     screen.blit(background, (0, 0))
-    surf = builder.create().surface
+    board = builder.create()
+    board.draw()
+    surf = board.surface
     screen.blit(surf, (0, 0))
     pygame.display.flip()
     exit = False
+    passed_int_color = (255, 255, 255)
     while not exit:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -126,8 +128,15 @@ if __name__ == "__main__":
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 exit = True
             elif event.type == MOUSEBUTTONDOWN:
-                print(event.pos)
-                print("ohohoh")
+                tile = board.getTileByCoord(event.pos)
+                print(tile.identifier)
+                tile.setInternalColor((255, 0, 0))
             elif event.type == MOUSEBUTTONUP:
-                print("ahahah")
+                tile = board.getTileByCoord(event.pos)
+                print(tile.identifier)
+                tile.setInternalColor(passed_int_color)
+            board.draw()
+            screen.blit(board.surface, (0, 0))
+            pygame.display.flip()
+
             clock.tick(60)

@@ -7,16 +7,13 @@ class NotAPolygonError(BaseException):
 
 
 class Tile(object):
-    def __init__(self, center: tuple, points: list, identifier: tuple,
-                 external_color: tuple = (0, 0, 0), internal_color: tuple = None) -> None:
+    def __init__(self, center: tuple, points: list, identifier: tuple) -> None:
         """
         Args:
             center: The equidistant center of the tile
             points: The points that will be used to draw the polygon (not closed), it will be closed by connecting
                     the last and the first point
             identifier: The identifier of the tile in the board
-            external_color: RGB (or RGBA) tuple that defines the color of the tile's sides
-            internal_color: RGB (or RGBA) tuple that defines the tile's internal color
         """
         self.nbrOfSides = len(points)
         if self.nbrOfSides < 3:
@@ -26,7 +23,23 @@ class Tile(object):
         self.center = center
         self.points = points
         self.walkable = False
+        self.externalColor = (0, 0, 0)
+        self.internalColor = None
+
+    def setExternalColor(self, external_color: tuple) -> None:
+        """
+        Sets the color of the tile's borders (default: black)
+        Args:
+            external_color: RGB (or RGBA) tuple that defines the color of the tile's sides
+        """
         self.externalColor = external_color
+
+    def setInternalColor(self, internal_color: tuple) -> None:
+        """
+        Set the color of the tile's body (default: transparent)
+        Args:
+            internal_color: RGB (or RGBA) tuple that defines the tile's internal color
+        """
         self.internalColor = internal_color
 
     def addNeighbour(self, neighbour_identifier: tuple) -> None:
