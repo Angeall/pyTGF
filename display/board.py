@@ -1,4 +1,4 @@
-from src.display.tile import Tile
+from display.tile import Tile
 from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
 import numpy as np
@@ -43,11 +43,20 @@ class Board(metaclass=ABCMeta):
         """
         self._tilesVisible = visible
 
-    def getTileByCoord(self, coordinates: tuple) -> Tile:
-        center_index = self._kdTree.query(coordinates, 1)[1]
+    def getTileByPixel(self, pixel: tuple) -> Tile:
+        """
+        Get the tile located on the given pixel
+        Args:
+            pixel: The screen coordinates on which we want to get the tile
+
+        Returns: The tile located on the pixel, or None if there is no tile at this position
+
+        """
+        center_index = self._kdTree.query(pixel, 1)[1]
         center = self._centers[center_index]
         center = round(center[0], 1), round(center[1], 1)
-        return self.getTileById(self._centersToTileIds[center])
+        tile = self.getTileById(self._centersToTileIds[center])
+        #TODO
 
     def draw(self):
         self._changeBackgroundColor()

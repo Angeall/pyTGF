@@ -1,5 +1,5 @@
-from src.display.board import Board, Builder
-from src.display.tile import Tile
+from display.board import Board, Builder
+from display.tile import Tile
 import pygame
 from pygame.locals import *
 
@@ -128,13 +128,16 @@ if __name__ == "__main__":
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
                 exit = True
             elif event.type == MOUSEBUTTONDOWN:
-                tile = board.getTileByCoord(event.pos)
-                print(tile.identifier)
-                tile.setInternalColor((255, 0, 0))
+                if pygame.mouse.get_pressed()[0]:
+                    tile = board.getTileByPixel(event.pos)
+                    if tile is not None:
+                        print(tile.identifier)
+                        tile.setInternalColor((255, 0, 0))
+                else:
+                    tile = None
             elif event.type == MOUSEBUTTONUP:
-                tile = board.getTileByCoord(event.pos)
-                print(tile.identifier)
-                tile.setInternalColor(passed_int_color)
+                if tile is not None:
+                    tile.setInternalColor(passed_int_color)
             board.draw()
             screen.blit(board.surface, (0, 0))
             pygame.display.flip()

@@ -1,8 +1,14 @@
 from pygame import gfxdraw
 import pygame
 
+from units.unit import Unit
+
 
 class NotAPolygonError(BaseException):
+    pass
+
+
+class OccupantNotFoundError(BaseException):
     pass
 
 
@@ -17,7 +23,7 @@ class Tile(object):
         """
         self.nbrOfSides = len(points)
         if self.nbrOfSides < 3:
-            raise NotAPolygonError("A polygon is made of a minimum of 3 points")
+            raise NotAPolygonError("A polygon is made of minimum 3 points")
         self.identifier = identifier
         self.neighbours = []
         self.center = center
@@ -25,6 +31,7 @@ class Tile(object):
         self.walkable = False
         self.externalColor = (0, 0, 0)
         self.internalColor = None
+        self.occupants = []
 
     def setExternalColor(self, external_color: tuple) -> None:
         """
@@ -69,7 +76,7 @@ class Tile(object):
 
     def draw(self, surface: pygame.Surface) -> None:
         """
-        Draws the tile on the given surface
+        Draws the tile and its occupants on the given surface
         Args:
             surface: The surface on which the tile will be drawn
         """
@@ -77,3 +84,35 @@ class Tile(object):
             gfxdraw.filled_polygon(surface, self.points, self.internalColor)
         gfxdraw.aapolygon(surface, self.points, self.externalColor)
         pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
+
+        for occupant in self.occupants:
+            occupant.draw(surface)
+
+    def addOccupant(self, new_occupant: Unit) -> None:
+        """
+        Adds an occupant to this tile
+        Args:
+            new_occupant: The occupant to add to this tile
+        """
+        self.occupants.append(new_occupant)
+
+    def removeOccupant(self, occupant_to_remove: Unit) -> None:
+        """
+        Removes an occupant from this tile
+        Args:
+            occupant_to_remove: The occupant to remove from this tile
+
+        Raises:
+            OccupantNotFoundError: If the given occupant is not present in the tile.
+        """
+        if occupant_to_remove in self.occupants:
+            self.occupants.remove(occupant_to_remove)
+        else:
+            raise OccupantNotFoundError(
+                "The occupant " + str(occupant_to_remove) + " was not found in the tile " + str(self.identifier))
+
+    def clearOccupants(self) -> None:
+        """
+        Removes all the occupants from this tile
+        """
+        self.occupants = []
