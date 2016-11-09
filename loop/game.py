@@ -24,7 +24,7 @@ class Game(metaclass=ABCMeta):
                     else:
                         self._onKeyPressed(event.key)
                 elif event.type == MOUSEBUTTONDOWN:
-                    tile = self.board.getTileByCoord(event.pos)
+                    tile = self.board.getTileByPixel(event.pos)
                     self._onTileClickedDown(tile, pygame.mouse.get_pressed())
                     previously_clicked_tile = tile
                 elif event.type == MOUSEBUTTONUP:

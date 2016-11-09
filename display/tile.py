@@ -85,8 +85,8 @@ class Tile(object):
         gfxdraw.aapolygon(surface, self.points, self.externalColor)
         pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
 
-        for occupant in self.occupants:
-            occupant.draw(surface)
+        for occupant in self.occupants:  # type: Unit
+            occupant.drawAsSingleSprite(surface)
 
     def addOccupant(self, new_occupant: Unit) -> None:
         """

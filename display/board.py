@@ -58,12 +58,13 @@ class Board(metaclass=ABCMeta):
         tile = self.getTileById(self._centersToTileIds[center])
         #TODO
 
-    def draw(self):
+    def draw(self, surface: pygame.Surface):
         self._changeBackgroundColor()
         for line in self.tiles:
             for tile in line:
                 if self._tilesVisible:
                     tile.draw(self.surface)
+        surface.blit(self.surface, (0, 0))
 
     @abstractmethod
     def getTileById(self, identifier) -> Tile:

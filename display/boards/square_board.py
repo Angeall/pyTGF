@@ -138,8 +138,7 @@ if __name__ == "__main__":
             elif event.type == MOUSEBUTTONUP:
                 if tile is not None:
                     tile.setInternalColor(passed_int_color)
-            board.draw()
-            screen.blit(board.surface, (0, 0))
+            board.draw(screen)
             pygame.display.flip()
 
             clock.tick(60)

@@ -2,8 +2,11 @@ import pygame
 
 
 class Unit(object):
-    def __init__(self):
-        pass
+    def __init__(self, sprite: pygame.sprite.Sprite):
+        self.sprite = sprite  # type: pygame.sprite.Sprite
+        self.group = None
 
-    def draw(self, surface: pygame.Surface):
-        pass
+    def drawAsSingleSprite(self, surface: pygame.Surface):
+        if self.group is None:
+            self.group = pygame.sprite.RenderPlain(self.sprite)
+        self.group.draw(surface)
