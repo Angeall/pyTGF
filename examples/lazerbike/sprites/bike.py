@@ -7,10 +7,10 @@ class BikeSprite(pygame.sprite.Sprite):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
         location = os.path.join(os.curdir, "bike.png")
-        img = pygame.image.load_basic(location)  # type: pygame.Surface
-        img = img.convert_alpha()
+        img = pygame.image.load_extended(location)  # type: pygame.Surface
+        # img = img.convert_alpha()
         self.image = img
-        self.rect = img.rect()  # type: pygame.Rect
+        self.rect = img.get_rect()  # type: pygame.Rect
 
     def moveTo(self, x:int, y: int) -> None:
         x_offset = x - self.rect.x

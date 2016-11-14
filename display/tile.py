@@ -1,6 +1,8 @@
+import numpy as np
 from pygame import gfxdraw
 import pygame
 
+import utils.geom
 from units.unit import Unit
 
 
@@ -13,6 +15,12 @@ class OccupantNotFoundError(BaseException):
 
 
 class Tile(object):
+    """
+    Represent a tile on the game board, which is represented by an equilateral polygon
+    """
+
+    TILE_LENGTH_EPSILON = 0.1
+
     def __init__(self, center: tuple, points: list, identifier: tuple) -> None:
         """
         Args:
@@ -28,6 +36,9 @@ class Tile(object):
         self.neighbours = []
         self.center = center
         self.points = points
+        assert self._isEquilateral()
+        self._convexHull = None    # Is initialized when needed, at the call of self.containsPoint
+        self._hullPath = None      # Is initialized when needed, at the call of self.containsPoint
         self.walkable = False
         self.externalColor = (0, 0, 0)
         self.internalColor = None
@@ -74,6 +85,20 @@ class Tile(object):
         """
         return other_tile_identifier in self.neighbours
 
+    def containsPoint(self, point: tuple) -> bool:
+        """
+        Checks if a point lies inside the tile
+        Args:
+            point: The point to check
+
+        Returns: True if the point is inside and False otherwise
+        """
+        if self._convexHull is None:
+            self._convexHull = utils.geom.get_convex_hull(self.points)
+        if self._hullPath is None:
+            self._hullPath = utils.geom.get_path(self.points, self._convexHull)
+        return self._hullPath.contains_point(point)
+
     def draw(self, surface: pygame.Surface) -> None:
         """
         Draws the tile and its occupants on the given surface
@@ -86,6 +111,9 @@ class Tile(object):
         pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
 
         for occupant in self.occupants:  # type: Unit
+            current_position = (occupant.sprite.rect.x, occupant.sprite.rect.y)
+            if current_position != self.center:
+                occupant.sprite.rect.move_ip(utils.geom.vectorize(current_position, self.center))
             occupant.drawAsSingleSprite(surface)
 
     def addOccupant(self, new_occupant: Unit) -> None:
@@ -116,3 +144,17 @@ class Tile(object):
         Removes all the occupants from this tile
         """
         self.occupants = []
+
+    def _isEquilateral(self):
+        """
+        Checks if the polygon is equilateral
+        Returns: True if all the length are equal with a epsilon-accuracy.
+        """
+        length = utils.geom.dist(self.points[0], self.points[1])
+        i = 1
+        while i < len(self.points) - 1:
+            computed_length = utils.geom.dist(self.points[i], self.points[i+1])
+            if abs(computed_length - length) > self.TILE_LENGTH_EPSILON:
+                return False
+            i += 1
+        return abs(utils.geom.dist(self.points[len(self.points)-1], self.points[0]) - length) < self.TILE_LENGTH_EPSILON

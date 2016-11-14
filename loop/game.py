@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from abc import ABCMeta, abstractmethod
 from display.board import Board
+import display.board
 from display.tile import Tile
 
 
@@ -10,17 +11,17 @@ class Game(metaclass=ABCMeta):
     def __init__(self, board: Board):
         self.board = board
 
-    def run(self, max_fps: int=60):
+    def run(self, max_fps: int=display.board.MAX_FPS):
         clock = pygame.time.Clock()
         screen = pygame.display.set_mode(self.board.surface.get_size(), DOUBLEBUF + HWSURFACE)
         previously_clicked_tile = None
         while True:
             for event in pygame.event.get():
                 if event.type == QUIT:
-                    break
+                    return
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
-                        break
+                        return
                     else:
                         self._onKeyPressed(event.key)
                 elif event.type == MOUSEBUTTONDOWN:
@@ -29,7 +30,7 @@ class Game(metaclass=ABCMeta):
                     previously_clicked_tile = tile
                 elif event.type == MOUSEBUTTONUP:
                     self._onTileClickedUp(previously_clicked_tile)
-                self.board.draw()
+                self.board.draw(screen)
                 screen.blit(self.board.surface, (0, 0))
                 pygame.display.flip()
 

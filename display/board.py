@@ -3,9 +3,20 @@ from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
 import numpy as np
 import pygame
+import utils.geom
+from units.unit import Unit
+
+
+MAX_FPS = 60
 
 
 class Board(metaclass=ABCMeta):
+    """
+    TODO:
+      - Mode borders only (so the tiles are not visible, but the borders are
+      - Make a transition between tiles, with a speed
+      - Make a principle of inertia for the units
+    """
     def __init__(self, surface: pygame.Surface, tiles: list, centers: list, centers_to_tile_ids: dict):
         self._tilesVisible = True
         self.tiles = tiles
@@ -14,6 +25,7 @@ class Board(metaclass=ABCMeta):
         self._centersToTileIds = centers_to_tile_ids
         self._kdTree = KDTree(np.array(self._centers))
         self.surface = surface
+        self.units = []
 
     def setBackgroundColor(self, background_color: tuple) -> None:
         """
@@ -56,7 +68,15 @@ class Board(metaclass=ABCMeta):
         center = self._centers[center_index]
         center = round(center[0], 1), round(center[1], 1)
         tile = self.getTileById(self._centersToTileIds[center])
-        #TODO
+        if tile.containsPoint(pixel):
+            return tile
+        return None
+
+    def moveUnit(self, unit_index: int, translation: tuple):
+        unit = self.units[unit_index]
+
+    def addUnit(self, unit: Unit) -> None:
+        self.units.append(unit)
 
     def draw(self, surface: pygame.Surface):
         self._changeBackgroundColor()

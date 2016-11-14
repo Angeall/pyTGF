@@ -107,15 +107,15 @@ if __name__ == "__main__":
     default = 700
     pygame.init()
     clock = pygame.time.Clock()
-    builder = SquareBoardBuilder(pygame.Surface((720, 480)), 2, 5)
+    builder = SquareBoardBuilder(pygame.Surface((1920, 1080)), 50, 100)
 
-    screen = pygame.display.set_mode((720, 480), DOUBLEBUF + HWSURFACE)
+    screen = pygame.display.set_mode((1920, 1080), DOUBLEBUF + HWSURFACE)
     background = pygame.Surface(screen.get_size())
     background = background.convert()
     background.fill((255, 255, 255))
     screen.blit(background, (0, 0))
     board = builder.create()
-    board.draw()
+    board.draw(screen)
     surf = board.surface
     screen.blit(surf, (0, 0))
     pygame.display.flip()
