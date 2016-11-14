@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from scipy.spatial.distance import euclidean
 
 
 def generate2DRotMatrix(angle: float, radians: bool=False) -> np.array:
@@ -9,9 +10,6 @@ def generate2DRotMatrix(angle: float, radians: bool=False) -> np.array:
     angle = angle if radians else angle*math.pi/180
     return np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
 
+
 def dist(a: tuple, b: tuple):
-    pass
-    #TODO
-
-
-
+    return abs(euclidean(a, b))
