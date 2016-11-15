@@ -39,7 +39,7 @@ class Tile(object):
         assert self._isEquilateral()
         self._convexHull = None    # Is initialized when needed, at the call of self.containsPoint
         self._hullPath = None      # Is initialized when needed, at the call of self.containsPoint
-        self.walkable = False
+        self.walkable = True
         self.externalColor = (0, 0, 0)
         self.internalColor = None
         self.occupants = []
@@ -108,7 +108,7 @@ class Tile(object):
         if self.internalColor is not None:
             gfxdraw.filled_polygon(surface, self.points, self.internalColor)
         gfxdraw.aapolygon(surface, self.points, self.externalColor)
-        pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
+        #pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
 
         for occupant in self.occupants:  # type: Unit
             current_position = (occupant.sprite.rect.x, occupant.sprite.rect.y)

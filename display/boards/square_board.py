@@ -96,6 +96,14 @@ class SquareBoardBuilder(Builder):
         else:  # If the current center is the last of its line
             return self._getFirstCenter()[0], current_center[1] + self._borderLength
 
+    def _getBoardBorders(self, tiles: list) -> list:
+        top_left = tiles[0][0]        # type: Tile
+        top_right = tiles[0][-1]      # type: Tile
+        bottom_left = tiles[-1][0]    # type: Tile
+        bottom_right = tiles[-1][-1]  # type: Tile
+        # TODO: computes borders
+        return []
+
     @property
     def boardType(self) -> type:
         """

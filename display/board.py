@@ -3,9 +3,7 @@ from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
 import numpy as np
 import pygame
-import utils.geom
 from units.unit import Unit
-
 
 MAX_FPS = 60
 
@@ -17,15 +15,37 @@ class Board(metaclass=ABCMeta):
       - Make a transition between tiles, with a speed
       - Make a principle of inertia for the units
     """
-    def __init__(self, surface: pygame.Surface, tiles: list, centers: list, centers_to_tile_ids: dict):
+
+    def __init__(self, surface: pygame.Surface, borders: list, tiles: list, centers: list, centers_to_tile_ids: dict):
+        """
+        Instantiates a game board using the given parameters
+        Args:
+            surface: The surface on which draw the board used to draw the board components
+            borders: A list of lines, represented by two points each, representing the borders of the board.
+                        (e.g. [((1, 2), (3, 4)), ((0,1), (0,2)), ...])
+            tiles: A list of tiles that will be on the board
+            centers: The list of the tiles centers
+            centers_to_tile_ids: The dict that links the centers to the tile object (so the tiles can be center-indexed)
+        """
         self._tilesVisible = True
         self.tiles = tiles
+        self.borders = borders
         self._backgroundColor = (255, 255, 255)
+        self._bordersColor = (0, 0, 0)
         self._centers = centers
         self._centersToTileIds = centers_to_tile_ids
         self._kdTree = KDTree(np.array(self._centers))
         self.surface = surface
-        self.units = []
+        self.units = {}  # type: dict
+        # self.units -> keys: units; values: tile_ids
+
+    def setBordersColor(self, borders_color: tuple) -> None:
+        """
+        Change the color of the board's borders color
+        Args:
+            borders_color: RGB (or RGBA) tuple for the borders color
+        """
+        self._bordersColor = borders_color
 
     def setBackgroundColor(self, background_color: tuple) -> None:
         """
@@ -34,18 +54,6 @@ class Board(metaclass=ABCMeta):
             background_color: RGB (or RGBA) tuple for the background color
         """
         self._backgroundColor = background_color
-
-    def _changeBackgroundColor(self) -> None:
-        """
-        Paints the surface into the colors saved in "self._backgroundColor"
-            that can be changed using "self.setBackgroundColor"
-        The background is painted above everything else on the surface,
-            hence erasing what's below
-        """
-        surface = pygame.Surface(self.surface.get_size())
-
-        surface.fill(self._backgroundColor)
-        self.surface.blit(surface, (0, 0))
 
     def setTilesVisible(self, visible: bool) -> None:
         """
@@ -75,15 +83,45 @@ class Board(metaclass=ABCMeta):
     def moveUnit(self, unit_index: int, translation: tuple):
         unit = self.units[unit_index]
 
-    def addUnit(self, unit: Unit) -> None:
-        self.units.append(unit)
+    def addUnit(self, unit: Unit, tile_id: ...) -> None:
+        self.units[unit] = tile_id
 
-    def draw(self, surface: pygame.Surface):
-        self._changeBackgroundColor()
+    def _drawBackground(self) -> None:
+        """
+        Paints the surface into the colors saved in "self._backgroundColor"
+            that can be changed using "self.setBackgroundColor"
+        The background is painted above everything else on the surface,
+            hence erasing what's below
+        """
+        surface = pygame.Surface(self.surface.get_size())
+        surface.fill(self._backgroundColor)
+        self.surface.blit(surface, (0, 0))
+
+    def _drawBorders(self) -> None:
+        """
+        Draws the borders of the board, without drawing any tile.
+        """
+        for (p1, p2) in self.borders:
+            pygame.draw.aaline(self.surface, self._bordersColor, p1, p2)
+
+    def _drawTiles(self) -> None:
+        """
+        Draw the tiles onto the board
+        """
         for line in self.tiles:
             for tile in line:
                 if self._tilesVisible:
                     tile.draw(self.surface)
+
+    def draw(self, surface: pygame.Surface) -> None:
+        """
+        Draw the board on the given surface
+        Args:
+            surface: The surface on which draw the board
+        """
+        self._drawBackground()
+        self._drawTiles()
+        self._drawBorders()
         surface.blit(self.surface, (0, 0))
 
     @abstractmethod
@@ -101,7 +139,7 @@ class Board(metaclass=ABCMeta):
 
 class Builder(metaclass=ABCMeta):
     """
-    Class used to instantiate a display board
+    Class used to instantiate a test_display board
     """
 
     _BASE_MARGIN = 33
@@ -115,6 +153,7 @@ class Builder(metaclass=ABCMeta):
         self._borderLength = None  # Init before computeMaxSizeUsingMargins
         self._computeMaxSizeUsingMargins()
         self._backgroundColor = (255, 255, 255)
+        self._bordersColor = (0, 0, 0)
         self._tilesVisible = True
 
     def setTilesVisible(self, visible: bool) -> None:
@@ -124,6 +163,14 @@ class Builder(metaclass=ABCMeta):
             visible: True if the tiles must be visible. False otherwise.
         """
         self._tilesVisible = visible
+
+    def setBordersColor(self, borders_color: tuple) -> None:
+        """
+        Change the color of the board's borders color
+        Args:
+            borders_color: RGB (or RGBA) tuple for the borders color
+        """
+        self._bordersColor = borders_color
 
     def setBackgroundColor(self, background_color: tuple) -> None:
         """
@@ -178,7 +225,9 @@ class Builder(metaclass=ABCMeta):
         Returns: The created board
         """
         tiles, centers, centers_to_tile_ids = self._buildGrid()
-        board = self.boardType(self._surface, tiles, centers, centers_to_tile_ids)  # type: Board
+        borders = self._getBoardBorders(tiles)
+        board = self.boardType(self._surface, borders, tiles, centers, centers_to_tile_ids)  # type: Board
+        board.setBordersColor(self._bordersColor)
         board.setBackgroundColor(self._backgroundColor)
         board.setTilesVisible(self._tilesVisible)
         return board
@@ -197,6 +246,18 @@ class Builder(metaclass=ABCMeta):
         """
         Gets the type of board that this builder creates
         Returns: the type of the board being created
+        """
+        pass
+
+    @abstractmethod
+    def _getBoardBorders(self, tiles: list) -> list:
+        """
+        Computes and returns the borders of the board from the tiles of the board
+        Args:
+            tiles: The tiles created for the board
+
+        Returns: A list of lines, represented by two points, that defines the borders.
+                    (e.g. [((1, 2), (3, 4)), ((0,1), (0,2)), ...])
         """
         pass
 
@@ -239,6 +300,3 @@ class Builder(metaclass=ABCMeta):
         Returns: The center of the first tile created
         """
         pass
-
-
-
