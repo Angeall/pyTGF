@@ -12,6 +12,18 @@ class TestSquareBoard(unittest.TestCase):
         for line in board.tiles:
             self.assertEqual(len(line), 6)
 
+    def test_board_borders(self):
+        builder = SquareBoardBuilder(pygame.Surface((100, 100)), 6, 6)
+        builder.setMargins(20, 20)
+        board = builder.create()
+        borders = board.borders
+        self.assertEqual(len(borders), 4)
+        self.assertEqual(len(borders[0]), 2)
+        self.assertTrue(((20, 20), (80, 20)) in borders)
+        self.assertTrue(((80, 20), (80, 80)) in borders)
+        self.assertTrue(((80, 80), (20, 80)) in borders)
+        self.assertTrue(((20, 80), (20, 20)) in borders)
+
     def test_tiles_position(self):
         width = 100
         height = 50

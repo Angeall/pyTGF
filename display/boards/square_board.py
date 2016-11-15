@@ -97,12 +97,36 @@ class SquareBoardBuilder(Builder):
             return self._getFirstCenter()[0], current_center[1] + self._borderLength
 
     def _getBoardBorders(self, tiles: list) -> list:
-        top_left = tiles[0][0]        # type: Tile
-        top_right = tiles[0][-1]      # type: Tile
-        bottom_left = tiles[-1][0]    # type: Tile
-        bottom_right = tiles[-1][-1]  # type: Tile
-        # TODO: computes borders
-        return []
+        """
+        Computes and returns the borders of the board from the tiles of the board
+        Args:
+            tiles: The tiles created for the board
+
+        Returns: A list of lines, represented by two points, that defines the borders.
+                    (e.g. [((1, 2), (3, 4)), ((0,1), (0,2)), ...])
+        """
+        top_left_tile = tiles[0][0]        # type: Tile
+        top_right_tile = tiles[0][-1]      # type: Tile
+        bottom_left_tile = tiles[-1][0]    # type: Tile
+        bottom_right_tile = tiles[-1][-1]  # type: Tile
+        top_left = None
+        top_right = None
+        bottom_left = None
+        bottom_right = None
+        for x, y in top_left_tile.points:
+            if top_left is None or (x <= top_left[0] and y <= top_left[1]):
+                top_left = (x, y)
+        for x, y in bottom_left_tile.points:
+            if bottom_left is None or (x <= bottom_left[0] and y >= bottom_left[1]):
+                bottom_left = (x, y)
+        for x, y in top_right_tile.points:
+            if top_right is None or (x >= top_right[0] and y <= top_right[1]):
+                top_right = (x, y)
+        for x, y in bottom_right_tile.points:
+            if bottom_right is None or (x >= bottom_right[0] and y >= bottom_right[1]):
+                bottom_right = (x, y)
+
+        return [(top_left, top_right), (top_right, bottom_right), (bottom_right, bottom_left), (bottom_left, top_left)]
 
     @property
     def boardType(self) -> type:
@@ -116,7 +140,8 @@ if __name__ == "__main__":
     pygame.init()
     clock = pygame.time.Clock()
     builder = SquareBoardBuilder(pygame.Surface((1920, 1080)), 50, 100)
-
+    builder.setBordersColor((255, 0, 0))
+    builder.setTilesVisible(False)
     screen = pygame.display.set_mode((1920, 1080), DOUBLEBUF + HWSURFACE)
     background = pygame.Surface(screen.get_size())
     background = background.convert()

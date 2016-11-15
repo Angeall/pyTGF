@@ -11,7 +11,6 @@ MAX_FPS = 60
 class Board(metaclass=ABCMeta):
     """
     TODO:
-      - Mode borders only (so the tiles are not visible, but the borders are
       - Make a transition between tiles, with a speed
       - Make a principle of inertia for the units
     """
@@ -188,7 +187,6 @@ class Builder(metaclass=ABCMeta):
             - A list of the centers of the tiles in the same format than the other list.
             - A dictionary linking a center to its tile
         """
-        self._borderLength = min(self._maxPixelsPerCol, self._maxPixelsPerLine)
         current_center = self._getFirstCenter()
         centers_to_tile_ids = {}
         tiles = []
@@ -217,6 +215,7 @@ class Builder(metaclass=ABCMeta):
             self._margins = (x_margin, self._margins[1])
         if y_margin is not None:
             self._margins = (self._margins[0], y_margin)
+        print(self._margins)
         self._computeMaxSizeUsingMargins()
 
     def create(self) -> Board:
@@ -239,6 +238,7 @@ class Builder(metaclass=ABCMeta):
         """
         self._maxPixelsPerLine = (self._height - 2 * self._margins[1]) / self._lines
         self._maxPixelsPerCol = (self._width - 2 * self._margins[0]) / self._columns
+        self._borderLength = min(self._maxPixelsPerCol, self._maxPixelsPerLine)
 
     @property
     @abstractmethod
