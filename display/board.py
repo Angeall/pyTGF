@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
 import numpy as np
 import pygame
-from units.unit import Unit
+from characters.unit import Unit
 
 MAX_FPS = 60
 

@@ -16,6 +16,19 @@ def dist(a: tuple, b: tuple):
     return abs(euclidean(a, b))
 
 
+def get_hypotenuse_length(a: int, b: int):
+    """
+    Given that a and b are the length of the sides of a right-angled triangle, this function gives the
+    length of the hypotenuse
+    Args:
+        a: The length of a side of the right-angled triangle
+        b: The length of the other side of the right-angled triangle
+
+    Returns: The length of the hypotenuse of the right-angled triangle
+    """
+    return np.sqrt(a**2 + b**2)
+
+
 def vectorize(p1: tuple, p2: tuple, signed: bool=True) -> tuple:
     """
     Computes the vector made by the two input points, p1 to p2

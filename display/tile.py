@@ -3,7 +3,7 @@ from pygame import gfxdraw
 import pygame
 
 import utils.geom
-from units.unit import Unit
+from characters.unit import Unit
 
 
 class NotAPolygonError(BaseException):
@@ -108,12 +108,9 @@ class Tile(object):
         if self.internalColor is not None:
             gfxdraw.filled_polygon(surface, self.points, self.internalColor)
         gfxdraw.aapolygon(surface, self.points, self.externalColor)
-        #pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
+        # pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
 
         for occupant in self.occupants:  # type: Unit
-            current_position = (occupant.sprite.rect.x, occupant.sprite.rect.y)
-            if current_position != self.center:
-                occupant.sprite.rect.move_ip(utils.geom.vectorize(current_position, self.center))
             occupant.drawAsSingleSprite(surface)
 
     def addOccupant(self, new_occupant: Unit) -> None:
