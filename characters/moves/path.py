@@ -4,8 +4,6 @@ from characters.moves.move import ShortMove
 
 
 class Path(metaclass=ABCMeta):
-    # TODO: Make a child for continuous move and eventually for path finder
-
     def __init__(self):
         self.cancelTriggered = False
         self.cancelled = False

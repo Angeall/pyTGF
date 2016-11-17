@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import pygame.locals
+from queue import Queue
 
 
 ARROWS_PLAYER1 = [pygame.locals.K_UP, pygame.locals.K_DOWN, pygame.locals.K_RIGHT, pygame.locals.K_LEFT]
@@ -9,10 +10,8 @@ ARROWS_PLAYER3 = [pygame.locals.K_o, pygame.locals.K_l, pygame.locals.K_m, pygam
 
 
 class Controller(metaclass=ABCMeta):
-    def __init__(self, commands_actions: dict):
+    def __init__(self):
         """
         Instantiates a controller for a unit.
-        Args:
-            commands_actions:
         """
-        self.commands = commands_actions
+        self.moves = Queue()

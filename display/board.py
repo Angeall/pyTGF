@@ -66,7 +66,7 @@ class Board(metaclass=ABCMeta):
         """
         Get the tile located on the given pixel
         Args:
-            pixel: The screen coordinates on which we want to get the tile
+            pixel: The _screen coordinates on which we want to get the tile
 
         Returns: The tile located on the pixel, or None if there is no tile at this position
 
