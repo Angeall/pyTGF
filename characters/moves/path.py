@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
-from characters.move import ShortMove
+
+from characters.moves.move import ShortMove
 
 
 class Path(metaclass=ABCMeta):
@@ -17,7 +18,7 @@ class Path(metaclass=ABCMeta):
     def performNextMove(self) -> None:
         if not (self.cancelled or self.completed):
             if self._currentMove is None:
-                self._currentMove = self.getNextShortMove()
+                self._currentMove = self._getNextShortMove()
                 if self._currentMove is None:  # Empty case: getNextShortMove returns nothing => Stops directly
                     self.completed = True
                     return
@@ -25,11 +26,11 @@ class Path(metaclass=ABCMeta):
                 if self.cancelTriggered:
                     self.cancelled = True
                 else:
-                    self._currentMove = self.getNextShortMove()
+                    self._currentMove = self._getNextShortMove()
                     self._currentMove.performStep()
 
     @abstractmethod
-    def getNextShortMove(self) -> ShortMove:
+    def _getNextShortMove(self) -> ShortMove:
         """
         Returns: The next move in the path or None if there is none
         """

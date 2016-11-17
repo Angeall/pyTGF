@@ -21,13 +21,15 @@ class Tile(object):
 
     TILE_LENGTH_EPSILON = 0.1
 
-    def __init__(self, center: tuple, points: list, identifier: tuple) -> None:
+    def __init__(self, center: tuple, points: list, identifier, walkable: bool=True, deadly: bool=False) -> None:
         """
         Args:
             center: The equidistant center of the tile
             points: The points that will be used to draw the polygon (not closed), it will be closed by connecting
                     the last and the first point
             identifier: The identifier of the tile in the board
+            walkable: Boolean that defines if a unit can walk on this tile or not
+            deadly: Boolean that defines if a unit must die when walking on this tile
         """
         self.nbrOfSides = len(points)
         if self.nbrOfSides < 3:
@@ -39,7 +41,8 @@ class Tile(object):
         assert self._isEquilateral()
         self._convexHull = None    # Is initialized when needed, at the call of self.containsPoint
         self._hullPath = None      # Is initialized when needed, at the call of self.containsPoint
-        self.walkable = True
+        self.deadly = deadly
+        self.walkable = walkable
         self.externalColor = (0, 0, 0)
         self.internalColor = None
         self.occupants = []

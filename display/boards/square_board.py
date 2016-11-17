@@ -5,6 +5,9 @@ from pygame.locals import *
 
 
 class SquareBoard(Board):
+
+    OUT_OF_BOARD_TILE = Tile((0, 0), [], None, deadly=True)
+
     def getTileById(self, identifier: tuple) -> Tile:
         """
 
@@ -14,7 +17,51 @@ class SquareBoard(Board):
         Returns:
 
         """
-        return self.tiles[identifier[0]][identifier[1]]
+        if identifier[0] < 0 or identifier[1] < 0 \
+                or identifier[0] >= len(self.tiles[0]) or identifier[1] >= len(self.tiles):
+            return self.OUT_OF_BOARD_TILE
+        else:
+            return self.tiles[identifier[0]][identifier[1]]
+
+    def getLeftTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile left to the given tile
+        Args:
+            origin_tile: The tile from which we want its left tile
+
+        Returns: The tile located to the left of the given tile
+        """
+        self.getTileById((origin_tile.identifier[0] - 1, origin_tile.identifier[1]))
+
+    def getRightTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile right to the given tile
+        Args:
+            origin_tile: The tile from which we want its right tile
+
+        Returns: The tile located to the right of the given tile
+        """
+        self.getTileById((origin_tile.identifier[0] + 1, origin_tile.identifier[1]))
+
+    def getTopTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile top to the given tile
+        Args:
+            origin_tile: The tile from which we want its top tile
+
+        Returns: The tile located to the top of the given tile
+        """
+        self.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] - 1))
+
+    def getBottomTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile bottom to the given tile
+        Args:
+            origin_tile: The tile from which we want its bottom tile
+
+        Returns: The tile located to the bottom of the given tile
+        """
+        self.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] + 1))
 
 
 class SquareBoardBuilder(Builder):
@@ -152,14 +199,14 @@ if __name__ == "__main__":
     surf = board.surface
     screen.blit(surf, (0, 0))
     pygame.display.flip()
-    exit = False
+    cancelled = False
     passed_int_color = (255, 255, 255)
-    while not exit:
+    while not cancelled:
         for event in pygame.event.get():
             if event.type == QUIT:
-                exit = True
+                cancelled = True
             elif event.type == KEYDOWN and event.key == K_ESCAPE:
-                exit = True
+                cancelled = True
             elif event.type == MOUSEBUTTONDOWN:
                 if pygame.mouse.get_pressed()[0]:
                     tile = board.getTileByPixel(event.pos)

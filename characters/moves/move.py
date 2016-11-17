@@ -2,6 +2,11 @@ from characters.unit import Unit
 from display.tile import Tile
 import utils.geom
 
+
+class DeadlyMove(BaseException):
+    pass
+
+
 class IllegalMove(BaseException):
     pass
 
@@ -22,6 +27,8 @@ class ShortMove(object):
             destination_tile: The tile toward which the unit is moved
             fps: The number of frames per second (refresh rate) used to determine the frames needed to move the unit
         """
+        if destination_tile.deadly:
+            raise DeadlyMove("The move that is trying to be done is deadly and ends the game for this unit")
         if destination_tile not in source_tile.neighbours or not destination_tile.walkable:
             raise IllegalMove("The move from the source tile -- " + str(source_tile.identifier) + " -- " +
                               "to the destination tile -- + " + str(destination_tile.identifier) + " -- " +
