@@ -13,8 +13,8 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
         self.image = img
         self.rect = img.get_rect()  # type: pygame.Rect
 
-    @abstractmethod
     @property
+    @abstractmethod
     def imageName(self):
         pass
 

@@ -3,9 +3,6 @@ from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
 import numpy as np
 import pygame
-from characters.unit import Unit
-
-MAX_FPS = 60
 
 
 class Board(metaclass=ABCMeta):
@@ -15,17 +12,18 @@ class Board(metaclass=ABCMeta):
       - Make a principle of inertia for the units
     """
 
-    def __init__(self, surface: pygame.Surface, borders: list, tiles: list, centers: list, centers_to_tile_ids: dict):
+    def __init__(self, size: tuple, borders: list, tiles: list, centers: list, centers_to_tile_ids: dict):
         """
         Instantiates a game board using the given parameters
         Args:
-            surface: The surface on which draw the board used to draw the board components
+            size: The size in pixels of the board : (width, height)
             borders: A list of lines, represented by two points each, representing the borders of the board.
                         (e.g. [((1, 2), (3, 4)), ((0,1), (0,2)), ...])
             tiles: A list of tiles that will be on the board
             centers: The list of the tiles centers
             centers_to_tile_ids: The dict that links the centers to the tile object (so the tiles can be center-indexed)
         """
+        self.size = size
         self._tilesVisible = True
         self.tiles = tiles
         self.borders = borders
@@ -34,9 +32,6 @@ class Board(metaclass=ABCMeta):
         self._centers = centers
         self._centersToTileIds = centers_to_tile_ids
         self._kdTree = KDTree(np.array(self._centers))
-        self.surface = surface
-        self.units = {}  # type: dict
-        # self.units -> keys: units; values: tile_ids
 
     def setBordersColor(self, borders_color: tuple) -> None:
         """
@@ -79,38 +74,38 @@ class Board(metaclass=ABCMeta):
             return tile
         return None
 
-    def moveUnit(self, unit_index: int, translation: tuple):
-        unit = self.units[unit_index]
-
-    def addUnit(self, unit: Unit, tile_id: ...) -> None:
-        self.units[unit] = tile_id
-
-    def _drawBackground(self) -> None:
+    def _drawBackground(self, surface: pygame.Surface) -> None:
         """
         Paints the surface into the colors saved in "self._backgroundColor"
             that can be changed using "self.setBackgroundColor"
         The background is painted above everything else on the surface,
             hence erasing what's below
+        Args:
+            surface: The surface onto which draw the background
         """
-        surface = pygame.Surface(self.surface.get_size())
-        surface.fill(self._backgroundColor)
-        self.surface.blit(surface, (0, 0))
+        surf = pygame.Surface(surface.get_size())
+        surf.fill(self._backgroundColor)
+        surface.blit(surf, (0, 0))
 
-    def _drawBorders(self) -> None:
+    def _drawBorders(self, surface: pygame.Surface) -> None:
         """
         Draws the borders of the board, without drawing any tile.
+        Args:
+            surface: The surface onto which draw the borders
         """
         for (p1, p2) in self.borders:
-            pygame.draw.aaline(self.surface, self._bordersColor, p1, p2)
+            pygame.draw.aaline(surface, self._bordersColor, p1, p2)
 
-    def _drawTiles(self) -> None:
+    def _drawTiles(self, surface: pygame.Surface) -> None:
         """
         Draw the tiles onto the board
+        Args:
+            surface: The surface onto which draw the tiles
         """
         for line in self.tiles:
             for tile in line:
                 if self._tilesVisible:
-                    tile.draw(self.surface)
+                    tile.draw(surface)
 
     def draw(self, surface: pygame.Surface) -> None:
         """
@@ -118,10 +113,12 @@ class Board(metaclass=ABCMeta):
         Args:
             surface: The surface on which draw the board
         """
-        self._drawBackground()
-        self._drawTiles()
-        self._drawBorders()
-        surface.blit(self.surface, (0, 0))
+        # Using a temporary surface allows to paint only once on the displayed surface (avoid delay between components)
+        surf = pygame.Surface(surface.get_size())
+        self._drawBackground(surf)
+        self._drawTiles(surf)
+        self._drawBorders(surf)
+        surface.blit(surf, (0, 0))
 
     @abstractmethod
     def getTileById(self, identifier) -> Tile:
@@ -143,9 +140,8 @@ class Builder(metaclass=ABCMeta):
 
     _BASE_MARGIN = 33
 
-    def __init__(self, surface: pygame.Surface, lines: int, columns: int) -> None:
-        self._surface = surface
-        self._width, self._height = surface.get_size()
+    def __init__(self, width: int, height: int, lines: int, columns: int) -> None:
+        self._width, self._height = width, height
         self._lines = lines
         self._columns = columns
         self._margins = (self._BASE_MARGIN, self._BASE_MARGIN)
@@ -225,7 +221,7 @@ class Builder(metaclass=ABCMeta):
         """
         tiles, centers, centers_to_tile_ids = self._buildGrid()
         borders = self._getBoardBorders(tiles)
-        board = self.boardType(self._surface, borders, tiles, centers, centers_to_tile_ids)  # type: Board
+        board = self.boardType((self._width, self._height), borders, tiles, centers, centers_to_tile_ids)  # type: Board
         board.setBordersColor(self._bordersColor)
         board.setBackgroundColor(self._backgroundColor)
         board.setTilesVisible(self._tilesVisible)

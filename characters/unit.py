@@ -16,6 +16,8 @@ class Unit(object):
         self.sprite = sprite  # type: UnitSprite
         self.group = None
         self.speed = speed
+        self.moving = False
+        self.direction = None
 
     def drawAsSingleSprite(self, surface: pygame.Surface):
         if self.group is None:

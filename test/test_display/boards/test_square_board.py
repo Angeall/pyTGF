@@ -7,13 +7,13 @@ from display.boards.square_board import SquareBoardBuilder
 
 class TestSquareBoard(unittest.TestCase):
     def test_numbers_of_tile(self):
-        board = SquareBoardBuilder(pygame.Surface((10, 10)), 7, 6).create()
+        board = SquareBoardBuilder(10, 10, 7, 6).create()
         self.assertEqual(len(board.tiles), 7)
         for line in board.tiles:
             self.assertEqual(len(line), 6)
 
     def test_board_borders(self):
-        builder = SquareBoardBuilder(pygame.Surface((100, 100)), 6, 6)
+        builder = SquareBoardBuilder(100, 100, 6, 6)
         builder.setMargins(20, 20)
         board = builder.create()
         borders = board.borders
@@ -31,7 +31,7 @@ class TestSquareBoard(unittest.TestCase):
         y_margin = 10
         nb_lines = 2
         nb_column = 5
-        builder = SquareBoardBuilder(pygame.Surface((width, height)), nb_lines, nb_column)
+        builder = SquareBoardBuilder(width, height, nb_lines, nb_column)
         builder.setMargins(x_margin, y_margin)
         board = builder.create()
         center = board.tiles[0][0].center
@@ -51,21 +51,21 @@ class TestSquareBoard(unittest.TestCase):
                                delta=0.01)
 
     def test_tile_neighbours(self):
-        board = SquareBoardBuilder(pygame.Surface((10, 10)), 7, 6).create()
+        board = SquareBoardBuilder(10, 10, 7, 6).create()
         self.assertTrue(board.getTileById((0, 0)).hasDirectAccess((0, 1)))
         self.assertTrue(board.getTileById((0, 3)).hasDirectAccess((1, 3)))
         self.assertTrue(board.getTileById((1, 3)).hasDirectAccess((0, 3)))
         self.assertTrue(board.getTileById((0, 2)).hasDirectAccess((0, 1)))
 
     def test_tile_nb_neighbours_on_borders(self):
-        board = SquareBoardBuilder(pygame.Surface((10, 10)), 7, 6).create()
+        board = SquareBoardBuilder(10, 10, 7, 6).create()
         self.assertTrue(len(board.getTileById((0, 0)).neighbours), 2)
         self.assertTrue(len(board.getTileById((6, 0)).neighbours), 2)
         self.assertTrue(len(board.getTileById((0, 5)).neighbours), 2)
         self.assertTrue(len(board.getTileById((6, 5)).neighbours), 2)
 
     def test_tile_nb_neighbours_on_sidelines(self):
-        board = SquareBoardBuilder(pygame.Surface((10, 10)), 7, 6).create()
+        board = SquareBoardBuilder(10, 10, 7, 6).create()
         self.assertTrue(len(board.getTileById((0, 2)).neighbours), 3)
         self.assertTrue(len(board.getTileById((6, 1)).neighbours), 3)
         self.assertTrue(len(board.getTileById((1, 5)).neighbours), 3)

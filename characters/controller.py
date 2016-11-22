@@ -1,4 +1,4 @@
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
 import pygame.locals
 from queue import Queue
 
@@ -14,4 +14,4 @@ class Controller(metaclass=ABCMeta):
         """
         Instantiates a controller for a unit.
         """
-        self.moves = Queue()
+        self.moves = Queue()  # Will contain constants that will be interpreted by the game

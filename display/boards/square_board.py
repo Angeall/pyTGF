@@ -6,7 +6,7 @@ from pygame.locals import *
 
 class SquareBoard(Board):
 
-    OUT_OF_BOARD_TILE = Tile((0, 0), [], None, deadly=True)
+    OUT_OF_BOARD_TILE = Tile((0, 0), [(0, 0), (0, 1), (1, 1), (1, 0)], None, deadly=True)
 
     def getTileById(self, identifier: tuple) -> Tile:
         """
@@ -18,7 +18,7 @@ class SquareBoard(Board):
 
         """
         if identifier[0] < 0 or identifier[1] < 0 \
-                or identifier[0] >= len(self.tiles[0]) or identifier[1] >= len(self.tiles):
+                or identifier[0] >= len(self.tiles) or identifier[1] >= len(self.tiles[0]):
             return self.OUT_OF_BOARD_TILE
         else:
             return self.tiles[identifier[0]][identifier[1]]
@@ -68,15 +68,16 @@ class SquareBoardBuilder(Builder):
 
     BOARD_TYPE = SquareBoard
 
-    def __init__(self, surface: pygame.Surface, lines: int, columns: int):
+    def __init__(self, width: int, height: int, lines: int, columns: int):
         """
 
         Args:
-            surface: The `pygame` surface on which draw
+            width: The width in pixels of the board to create
+            height: The height in pixels of the board to create
             lines: The number of lines wanted in the grid
             columns: The number of columns wanted in the grid
         """
-        super().__init__(surface, lines, columns)
+        super().__init__(width, height, lines, columns)
 
     def _generateTile(self, center: tuple, identifier: tuple) -> Tile:
         """
@@ -186,9 +187,9 @@ if __name__ == "__main__":
     default = 700
     pygame.init()
     clock = pygame.time.Clock()
-    builder = SquareBoardBuilder(pygame.Surface((1920, 1080)), 50, 100)
+    builder = SquareBoardBuilder(1920, 1080, 50, 100)
     builder.setBordersColor((255, 0, 0))
-    builder.setTilesVisible(False)
+    builder.setTilesVisible(True)
     screen = pygame.display.set_mode((1920, 1080), DOUBLEBUF + HWSURFACE)
     background = pygame.Surface(screen.get_size())
     background = background.convert()
@@ -196,8 +197,6 @@ if __name__ == "__main__":
     screen.blit(background, (0, 0))
     board = builder.create()
     board.draw(screen)
-    surf = board.surface
-    screen.blit(surf, (0, 0))
     pygame.display.flip()
     cancelled = False
     passed_int_color = (255, 255, 255)

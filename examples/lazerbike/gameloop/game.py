@@ -1,24 +1,19 @@
-
+from characters.controllers.human import Human
+from characters.controller import Controller
+from examples.lazerbike.controllers.allowed_moves import *
 from display.tile import Tile
-from pygame.locals import *
-
 from loop.game import Game
 
 
 class LazerBikeGame(Game):
-    def _onKeyPressed(self, key_id: int) -> None:
-        if key_id == K_RIGHT:
-            self.board.units[0].moveRight(1)
-        elif key_id == K_LEFT:
-            self.board.units[0].moveLeft(1)
-        elif key_id == K_UP:
-            self.board.units[0].moveUp(1)
-        elif key_id == K_DOWN:
-            self.board.units[0].moveDown(1)
+    def _handleControllerEvent(self, controller: Controller, event) -> None:
+        unit = self._controllers[controller]
+        if event == GO_RIGHT:
 
-    def _onTileClickedDown(self, tile: Tile, mouse_buttons_state: tuple) -> None:
+        elif event == GO_RIGHT:
+
+    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple, click_up: bool):
         pass
 
-    def _onTileClickedUp(self, tile: Tile) -> None:
-        pass
-
+    def _sendInputToHumanController(self, controller: Human, input_key: int):
+        controller.reactToInput(input_key)
