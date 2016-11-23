@@ -27,15 +27,14 @@ class ShortMove(object):
             destination_tile: The tile toward which the unit is moved
             fps: The number of frames per second (refresh rate) used to determine the frames needed to move the unit
         """
-        if destination_tile.deadly:
-            raise DeadlyMove("The move that is trying to be done is deadly and ends the game for this unit")
-        if destination_tile not in source_tile.neighbours or not destination_tile.walkable:
+        if destination_tile.identifier not in source_tile.neighbours or not destination_tile.walkable:
             raise IllegalMove("The move from the source tile -- " + str(source_tile.identifier) + " -- " +
                               "to the destination tile -- + " + str(destination_tile.identifier) + " -- " +
                               "cannot be performed")
         self.isPerformed = False
         self.unit = unit
         self.sourceTile = source_tile
+        self._currentPos = self.sourceTile.center
         self.destinationTile = destination_tile
         pixels_to_go_x = (destination_tile.center[0] - source_tile.center[0])
         pixels_to_go_y = (destination_tile.center[1] - source_tile.center[1])
@@ -53,9 +52,15 @@ class ShortMove(object):
         if not self.isPerformed:
             if self._frameNeeded == 1:  # Last step => Complete the move (kill precision error)
                 self.unit.moveTo(self.destinationTile.center)
+
                 self.isPerformed = True
+                if self.destinationTile.deadly:
+                    raise DeadlyMove("The move that has been done is deadly and ends the game for this unit")
             else:
-                self.unit.move(self._pixelsPerFrame)
+                temp_x = self._currentPos[0] + self._pixelsPerFrame[0]
+                temp_y = self._currentPos[1] + self._pixelsPerFrame[1]
+                self._currentPos = temp_x, temp_y
+                self.unit.moveTo(self._currentPos)
                 self._frameNeeded -= 1
 
 

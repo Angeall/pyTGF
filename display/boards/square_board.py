@@ -31,7 +31,7 @@ class SquareBoard(Board):
 
         Returns: The tile located to the left of the given tile
         """
-        self.getTileById((origin_tile.identifier[0] - 1, origin_tile.identifier[1]))
+        return self.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] - 1))
 
     def getRightTile(self, origin_tile: Tile) -> Tile:
         """
@@ -41,7 +41,7 @@ class SquareBoard(Board):
 
         Returns: The tile located to the right of the given tile
         """
-        self.getTileById((origin_tile.identifier[0] + 1, origin_tile.identifier[1]))
+        return self.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] + 1))
 
     def getTopTile(self, origin_tile: Tile) -> Tile:
         """
@@ -51,7 +51,7 @@ class SquareBoard(Board):
 
         Returns: The tile located to the top of the given tile
         """
-        self.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] - 1))
+        return self.getTileById((origin_tile.identifier[0] - 1, origin_tile.identifier[1]))
 
     def getBottomTile(self, origin_tile: Tile) -> Tile:
         """
@@ -61,7 +61,7 @@ class SquareBoard(Board):
 
         Returns: The tile located to the bottom of the given tile
         """
-        self.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] + 1))
+        return self.getTileById((origin_tile.identifier[0] + 1, origin_tile.identifier[1]))
 
 
 class SquareBoardBuilder(Builder):

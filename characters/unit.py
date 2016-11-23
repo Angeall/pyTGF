@@ -6,7 +6,7 @@ from characters.sprite import UnitSprite
 
 class Unit(object):
     # TODO: make a controller for each unit. The controller will be the API call
-    def __init__(self, sprite: UnitSprite, speed: float = 3):
+    def __init__(self, sprite: UnitSprite, speed: float = 100):
         """
         Instantiates a character unit in the game
         Args:
@@ -16,8 +16,7 @@ class Unit(object):
         self.sprite = sprite  # type: UnitSprite
         self.group = None
         self.speed = speed
-        self.moving = False
-        self.direction = None
+        self.currentAction = None
 
     def drawAsSingleSprite(self, surface: pygame.Surface):
         if self.group is None:
@@ -32,7 +31,8 @@ class Unit(object):
         """
         current_position = self.sprite.rect.center
         if current_position != destination:
-            self.sprite.rect.move_ip(utils.geom.vectorize(current_position, destination))
+            x, y = utils.geom.vectorize(current_position, destination)
+            self.sprite.rect.move_ip(x, y)
 
     def move(self, destination_offset) -> None:
         """
@@ -40,4 +40,5 @@ class Unit(object):
         Args:
             destination_offset: The translation offset to perform
         """
-        self.sprite.rect.move_ip(destination_offset)
+        print("moving")
+        self.sprite.rect.move_ip(destination_offset[0], destination_offset[1])

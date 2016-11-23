@@ -1,4 +1,3 @@
-
 GO_RIGHT = 0
 GO_LEFT = 1
 GO_UP = 2
