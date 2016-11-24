@@ -4,8 +4,7 @@ import pygame
 
 from examples.lazerbike.controllers.allowed_moves import *
 from examples.lazerbike.gameloop.game import LazerBikeGame
-from examples.lazerbike.sprites.bike import BikeSprite
-from characters.unit import Unit
+from examples.lazerbike.sprites.bike import BikeSprite, Bike
 
 if __name__ == "__main__":
     pygame.init()
@@ -17,8 +16,7 @@ if __name__ == "__main__":
     tile = board.getTileById((25, 25))
     game = LazerBikeGame(board)
     print("Adding unit")
-    Unit(sprite)
     # TODO : add a turn method to a Bike class so the bike can easily turn from any position to any other
-    game.addUnit(Unit(sprite), Player1(), (25, 25), GO_RIGHT)
+    game.addUnit(Bike(sprite, GO_RIGHT), Player1(), (25, 25), GO_RIGHT)
     print("Unit added")
     game.run()

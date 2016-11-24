@@ -6,7 +6,7 @@ from characters.sprite import UnitSprite
 
 class Unit(object):
     # TODO: make a controller for each unit. The controller will be the API call
-    def __init__(self, sprite: UnitSprite, speed: float = 100):
+    def __init__(self, sprite: UnitSprite, speed: float = 150):
         """
         Instantiates a character unit in the game
         Args:
