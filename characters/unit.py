@@ -40,5 +40,4 @@ class Unit(object):
         Args:
             destination_offset: The translation offset to perform
         """
-        print("moving")
         self.sprite.rect.move_ip(destination_offset[0], destination_offset[1])

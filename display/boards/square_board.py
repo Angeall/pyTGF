@@ -200,6 +200,7 @@ if __name__ == "__main__":
     pygame.display.flip()
     cancelled = False
     passed_int_color = (255, 255, 255)
+    tile = None
     while not cancelled:
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -210,7 +211,6 @@ if __name__ == "__main__":
                 if pygame.mouse.get_pressed()[0]:
                     tile = board.getTileByPixel(event.pos)
                     if tile is not None:
-                        print(tile.identifier)
                         tile.setInternalColor((255, 0, 0))
                 else:
                     tile = None

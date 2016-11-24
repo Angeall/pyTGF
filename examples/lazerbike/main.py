@@ -15,8 +15,6 @@ if __name__ == "__main__":
     sprite = BikeSprite()
     tile = board.getTileById((25, 25))
     game = LazerBikeGame(board)
-    print("Adding unit")
     # TODO : add a turn method to a Bike class so the bike can easily turn from any position to any other
     game.addUnit(Bike(sprite, GO_RIGHT), Player1(), (25, 25), GO_RIGHT)
-    print("Unit added")
     game.run()

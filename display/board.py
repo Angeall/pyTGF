@@ -211,7 +211,6 @@ class Builder(metaclass=ABCMeta):
             self._margins = (x_margin, self._margins[1])
         if y_margin is not None:
             self._margins = (self._margins[0], y_margin)
-        print(self._margins)
         self._computeMaxSizeUsingMargins()
 
     def create(self) -> Board:

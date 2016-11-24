@@ -78,7 +78,6 @@ class Game(metaclass=ABCMeta):
         return self._controllers[controller]
 
     def _getTileForUnit(self, unit: Unit) -> Tile:
-        print(unit)
         return self.board.getTileById(self.units[unit])
 
     def _cancelCurrentMoves(self, controller) -> None:
@@ -151,7 +150,7 @@ class Game(metaclass=ABCMeta):
                 pass
 
     @abstractmethod
-    def _handleControllerEvent(self, controller: Controller, event: ...) -> None:
+    def _handleControllerEvent(self, controller: Controller, event) -> None:
         """
         The goal of this method is to grab controls from the given controller and handle them in the game
         Args:
