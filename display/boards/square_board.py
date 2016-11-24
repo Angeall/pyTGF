@@ -97,9 +97,9 @@ class SquareBoardBuilder(Builder):
             tile.addNeighbour((x - 1, y))
         if y - 1 >= 0:
             tile.addNeighbour((x, y - 1))
-        if x + 1 < self._columns:
+        if x + 1 < self._lines:
             tile.addNeighbour((x + 1, y))
-        if y + 1 < self._lines:
+        if y + 1 < self._columns:
             tile.addNeighbour((x, y + 1))
         return tile
 
