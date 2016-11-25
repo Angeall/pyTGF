@@ -17,4 +17,5 @@ if __name__ == "__main__":
     game = LazerBikeGame(board)
     # TODO : add a turn method to a Bike class so the bike can easily turn from any position to any other
     game.addUnit(Bike(sprite, GO_RIGHT), Player1(), (25, 25), GO_RIGHT)
+    del sprite
     game.run()

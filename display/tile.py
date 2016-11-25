@@ -98,8 +98,10 @@ class Tile(object):
         """
         if self._convexHull is None:
             self._convexHull = utils.geom.get_convex_hull(self.points)
+        assert self._convexHull is not None
         if self._hullPath is None:
             self._hullPath = utils.geom.get_path(self.points, self._convexHull)
+        assert self._hullPath is not None
         return self._hullPath.contains_point(point)
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -114,9 +116,9 @@ class Tile(object):
         # pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
 
         for occupant in self.occupants:  # type: Unit
-            occupant.drawAsSingleSprite(surface)
+            occupant.draw(surface)
 
-    def addOccupant(self, new_occupant: Unit) -> None:
+    def addOccupant(self, new_occupant) -> None:
         """
         Adds an occupant to this tile
         Args:
@@ -124,7 +126,11 @@ class Tile(object):
         """
         self.occupants.append(new_occupant)
 
-    def removeOccupant(self, occupant_to_remove: Unit) -> None:
+    def __contains__(self, item):
+        # TODO: Checks if the tile contains a unit and if the unit is alive ! if not, remove it from the tile
+        pass
+
+    def removeOccupant(self, occupant_to_remove) -> None:
         """
         Removes an occupant from this tile
         Args:

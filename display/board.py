@@ -9,7 +9,7 @@ class Board(metaclass=ABCMeta):
     """
     TODO:
       - Make a transition between tiles, with a speed
-      - Make a principle of inertia for the units
+      - Make a principle of inertia for the _units
     """
 
     def __init__(self, size: tuple, borders: list, tiles: list, centers: list, centers_to_tile_ids: dict):

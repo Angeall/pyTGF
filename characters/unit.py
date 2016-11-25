@@ -1,27 +1,59 @@
 import pygame
+from queue import Queue, Empty
 
 import utils.geom
 from characters.sprite import UnitSprite
 
 
 class Unit(object):
-    # TODO: make a controller for each unit. The controller will be the API call
-    def __init__(self, sprite: UnitSprite, speed: float = 150):
+    # TODO: Make an abstraction between an alive unit, a unit with a sprite, etc...
+    def __init__(self, sprite: UnitSprite, speed: float = 150, max_particles: int=-1):
         """
         Instantiates a character unit in the game
         Args:
             sprite: The sprite to draw on the board
             speed: The speed, in pixels per seconds, of the unit when moving
+            max_particles: The maximum number of particles for this unit (-1 = infinite)
         """
         self.sprite = sprite  # type: UnitSprite
-        self.group = None
+        self._drawable = None
+        self._particles = pygame.sprite.Group()
+        self._particlesQueue = Queue()
         self.speed = speed
         self.currentAction = None
 
-    def drawAsSingleSprite(self, surface: pygame.Surface):
-        if self.group is None:
-            self.group = pygame.sprite.RenderPlain(self.sprite)
-        self.group.draw(surface)
+    def isAlive(self):
+        return self.sprite.isAlive()
+
+    def draw(self, surface: pygame.Surface) -> None:
+        if self._drawable is None:
+            self._drawable = pygame.sprite.RenderPlain(self.sprite)
+        self._particles.draw(surface)
+        self._drawable.draw(surface)
+
+    def addParticle(self, sprite: UnitSprite) -> None:
+        self._particlesQueue.put(sprite)
+        self._particles.add(sprite)
+
+    def removeOldestParticle(self) -> None:
+        try:
+            oldest_sprite = self._particlesQueue.get_nowait()
+            self._particles.remove(oldest_sprite)
+        except Empty:
+            pass
+
+    def removeParticle(self, sprite: UnitSprite) -> None:
+        temp_queue = Queue()
+        try:
+            while True:  # Will stop when the Empty exception comes out from the Queue
+                current = self._particlesQueue.get_nowait()
+                if current is not sprite:
+                    temp_queue.put(current)
+        except Empty:
+            pass
+        finally:
+            self._particlesQueue = temp_queue
+            self._particles.remove(sprite)
 
     def moveTo(self, destination: tuple) -> None:
         """

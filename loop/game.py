@@ -21,9 +21,9 @@ class Game(metaclass=ABCMeta):
         self.board = board
         self._screen = None
         self._previouslyClickedTile = None
-        # self.units -> keys: units; values: tile_ids
-        self.units = {}  # type: dict
-        # self._controllers -> keys: controllers; values: units
+        # self._units -> keys: Units; values: tile_ids
+        self._units = {}  # type: dict
+        # self._controllers -> keys: controllers; values: _units
         self._controllers = {}
         # self._controllersMoves -> keys: controllers; values: tuples (current_move, pending_moves)
         self._controllersMoves = {}
@@ -78,7 +78,7 @@ class Game(metaclass=ABCMeta):
         return self._controllers[controller]
 
     def _getTileForUnit(self, unit: Unit) -> Tile:
-        return self.board.getTileById(self.units[unit])
+        return self.board.getTileById(self._units[unit])
 
     def _cancelCurrentMoves(self, controller) -> None:
         """
@@ -111,7 +111,7 @@ class Game(metaclass=ABCMeta):
         """
         self._controllers[controller] = unit
         self._controllersMoves[controller] = (None, Queue())
-        self.units[unit] = tile_id
+        self._units[unit] = tile_id
         tile = self.board.getTileById(tile_id)
         tile.addOccupant(unit)
         unit.moveTo(tile.center)
@@ -178,8 +178,8 @@ class Game(metaclass=ABCMeta):
                 tile_id = current_move.performNextMove()
                 if tile_id is not None:  # A new tile has been reached by the movement
                     unit = self._controllers[controller]
-                    old_tile_id = self.units[unit]
-                    self.units[unit] = tile_id
+                    old_tile_id = self._units[unit]
+                    self._units[unit] = tile_id
                     self.board.getTileById(old_tile_id).removeOccupant(unit)
                     self.board.getTileById(tile_id).addOccupant(unit)
                 if current_move.cancelled or current_move.completed:
