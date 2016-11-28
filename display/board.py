@@ -27,7 +27,7 @@ class Board(metaclass=ABCMeta):
         self._tilesVisible = True
         self.tiles = tiles
         self.borders = borders
-        self._backgroundColor = (255, 255, 255)
+        self.backgroundColor = (255, 255, 255)
         self._bordersColor = (0, 0, 0)
         self._centers = centers
         self._centersToTileIds = centers_to_tile_ids
@@ -47,7 +47,7 @@ class Board(metaclass=ABCMeta):
         Args:
             background_color: RGB (or RGBA) tuple for the background color
         """
-        self._backgroundColor = background_color
+        self.backgroundColor = background_color
 
     def setTilesVisible(self, visible: bool) -> None:
         """
@@ -76,7 +76,7 @@ class Board(metaclass=ABCMeta):
 
     def _drawBackground(self, surface: pygame.Surface) -> None:
         """
-        Paints the surface into the colors saved in "self._backgroundColor"
+        Paints the surface into the colors saved in "self.backgroundColor"
             that can be changed using "self.setBackgroundColor"
         The background is painted above everything else on the surface,
             hence erasing what's below
@@ -84,7 +84,7 @@ class Board(metaclass=ABCMeta):
             surface: The surface onto which draw the background
         """
         surf = pygame.Surface(surface.get_size())
-        surf.fill(self._backgroundColor)
+        surf.fill(self.backgroundColor)
         surface.blit(surf, (0, 0))
 
     def _drawBorders(self, surface: pygame.Surface) -> None:

@@ -18,6 +18,10 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
         self.image = transform.rotate(self.image, angle)
         self.rect = self.image.get_rect()  # type: pygame.Rect
 
+    def size(self, width: int, height: int):
+        self.image = transform.scale(self.image, (width, height))
+        self.rect = self.image.get_rect()
+
     @property
     @abstractmethod
     def imageName(self):

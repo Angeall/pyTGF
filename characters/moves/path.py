@@ -1,17 +1,28 @@
 from abc import ABCMeta, abstractmethod
+from types import FunctionType as function
 
 from characters.moves.move import ShortMove
-from utils.functions import DelayedFunction
 
 
 class Path(metaclass=ABCMeta):
-    def __init__(self, pre_action: DelayedFunction=None, post_action: DelayedFunction=None):
+    def __init__(self, pre_action: function=None, post_action: function=None,
+                 step_action: function=None):
+        """
+        Instantiates a path, which is a series of ShortMoves
+        Args:
+            pre_action: The action to perform before the first move is performed
+            post_action: The action to perform after the last move was performed
+            step_action: The action to perform each time a step (ShortMove) has been completed.
+                (step_action must have an unfulfilled "previous_tile" parameter, which will be filled with the last tile
+                 and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
+        """
         self.cancelTriggered = False
         self.cancelled = False
         self.completed = False
-        self._currentMove = None
-        self._preAction = pre_action  # type: DelayedFunction
-        self._postAction = post_action  # type: DelayedFunction
+        self._currentMove = None  # type: ShortMove
+        self._preAction = pre_action  # type: function
+        self._postAction = post_action  # type: function
+        self._stepAction = step_action  # type: function
         self._isFirstMove = True
 
     def cancel(self, cancel_post_action: bool=True) -> None:
@@ -29,7 +40,7 @@ class Path(metaclass=ABCMeta):
         """
         if self._isFirstMove:
             if self._preAction is not None:
-                self._preAction.exec()
+                self._preAction()
                 self._preAction = None
             self._isFirstMove = False
         if not (self.cancelled or self.completed):
@@ -39,6 +50,12 @@ class Path(metaclass=ABCMeta):
                     self.completed = True
                     return
             if self._currentMove.isPerformed:
+                if self._stepAction is not None:
+                    try:
+                        self._stepAction(previous_tile=self._currentMove.sourceTile,
+                                         current_tile=self._currentMove.destinationTile)
+                    except TypeError:
+                        self._stepAction()
                 new_tile_id = self._currentMove.destinationTile.identifier
                 if self.cancelTriggered:
                     self.cancelled = True
@@ -50,7 +67,7 @@ class Path(metaclass=ABCMeta):
                 self._currentMove.performStep()
         else:
             if self._postAction is not None:
-                self._postAction.exec()
+                self._postAction()
                 self._postAction = None
 
     @abstractmethod

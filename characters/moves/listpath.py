@@ -1,10 +1,11 @@
+from types import FunctionType as function
+
 from characters.moves.path import Path
 from characters.moves.move import ShortMove
-from utils.functions import DelayedFunction
 
 
 class ListPath(Path):
-    def __init__(self, move_list: list, pre_action: DelayedFunction=None, post_action: DelayedFunction=None):
+    def __init__(self, move_list: list, pre_action: function=None, post_action: function=None):
         """
         Creates a path containing all the short moves to perform in the given list
         Args:

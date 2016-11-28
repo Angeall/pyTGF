@@ -1,9 +1,6 @@
 from abc import ABCMeta, abstractmethod
-import asyncio
 
 from characters.controller import Controller
-from characters.unit import Unit
-from display.tile import Tile
 
 
 class Human(Controller, metaclass=ABCMeta):

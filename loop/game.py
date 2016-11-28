@@ -4,13 +4,12 @@ from queue import Queue, Empty
 import pygame
 from pygame.locals import *
 
-from display.tile import Tile
 from characters.controller import Controller
 from characters.controllers.human import Human
 from characters.moves.path import Path
-from characters.unit import Unit
+from characters.units.unit import Unit
 from display.board import Board
-
+from display.tile import Tile
 
 MAX_FPS = 60
 
@@ -67,7 +66,7 @@ class Game(metaclass=ABCMeta):
         """
         Adds a move (cancelling the pending moves)
         Args:
-            controller: The controller for which add a move
+            controller: The controller f*or which add a move
             move: The move to add for the given controller
         """
         self._cancelCurrentMoves(controller)

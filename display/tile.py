@@ -1,9 +1,8 @@
-import numpy as np
-from pygame import gfxdraw
 import pygame
+from pygame import gfxdraw
 
 import utils.geom
-from characters.unit import Unit
+from characters.particle import Particle
 
 
 class NotAPolygonError(BaseException):
@@ -38,6 +37,7 @@ class Tile(object):
         self.neighbours = []
         self.center = center
         self.points = points
+        self.sideLength = int(utils.geom.dist(self.points[-1], self.points[0]))
         assert self._isEquilateral()
         self._convexHull = None    # Is initialized when needed, at the call of self.containsPoint
         self._hullPath = None      # Is initialized when needed, at the call of self.containsPoint
@@ -45,7 +45,20 @@ class Tile(object):
         self.walkable = walkable
         self.externalColor = (0, 0, 0)
         self.internalColor = None
-        self.occupants = []
+        self._occupants = []
+
+    @property
+    def occupants(self):
+        to_remove = []
+        for occupant in self._occupants:  # type: Particle
+            if not occupant.isAlive():
+                to_remove.append(occupant)
+        self.removeOccupant(to_remove)
+        return self._occupants
+
+    @occupants.setter
+    def occupants(self, value):
+        self._occupants = value
 
     def setExternalColor(self, external_color: tuple) -> None:
         """
@@ -115,7 +128,7 @@ class Tile(object):
         gfxdraw.aapolygon(surface, self.points, self.externalColor)
         # pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
 
-        for occupant in self.occupants:  # type: Unit
+        for occupant in self.occupants:  # type: Particle
             occupant.draw(surface)
 
     def addOccupant(self, new_occupant) -> None:
@@ -139,11 +152,18 @@ class Tile(object):
         Raises:
             OccupantNotFoundError: If the given occupant is not present in the tile.
         """
-        if occupant_to_remove in self.occupants:
-            self.occupants.remove(occupant_to_remove)
-        else:
-            raise OccupantNotFoundError(
-                "The occupant " + str(occupant_to_remove) + " was not found in the tile " + str(self.identifier))
+        if isinstance(occupant_to_remove, Particle):
+            if occupant_to_remove in self._occupants:
+                self._occupants.remove(occupant_to_remove)
+            else:
+                raise OccupantNotFoundError(
+                    "The occupant " + str(occupant_to_remove) + " was not found in the tile " + str(self.identifier))
+        elif isinstance(occupant_to_remove, list):
+            new_occupants = []
+            for occupant in self._occupants:  # type: Particle
+                if new_occupants not in occupant_to_remove:
+                    new_occupants.append(occupant)
+            self.occupants = new_occupants
 
     def clearOccupants(self) -> None:
         """

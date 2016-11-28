@@ -1,6 +1,6 @@
-from characters.unit import Unit
-from display.tile import Tile
 import utils.geom
+from characters.units.unit import Unit
+from display.tile import Tile
 
 
 class DeadlyMove(BaseException):
@@ -16,7 +16,7 @@ class ShortMove(object):
     Represents a linear unit move between two tiles directly accessible.
     Can only make a straight movement.
 
-    This class supposes that the unit comes from the center of the source_tile.
+    This class supposes that the unit comes from the center of the sourceTile.
     """
     def __init__(self, unit: Unit, source_tile: Tile, destination_tile: Tile, fps: int):
         """
