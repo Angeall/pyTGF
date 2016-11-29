@@ -26,6 +26,12 @@ class Unit(Particle):
             surface: The surface the unit and its particle will be drawn on
         """
         super().draw(surface)
+        self._particlesSpriteGroup.draw(surface)
+
+    def kill(self):
+        super().kill()
+        while len(self._particlesSpriteGroup) != 0:
+            self.removeOldestParticle()
 
     def addParticle(self, particle: Particle) -> None:
         """

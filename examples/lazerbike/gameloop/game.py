@@ -15,12 +15,15 @@ class LazerBikeGame(Game):
         super().__init__(board)
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
+        self.setSuicide(True)
 
     def _handleGameFinished(self, winning_units: list):
-        print("WINNING : players :")
-        for player in winning_units:
-            print(player.playerNumber)
-        return
+        if winning_units is None:
+            print("DRAW")
+        else:
+            print("WINNING :")
+            for player in winning_units:
+                print("--Player", player.playerNumber)
 
     def _isFinished(self) -> (bool, list):
         teams_alive = 0
@@ -68,11 +71,12 @@ class LazerBikeGame(Game):
                                                      step_post_action=partial(self._letTraceOnPreviousTile, unit=unit)))
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
+        tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)
-        self._resizeTrace(trace, current_tile)
-        trace.moveTo(current_tile.center)
+        self._resizeTrace(trace, tile_to_place_trace)
+        trace.moveTo(tile_to_place_trace.center)
         self._previousTraces[unit] = trace
-        current_tile.addOccupant(trace)
+        tile_to_place_trace.addOccupant(trace)
         unit.addParticle(trace)
 
     @staticmethod

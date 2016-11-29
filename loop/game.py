@@ -26,18 +26,22 @@ class Game(metaclass=ABCMeta):
         self._previouslyClickedTile = None
         self._gameStateChanged = False
         self._teamKill = False
+        self._suicide = False
         self._state = CONTINUE  # The game must go on at start
         # self._teams -> keys: int; values: units
         self._teams = {}
         # self._units -> keys: Units; values: tile_ids
         self._units = {}  # type: dict
-        # self._controllers -> keys: controllers; values: _units
+        # self._controllers -> keys: controllers; values: Units
         self._controllers = {}
         # self._controllersMoves -> keys: controllers; values: tuples (current_move, pending_moves)
         self._controllersMoves = {}
 
     def setTeamKill(self, team_kill_enabled: bool=True):
         self._teamKill = team_kill_enabled
+
+    def setSuicide(self, suicide_enabled: bool=True):
+        self._suicide = suicide_enabled
 
     def run(self, max_fps: int=MAX_FPS):
         pygame.init()
@@ -80,6 +84,8 @@ class Game(metaclass=ABCMeta):
 
     def _refreshScreen(self):
         self.board.draw(self._screen)
+        for unit in self._units:
+            unit.draw(self._screen)
         pygame.display.flip()
 
     def _handleInputs(self) -> int:
@@ -183,13 +189,14 @@ class Game(metaclass=ABCMeta):
         Get the next move to be performed and perform its next step
         """
         for controller in self._controllers.keys():
-            current_move = self._getNextMoveForControllerIfNeeded(controller)
-            if current_move is not None:
-                tile_id = current_move.performNextMove()
-                if tile_id is not None:  # A new tile has been reached by the movement
-                    self._updateGameState(controller, tile_id)
-                if current_move.cancelled or current_move.completed:
-                    pass  # TODO check for collisions
+            if self._controllers[controller].isAlive():
+                current_move = self._getNextMoveForControllerIfNeeded(controller)
+                if current_move is not None:
+                    tile_id = current_move.performNextMove()
+                    if tile_id is not None:  # A new tile has been reached by the movement
+                        self._updateGameState(controller, tile_id)
+                    if current_move.cancelled or current_move.completed:
+                        pass  # TODO check for collisions
 
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
         """
@@ -266,7 +273,9 @@ class Game(metaclass=ABCMeta):
             frontal: If true, the collision is frontal and kills the two players
         """
         same_team = self._fromSameTeam(player1, player2)
-        if not same_team or self._teamKill:  # If not same team or the team kill is activated: kill each other
+        suicide = player1 is player2
+        if (not same_team or self._teamKill) or (suicide and self._suicide):
+
             player1.kill()
             if frontal:
                 player2.kill()
