@@ -11,10 +11,10 @@ from functools import partial
 
 
 class LazerBikeGame(Game):
-
     def __init__(self, board: SquareBoard):
         super().__init__(board)
         self._unitsPreviousMoves = {}
+        self._previousTraces = {}
 
     def _handleControllerEvent(self, controller: Controller, event) -> None:
         unit = self._getUnitFromController(controller)  # type: Bike
@@ -40,16 +40,27 @@ class LazerBikeGame(Game):
                 fct = board.getTopTile
         if fct is not None:
             if initial_move:
-               self._unitsPreviousMoves[unit] = event
-            self._addMove(controller, ContinuousMove(unit, self._getTileForUnit, fct, MAX_FPS, pre_action=pre_action,
-                                                     step_action=partial(self._letTraceOnPreviousTile, unit=unit)))
+                self._unitsPreviousMoves[unit] = event
+            self._addMove(controller, ContinuousMove(unit, self._getTileForUnit, fct, MAX_FPS,
+                                                     pre_action=pre_action,
+                                                     step_post_action=partial(self._letTraceOnPreviousTile, unit=unit)))
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
         trace = Trace(unit.playerNumber)
         self._resizeTrace(trace, previous_tile, current_tile)
-        self._determineIfAngle(trace, unit, previous_tile, current_tile)
-        trace.moveTo(previous_tile.center)
-        previous_tile.addOccupant(trace)
+        is_angle = self._determineIfAngle(trace, unit, previous_tile, current_tile)
+        if is_angle and unit in self._previousTraces:
+            prev_trace = self._previousTraces[unit]
+            previous_tile.removeOccupant(prev_trace)
+            unit.removeParticle(prev_trace)
+            trace.moveTo(previous_tile.center)
+            previous_tile.addOccupant(trace)
+            unit.addParticle(trace)
+            trace = Trace(unit.playerNumber)
+            self._resizeTrace(trace, previous_tile, current_tile)
+        trace.moveTo(current_tile.center)
+        self._previousTraces[unit] = trace
+        current_tile.addOccupant(trace)
         unit.addParticle(trace)
 
     def _determineIfAngle(self, trace: Trace, unit: Bike, previous_tile: Tile, current_tile: Tile):
@@ -58,6 +69,8 @@ class LazerBikeGame(Game):
         if previous_direction != current_direction:
             self._unitsPreviousMoves[unit] = current_direction
             trace.sprite.makeAngle(previous_direction, current_direction, self.board.backgroundColor)
+            return True
+        return False
 
     def _resizeTrace(self, trace, previous_tile, current_tile):
         if self._isMovementVertical(previous_tile, current_tile):
