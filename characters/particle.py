@@ -5,12 +5,14 @@ from characters.sprite import UnitSprite
 
 
 class Particle:
-    def __init__(self, sprite: UnitSprite=None):
+    def __init__(self, sprite: UnitSprite=None, nb_lives: int=1):
         """
         Instantiates a particle unit in the game
         Args:
             sprite: The sprite to draw on the board
+            nb_lives: The number of lives this unit has before it dies
         """
+        self._nbLives = nb_lives
         self.sprite = sprite  # type: UnitSprite
         self._drawable = None
         self._isAlive = True
@@ -25,7 +27,9 @@ class Particle:
         """
         Kills the particle
         """
-        self._isAlive = False
+        self._nbLives -= 1
+        if self._nbLives <= 0:
+            self._isAlive = False
 
     def draw(self, surface: pygame.Surface) -> None:
         """
@@ -56,3 +60,9 @@ class Particle:
             destination_offset: The translation offset to perform
         """
         self.sprite.rect.move_ip(destination_offset[0], destination_offset[1])
+
+    def getSpriteGroup(self) -> pygame.sprite.Group:
+        """
+        Returns: The group consisting in the unit sprite
+        """
+        return self._drawable

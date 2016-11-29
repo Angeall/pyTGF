@@ -184,3 +184,9 @@ class Tile(object):
                 return False
             i += 1
         return abs(utils.geom.dist(self.points[len(self.points)-1], self.points[0]) - length) < self.TILE_LENGTH_EPSILON
+
+    def hasTwoOrMoreOccupants(self):
+        """
+        Returns: True if this tile has two or more occupants
+        """
+        return len(self._occupants) >= 2

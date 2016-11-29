@@ -16,6 +16,28 @@ class LazerBikeGame(Game):
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
 
+    def _handleGameFinished(self, winning_units: list):
+        print("WINNING : players :")
+        for player in winning_units:
+            print(player.playerNumber)
+        return
+
+    def _isFinished(self) -> (bool, list):
+        teams_alive = 0
+        team_units = []
+        for team in self._teams.values():
+            for unit in team:
+                if unit.isAlive():
+                    teams_alive += 1
+                    team_units = team
+                    break
+        if teams_alive > 1:
+            return False, None
+        elif teams_alive == 0:
+            return True, None
+        else:
+            return True, team_units
+
     def _handleControllerEvent(self, controller: Controller, event) -> None:
         unit = self._getUnitFromController(controller)  # type: Bike
         board = self.board  # type: SquareBoard
@@ -47,38 +69,16 @@ class LazerBikeGame(Game):
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
         trace = Trace(unit.playerNumber)
-        self._resizeTrace(trace, previous_tile, current_tile)
-        is_angle = self._determineIfAngle(trace, unit, previous_tile, current_tile)
-        if is_angle and unit in self._previousTraces:
-            prev_trace = self._previousTraces[unit]
-            previous_tile.removeOccupant(prev_trace)
-            unit.removeParticle(prev_trace)
-            trace.moveTo(previous_tile.center)
-            previous_tile.addOccupant(trace)
-            unit.addParticle(trace)
-            trace = Trace(unit.playerNumber)
-            self._resizeTrace(trace, previous_tile, current_tile)
+        self._resizeTrace(trace, current_tile)
         trace.moveTo(current_tile.center)
         self._previousTraces[unit] = trace
         current_tile.addOccupant(trace)
         unit.addParticle(trace)
 
-    def _determineIfAngle(self, trace: Trace, unit: Bike, previous_tile: Tile, current_tile: Tile):
-        previous_direction = self._unitsPreviousMoves[unit]
-        current_direction = self._determineCurrentDirection(previous_tile, current_tile)
-        if previous_direction != current_direction:
-            self._unitsPreviousMoves[unit] = current_direction
-            trace.sprite.makeAngle(previous_direction, current_direction, self.board.backgroundColor)
-            return True
-        return False
-
-    def _resizeTrace(self, trace, previous_tile, current_tile):
-        if self._isMovementVertical(previous_tile, current_tile):
-            width = int(previous_tile.sideLength / 6)
-            height = previous_tile.sideLength
-        else:
-            width = previous_tile.sideLength
-            height = int(previous_tile.sideLength / 6)
+    @staticmethod
+    def _resizeTrace(trace, current_tile):
+        width = int(round(current_tile.sideLength / 2))
+        height = int(round(current_tile.sideLength / 2))
         trace.sprite.size(width, height)
 
     @staticmethod

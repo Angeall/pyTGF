@@ -1,6 +1,7 @@
-from examples.lazerbike.controllers.player1 import Player1
+from examples.lazerbike.controllers.player import LazerBikePlayer
 from display.boards.square_board import SquareBoardBuilder, SquareBoard
 import pygame
+from pygame.locals import *
 
 from examples.lazerbike.controllers.allowed_moves import *
 from examples.lazerbike.gameloop.game import LazerBikeGame
@@ -14,6 +15,9 @@ if __name__ == "__main__":
     board = builder.create()
     tile = board.getTileById((25, 25))
     game = LazerBikeGame(board)
-    # TODO : add a turn method to a Bike class so the bike can easily turn from any position to any other
-    game.addUnit(Bike(max_trace=5), Player1(), (25, 25), GO_RIGHT)
+    player1 = LazerBikePlayer(1, K_RIGHT, K_LEFT, K_UP, K_DOWN)
+    player2 = LazerBikePlayer(2, K_d, K_a, K_w, K_s)
+
+    game.addUnit(Bike(1, max_trace=5), player1, (12, 25), GO_RIGHT, team=1)
+    game.addUnit(Bike(2, max_trace=5), player2, (37, 50), GO_LEFT, team=2)
     game.run()
