@@ -38,20 +38,33 @@ class Game(metaclass=ABCMeta):
         self._controllersMoves = {}
 
     def setTeamKill(self, team_kill_enabled: bool=True):
+        """
+        Sets the team kill of the game. If true, a unit can harm another unit from its own team
+        Args:
+            team_kill_enabled: boolean that enables (True) or disables (False) the teamkill in the game
+        """
         self._teamKill = team_kill_enabled
 
     def setSuicide(self, suicide_enabled: bool=True):
+        """
+        Sets the suicide handling of the game. If true, a unit can suicide itself on its own particles.
+        Args:
+            suicide_enabled: boolean that enables (True) or disables (False) the suicide in the game
+        """
         self._suicide = suicide_enabled
 
-    def run(self, max_fps: int=MAX_FPS):
+    def run(self, max_fps: int=MAX_FPS) -> None:
+        """
+        Launch the game and its logical loop
+        Args:
+            max_fps: The maximum frame per seconds of the game
+        """
         pygame.init()
         clock = pygame.time.Clock()
         self._screen = pygame.display.set_mode(self.board.size, DOUBLEBUF + HWSURFACE)
         while self._state != END:
-            self._state = self._handleInputs()
-            if self._state == PAUSE:
-                self.pause()
-            elif self._state == CONTINUE:
+            self._handleInputs()
+            if self._state == CONTINUE:
                 self._handleControllersEvents()
                 self._handlePendingMoves()
                 self._refreshScreen()
@@ -82,30 +95,34 @@ class Game(metaclass=ABCMeta):
         if initial_action is not None:
             self._handleControllerEvent(controller, initial_action)
 
-    def _refreshScreen(self):
+    def _refreshScreen(self) -> None:
+        """
+        Update the visual state of the game
+        """
         self.board.draw(self._screen)
         for unit in self._units:
             unit.draw(self._screen)
         pygame.display.flip()
 
-    def _handleInputs(self) -> int:
+    def _handleInputs(self) -> None:
         """
         Handles all the user input (mouse and keyboard)
-        Returns: The new game state : 0 = Continue, 1 = Pause and 2 = End
         """
         for event in pygame.event.get():
             if event.type == QUIT:
-                return END
+                self._state = END
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
-                    return PAUSE
+                    if self._state == CONTINUE:
+                        self.pause()
+                    elif self._state == PAUSE:
+                        self.resume()
                 else:
                     self._dispatchInputToHumanControllers(event.key)
             elif event.type == MOUSEBUTTONDOWN:
                 self._dispatchMouseEventToHumanControllers(event.pos)
             elif event.type == MOUSEBUTTONUP:
                 self._dispatchMouseEventToHumanControllers(None, click_up=True)
-        return CONTINUE
 
     def _addMove(self, controller: Controller, move: Path) -> None:
         """
@@ -119,9 +136,21 @@ class Game(metaclass=ABCMeta):
         fifo.put(move)
 
     def _getUnitFromController(self, controller: Controller) -> Unit:
+        """
+        Args:
+            controller: The controller that controls the wanted unit
+
+        Returns: The unit controlled by the given controller
+        """
         return self._controllers[controller]
 
     def _getTileForUnit(self, unit: Unit) -> Tile:
+        """
+        Args:
+            unit: The unit for which the Tile will be given
+
+        Returns: The tile on which the given unit is located
+        """
         return self.board.getTileById(self._units[unit])
 
     def _cancelCurrentMoves(self, controller) -> None:
@@ -144,19 +173,44 @@ class Game(metaclass=ABCMeta):
             pass
 
     @abstractmethod
-    def _sendInputToHumanController(self, controller: Human, input_key: int):
+    def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
+        """
+        Can optionally filter the keyboard events to send
+        Args:
+            controller: The controller to which the event must be sent
+            input_key: The key pressed on the keyboard
+        """
         pass
 
-    def _dispatchInputToHumanControllers(self, input_key):
+    def _dispatchInputToHumanControllers(self, input_key) -> None:
+        """
+        Handles keyboard events and send them to Human Controllers to trigger actions if needed
+        Args:
+            input_key: The key pressed on the keyboard
+        """
         for controller in self._controllers.keys():  # type: Human
             if isinstance(controller, Human):
                 self._sendInputToHumanController(controller, input_key)
 
     @abstractmethod
-    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple, click_up: bool):
+    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple, click_up: bool)->None:
+        """
+        Can optionally filter the mouse events to send
+        Args:
+            controller: The controller to which the event must be sent
+            tile: The tile that was clicked on
+            mouse_state: The mouse state (To know which button of the mouse is pressed)
+            click_up: True if the button was released, False if the button was pressed
+        """
         pass
 
-    def _dispatchMouseEventToHumanControllers(self, pixel, click_up=False):
+    def _dispatchMouseEventToHumanControllers(self, pixel, click_up=False) -> None:
+        """
+        Handles mouse events and send them to Human Controllers to trigger actions if needed
+        Args:
+            pixel: The pixel clicked
+            click_up: True if the button was released, False if the button was pressed
+        """
         tile = None
         if pixel is not None:
             tile = self.board.getTileByPixel(pixel)
@@ -166,7 +220,10 @@ class Game(metaclass=ABCMeta):
             if type(controller) == Human:
                 self._sendMouseEventToHumanController(controller, tile, mouse_state, click_up)
 
-    def _handleControllersEvents(self):
+    def _handleControllersEvents(self) -> None:
+        """
+        Gets event from the controllers and dispatch them to the right method
+        """
         for controller in self._controllers.keys():
             try:
                 move = controller.moves.get_nowait()
@@ -219,6 +276,15 @@ class Game(metaclass=ABCMeta):
         return current_move
 
     def _updateGameState(self, controller, tile_id):
+        """
+        Change the unit's tile and checks for collisions
+        Args:
+            controller:
+            tile_id:
+
+        Returns:
+
+        """
         unit = self._controllers[controller]
         old_tile_id = self._units[unit]
         self._units[unit] = tile_id
@@ -251,22 +317,31 @@ class Game(metaclass=ABCMeta):
                 return False
         return False  # Never found the team...
 
-    def _handleCollision(self, unit, other_units):
+    def _handleCollision(self, unit, other_units) -> None:
+        """
+        Handles a collision between a unit and other units
+        Args:
+            unit: The moving units
+            other_units: The other units that are on the same tile than the moving unit
+        """
         for other_unit in other_units:
-            if other_unit in self._units.keys():  # If the other unit is a controlled unit
-                self._collidePlayers(unit, other_unit, frontal=True)
-            else:  # If the other unit is a Particle
-                other_player = None
-                for player in self._units.keys():  # type: Unit
-                    if player.hasParticle(other_unit):
-                        other_player = player
-                        break
-                if other_player is not None:  # If we found the player to which belongs the colliding particle
-                    self._collidePlayers(unit, other_player)
+            if not(unit is other_unit):
+                if other_unit in self._units.keys():  # If the other unit is a controlled unit
+                    self._collidePlayers(unit, other_unit, frontal=True)
+                else:  # If the other unit is a Particle
+                    other_player = None
+                    for player in self._units.keys():  # type: Unit
+                        if player.hasParticle(other_unit):
+                            other_player = player
+                            break
+                    if other_player is not None:  # If we found the player to which belongs the colliding particle
+                        self._collidePlayers(unit, other_player)
 
     def _collidePlayers(self, player1, player2, frontal: bool=False):
         """
         Makes what it has to be done when the first given player collides with a particle of the second given player
+        (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
+        units)
         Args:
             player1: The first given player
             player2: The second given player
@@ -275,10 +350,12 @@ class Game(metaclass=ABCMeta):
         same_team = self._fromSameTeam(player1, player2)
         suicide = player1 is player2
         if (not same_team or self._teamKill) or (suicide and self._suicide):
-
-            player1.kill()
+            self.kill(player1)
             if frontal:
-                player2.kill()
+                self.kill(player2)
+
+    def kill(self, unit):
+        unit.kill()
 
     @abstractmethod
     def _isFinished(self) -> (bool, list):
@@ -298,19 +375,25 @@ class Game(metaclass=ABCMeta):
         pass
 
     def _checkGameState(self) -> int:
+        """
+        Checks if the game is finished
+        Returns: 0 = CONTINUE; 2 = END
+        """
         state = self._isFinished()
         if state[0]:
             self._handleGameFinished(state[1])
             return END
         return CONTINUE
 
-    def pause(self):
+    def pause(self) -> None:
+        """
+        Change the state of the game to "PAUSE"
+        """
         self._state = PAUSE
 
-    def resume(self):
+    def resume(self) -> None:
         """
         Resume the game
-        Returns:
         """
         self._state = CONTINUE
 

@@ -22,7 +22,7 @@ if __name__ == "__main__":
     player4 = LazerBikePlayer(2, K_h, K_f, K_t, K_g)
 
     game.addUnit(Bike(1, max_trace=15), player1, (12, 25), GO_RIGHT, team=1)
-    game.addUnit(Bike(3, max_trace=15), player3, (4, 37), GO_DOWN, team=3)
-    game.addUnit(Bike(4, max_trace=15), player4, (45, 37), GO_UP, team=4)
+    # game.addUnit(Bike(3, max_trace=15), player3, (4, 37), GO_DOWN, team=3)
+    # game.addUnit(Bike(4, max_trace=15), player4, (45, 37), GO_UP, team=4)
     game.addUnit(Bike(2, max_trace=15), player2, (37, 50), GO_LEFT, team=2)
     game.run()
