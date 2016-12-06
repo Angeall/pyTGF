@@ -4,7 +4,7 @@ import pygame.transform as transform
 
 from characters.particle import Particle
 from characters.sprite import UnitSprite
-from examples.lazerbike.controllers.allowed_moves import *
+from examples.lazerbike.controls.allowed_moves import *
 
 TOP_RIGHT = 0
 TOP_LEFT = 1

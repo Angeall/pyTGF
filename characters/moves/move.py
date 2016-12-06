@@ -3,11 +3,15 @@ from characters.units.unit import Unit
 from display.tile import Tile
 
 
-class DeadlyMove(BaseException):
+class DeadlyMove(BaseException):  # The move is deadly
     pass
 
 
-class IllegalMove(BaseException):
+class IllegalMove(BaseException):  # The move is illegal but not deadly
+    pass
+
+
+class ImpossibleMove(BaseException):  # The move cannot be done because the wanted tile is not walkable
     pass
 
 
@@ -25,12 +29,8 @@ class ShortMove(object):
             unit: The unit to move
             source_tile: The tile from which the unit is moved
             destination_tile: The tile toward which the unit is moved
-            fps: The number of frames per second (refresh rate) used to determine the frames needed to move the unit
+            fps: The number of _frames per second (refresh rate) used to determine the _frames needed to move the unit
         """
-        if destination_tile.identifier not in source_tile.neighbours or not destination_tile.walkable:
-            raise IllegalMove("The move from the source tile -- " + str(source_tile.identifier) + " -- " +
-                              "to the destination tile -- + " + str(destination_tile.identifier) + " -- " +
-                              "cannot be performed")
         self.isPerformed = False
         self.unit = unit
         self.sourceTile = source_tile
@@ -49,13 +49,22 @@ class ShortMove(object):
         Returns:
 
         """
+        if self.destinationTile.deadly:
+            raise DeadlyMove("The move that has been done is deadly and ends the game for this unit")
+        if not self.destinationTile.walkable:
+            raise ImpossibleMove("The destination is not walkable")
+        if self.destinationTile.identifier not in self.sourceTile.neighbours:
+            raise IllegalMove("The move from the source tile -- " + str(self.sourceTile.identifier) + " -- " +
+                              "to the destination tile -- + " + str(self.destinationTile.identifier) + " -- " +
+                              "cannot be performed")
+
         if not self.isPerformed:
-            if self._frameNeeded == 1:  # Last step => Complete the move (kill precision error)
+            if self._frameNeeded <= 1:  # Last step => Complete the move (kill precision error)
                 self.unit.moveTo(self.destinationTile.center)
 
                 self.isPerformed = True
-                if self.destinationTile.deadly:
-                    raise DeadlyMove("The move that has been done is deadly and ends the game for this unit")
+
+
             else:
                 temp_x = self._currentPos[0] + self._pixelsPerFrame[0]
                 temp_y = self._currentPos[1] + self._pixelsPerFrame[1]

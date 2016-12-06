@@ -1,11 +1,10 @@
 from characters.controllers.human import Human
-from examples.lazerbike.controllers.allowed_moves import *
+from examples.lazerbike.controls.player import LazerBikePlayer
 
 
-class LazerBikePlayer(Human):
+class HumanPlayer(LazerBikePlayer, Human):
     def __init__(self, player_number: int, right_key: int, left_key: int, up_key: int, down_key: int):
-        super().__init__()
-        self.playerNumber = player_number
+        super().__init__(player_number)
         self.rightKey = right_key
         self.leftKey = left_key
         self.upKey = up_key
@@ -13,13 +12,15 @@ class LazerBikePlayer(Human):
 
     def reactToInput(self, input_key, *game_info: ...) -> None:
             if input_key == self.rightKey:
-                self.moves.put(GO_RIGHT)
+                self.goRight()
             elif input_key == self.leftKey:
-                self.moves.put(GO_LEFT)
+                self.goLeft()
             elif input_key == self.upKey:
-                self.moves.put(GO_UP)
+                self.goUp()
             elif input_key == self.downKey:
-                self.moves.put(GO_DOWN)
+                self.goDown()
 
     def reactToTileClicked(self, tile=None, mouse_state=(False, False, False), click_up=False, *game_info) -> None:
         pass
+
+

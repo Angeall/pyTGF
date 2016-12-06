@@ -24,9 +24,9 @@ class BikeSprite(UnitSprite):
 
 
 class Bike(MovingUnit):
-    def __init__(self, player_number: int=default_player_number, max_trace: int=-1):
+    def __init__(self, speed: int, player_number: int=default_player_number, max_trace: int=-1):
         global default_player_number
-        super().__init__(BikeSprite(player_number), max_particles=max_trace)
+        super().__init__(BikeSprite(player_number), max_particles=max_trace, speed=speed)
         default_player_number += 1
         self.playerNumber = player_number
         self.direction = 0  # The initial position of the sprite is towards right

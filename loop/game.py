@@ -7,6 +7,7 @@ from pygame.locals import *
 from characters.controller import Controller
 from characters.controllers.human import Human
 from characters.moves.path import Path
+from characters.moves.move import IllegalMove, DeadlyMove, ImpossibleMove
 from characters.units.unit import Unit
 from display.board import Board
 from display.tile import Tile
@@ -27,14 +28,15 @@ class Game(metaclass=ABCMeta):
         self._gameStateChanged = False
         self._teamKill = False
         self._suicide = False
+        self.winningPlayers = []
         self._state = CONTINUE  # The game must go on at start
         # self._teams -> keys: int; values: units
         self._teams = {}
         # self._units -> keys: Units; values: tile_ids
         self._units = {}  # type: dict
-        # self._controllers -> keys: controllers; values: Units
+        # self._controllers -> keys: controls; values: Units
         self._controllers = {}
-        # self._controllersMoves -> keys: controllers; values: tuples (current_move, pending_moves)
+        # self._controllersMoves -> keys: controls; values: tuples (current_move, pending_moves)
         self._controllersMoves = {}
 
     def setTeamKill(self, team_kill_enabled: bool=True):
@@ -53,11 +55,13 @@ class Game(metaclass=ABCMeta):
         """
         self._suicide = suicide_enabled
 
-    def run(self, max_fps: int=MAX_FPS) -> None:
+    def run(self, max_fps: int=MAX_FPS) -> str:
         """
         Launch the game and its logical loop
         Args:
             max_fps: The maximum frame per seconds of the game
+
+        Returns:
         """
         pygame.init()
         clock = pygame.time.Clock()
@@ -70,6 +74,7 @@ class Game(metaclass=ABCMeta):
                 self._refreshScreen()
                 self._state = self._checkGameState()
             clock.tick(max_fps)
+        return self._handleGameFinished(self.winningPlayers)
 
     def addUnit(self, unit: Unit, controller: Controller, tile_id, initial_action: Path=None, team: int=-1) -> None:
         """
@@ -172,16 +177,6 @@ class Game(metaclass=ABCMeta):
         except Empty:
             pass
 
-    @abstractmethod
-    def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
-        """
-        Can optionally filter the keyboard events to send
-        Args:
-            controller: The controller to which the event must be sent
-            input_key: The key pressed on the keyboard
-        """
-        pass
-
     def _dispatchInputToHumanControllers(self, input_key) -> None:
         """
         Handles keyboard events and send them to Human Controllers to trigger actions if needed
@@ -191,18 +186,6 @@ class Game(metaclass=ABCMeta):
         for controller in self._controllers.keys():  # type: Human
             if isinstance(controller, Human):
                 self._sendInputToHumanController(controller, input_key)
-
-    @abstractmethod
-    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple, click_up: bool)->None:
-        """
-        Can optionally filter the mouse events to send
-        Args:
-            controller: The controller to which the event must be sent
-            tile: The tile that was clicked on
-            mouse_state: The mouse state (To know which button of the mouse is pressed)
-            click_up: True if the button was released, False if the button was pressed
-        """
-        pass
 
     def _dispatchMouseEventToHumanControllers(self, pixel, click_up=False) -> None:
         """
@@ -222,7 +205,7 @@ class Game(metaclass=ABCMeta):
 
     def _handleControllersEvents(self) -> None:
         """
-        Gets event from the controllers and dispatch them to the right method
+        Gets event from the controls and dispatch them to the right method
         """
         for controller in self._controllers.keys():
             try:
@@ -231,29 +214,29 @@ class Game(metaclass=ABCMeta):
             except Empty:
                 pass
 
-    @abstractmethod
-    def _handleControllerEvent(self, controller: Controller, event) -> None:
-        """
-        The goal of this method is to grab controls from the given controller and handle them in the game
-        Args:
-            controller: The controller to handle
-            event: The event sent by the controller
-        """
-        pass
-
     def _handlePendingMoves(self) -> None:
         """
         Get the next move to be performed and perform its next step
         """
         for controller in self._controllers.keys():
-            if self._controllers[controller].isAlive():
+            unit = self._controllers[controller]
+            if unit.isAlive():
                 current_move = self._getNextMoveForControllerIfNeeded(controller)
                 if current_move is not None:
-                    tile_id = current_move.performNextMove()
-                    if tile_id is not None:  # A new tile has been reached by the movement
-                        self._updateGameState(controller, tile_id)
-                    if current_move.cancelled or current_move.completed:
-                        pass  # TODO check for collisions
+                    try:
+                        tile_id = current_move.performNextMove()
+                        if tile_id is not None:  # A new tile has been reached by the movement
+                            self._updateGameState(controller, tile_id)
+                        if current_move.cancelled or current_move.completed:
+                            pass
+                    except IllegalMove:
+                        self.kill(unit)
+                        self._cancelCurrentMoves(unit)
+                    except DeadlyMove:
+                        self.kill(unit)
+                        current_move.cancel(cancel_post_action=True)
+                    except ImpossibleMove:
+                        self._cancelCurrentMoves(unit)
 
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
         """
@@ -281,9 +264,6 @@ class Game(metaclass=ABCMeta):
         Args:
             controller:
             tile_id:
-
-        Returns:
-
         """
         unit = self._controllers[controller]
         old_tile_id = self._units[unit]
@@ -357,23 +337,6 @@ class Game(metaclass=ABCMeta):
     def kill(self, unit):
         unit.kill()
 
-    @abstractmethod
-    def _isFinished(self) -> (bool, list):
-        """
-        Checks if the game is finished and returns the winning units or None if the game drew
-        Returns: a tuple : (bool telling if the game is finished, Units the winning units or None if draw or unfinished)
-        """
-        pass
-
-    @abstractmethod
-    def _handleGameFinished(self, winning_units: list):
-        """
-        Handle the end of the game
-        Args:
-            winning_units: The units that won the game
-        """
-        pass
-
     def _checkGameState(self) -> int:
         """
         Checks if the game is finished
@@ -381,7 +344,7 @@ class Game(metaclass=ABCMeta):
         """
         state = self._isFinished()
         if state[0]:
-            self._handleGameFinished(state[1])
+            self.winningPlayers = state[1]
             return END
         return CONTINUE
 
@@ -397,4 +360,53 @@ class Game(metaclass=ABCMeta):
         """
         self._state = CONTINUE
 
+    @abstractmethod
+    def _isFinished(self) -> (bool, list):
+        """
+        Checks if the game is finished and returns the winning units or None if the game drew
+        Returns: a tuple : (bool telling if the game is finished, Units the winning units or None if draw or unfinished)
+        """
+        pass
 
+    @abstractmethod
+    def _handleGameFinished(self, winning_units: list) -> str:
+        """
+        Handle the end of the game
+        Args:
+            winning_units: The units that won the game
+
+        Returns: The message saying which player(s) won and optionally a score
+        """
+        pass
+
+    @abstractmethod
+    def _handleControllerEvent(self, controller: Controller, event) -> None:
+        """
+        The goal of this method is to grab controls from the given controller and handle them in the game
+        Args:
+            controller: The controller to handle
+            event: The event sent by the controller
+        """
+        pass
+
+    @abstractmethod
+    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple, click_up: bool)->None:
+        """
+        Can optionally filter the mouse events to send
+        Args:
+            controller: The controller to which the event must be sent
+            tile: The tile that was clicked on
+            mouse_state: The mouse state (To know which button of the mouse is pressed)
+            click_up: True if the button was released, False if the button was pressed
+        """
+        pass
+
+    @abstractmethod
+    def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
+        """
+        Can optionally filter the keyboard events to send
+        Args:
+            controller: The controller to which the event must be sent
+            input_key: The key pressed on the keyboard
+        """
+        pass

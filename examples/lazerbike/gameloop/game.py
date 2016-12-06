@@ -1,13 +1,14 @@
 from characters.controllers.human import Human
 from characters.controller import Controller
 from characters.moves.continous import ContinuousMove
-from examples.lazerbike.controllers.allowed_moves import *
+from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.sprites.bike import Bike
 from examples.lazerbike.sprites.trace import Trace
 from display.tile import Tile
 from display.boards.square_board import SquareBoard
 from loop.game import Game, MAX_FPS
 from functools import partial
+from types import FunctionType as function
 
 
 class LazerBikeGame(Game):
@@ -19,11 +20,13 @@ class LazerBikeGame(Game):
 
     def _handleGameFinished(self, winning_units: list):
         if winning_units is None:
-            print("DRAW")
+            return "DRAW"
         else:
-            print("WINNING :")
+            msg = "WON: "
             for player in winning_units:
-                print("--Player", player.playerNumber)
+                msg += "Player " + str(player.playerNumber) + ", "
+            msg = msg[:-2]
+            return msg
 
     def _isFinished(self) -> (bool, list):
         teams_alive = 0
