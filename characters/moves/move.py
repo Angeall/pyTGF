@@ -1,5 +1,5 @@
 import utils.geom
-from characters.units.unit import Unit
+from characters.units.moving_unit import MovingUnit
 from display.tile import Tile
 
 
@@ -22,7 +22,7 @@ class ShortMove(object):
 
     This class supposes that the unit comes from the center of the sourceTile.
     """
-    def __init__(self, unit: Unit, source_tile: Tile, destination_tile: Tile, fps: int):
+    def __init__(self, unit: MovingUnit, source_tile: Tile, destination_tile: Tile, fps: int):
         """
         Instantiates a move object between two tiles
         Args:
@@ -63,8 +63,6 @@ class ShortMove(object):
                 self.unit.moveTo(self.destinationTile.center)
 
                 self.isPerformed = True
-
-
             else:
                 temp_x = self._currentPos[0] + self._pixelsPerFrame[0]
                 temp_y = self._currentPos[1] + self._pixelsPerFrame[1]

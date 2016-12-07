@@ -126,10 +126,6 @@ class Tile(object):
         if self.internalColor is not None:
             gfxdraw.filled_polygon(surface, self.points, self.internalColor)
         gfxdraw.aapolygon(surface, self.points, self.externalColor)
-        # pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
-
-        # for occupant in self.occupants:  # type: Particle
-        #     occupant.draw(surface)
 
     def addOccupant(self, new_occupant) -> None:
         """
@@ -140,8 +136,7 @@ class Tile(object):
         self.occupants.append(new_occupant)
 
     def __contains__(self, item):
-        # TODO: Checks if the tile contains a unit and if the unit is alive ! if not, remove it from the tile
-        pass
+        return item in self.occupants
 
     def removeOccupant(self, occupant_to_remove) -> None:
         """
@@ -161,7 +156,7 @@ class Tile(object):
         elif isinstance(occupant_to_remove, list):
             new_occupants = []
             for occupant in self._occupants:  # type: Particle
-                if new_occupants not in occupant_to_remove:
+                if occupant not in occupant_to_remove:
                     new_occupants.append(occupant)
             self.occupants = new_occupants
 

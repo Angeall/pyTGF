@@ -17,6 +17,7 @@ class Unit(Particle):
         super().__init__(sprite, nb_lives=nb_lives)
         self._particlesSpriteGroup = pygame.sprite.Group()
         self._particlesQueue = Queue()
+        self._particlesList = []
         self._maxParticles = max_particles
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -39,19 +40,24 @@ class Unit(Particle):
         Args:
             particle: the particle to add to this unit
         """
-        if 0 <= self._maxParticles <= len(self._particlesSpriteGroup):
+        if 0 <= self._maxParticles <= len(self._particlesList):
             self.removeOldestParticle()
         self._particlesQueue.put(particle)
-        self._particlesSpriteGroup.add(particle.sprite)
+        self._particlesList.append(particle)
+        if particle.sprite is not None:
+            self._particlesSpriteGroup.add(particle.sprite)
 
     def removeOldestParticle(self) -> None:
         """
-        Removes the oldest particle belonging to this unit
+        Removes the oldest particle belonging to this unit-
         """
         try:
             oldest_particle = self._particlesQueue.get_nowait()  # type: Particle
+            assert oldest_particle is self._particlesList[0]
+            self._particlesList = self._particlesList[1:]
             oldest_particle.kill()
-            self._particlesSpriteGroup.remove(oldest_particle.sprite)
+            if oldest_particle.sprite is not None:
+                self._particlesSpriteGroup.remove(oldest_particle.sprite)
         except Empty:
             pass
 
@@ -70,9 +76,11 @@ class Unit(Particle):
         except Empty:
             pass
         finally:
+            self._particlesList.remove(particle)
             self._particlesQueue = temp_queue
             particle.kill()
-            self._particlesSpriteGroup.remove(particle.sprite)
+            if particle.sprite is not None:
+                self._particlesSpriteGroup.remove(particle.sprite)
 
     def hasParticle(self, particle: Particle):
         """
@@ -82,7 +90,7 @@ class Unit(Particle):
 
         Returns: True if the given particle belongs to this unit
         """
-        return self._particlesSpriteGroup.has(particle.sprite)
+        return self._particlesSpriteGroup.has(particle.sprite) or particle in self._particlesList
 
     def getParticlesSpriteGroup(self):
         return self._particlesSpriteGroup
