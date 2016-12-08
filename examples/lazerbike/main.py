@@ -60,7 +60,6 @@ def get_player_info(player_number: int):
 
 def add_player(game: LazerBikeGame, player_class, player_number: int, player_team: int, speed: int):
     global nb_human
-    print(player_class)
     try:
         controller = player_class(player_number)
     except TypeError:
