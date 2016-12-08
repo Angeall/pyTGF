@@ -15,6 +15,7 @@ class Particle:
         self._nbLives = nb_lives
         self.sprite = sprite  # type: UnitSprite
         self._isAlive = True
+        self._drawable = None
 
     def isAlive(self) -> bool:
         """

@@ -360,22 +360,25 @@ class Game(metaclass=ABCMeta):
         """
         self._state = CONTINUE
 
-    @abstractmethod
-    def _isFinished(self) -> (bool, list):
-        """
-        Checks if the game is finished and returns the winning units or None if the game drew
-        Returns: a tuple : (bool telling if the game is finished, Units the winning units or None if draw or unfinished)
-        """
-        pass
-
-    @abstractmethod
-    def _handleGameFinished(self, winning_units: list) -> str:
+    def _handleGameFinished(self, winning_units: list) -> tuple:
         """
         Handle the end of the game
         Args:
             winning_units: The units that won the game
 
-        Returns: The message saying which player(s) won and optionally a score
+        Returns: A tuple containing the winning units or an empty tuple if there is a draw
+        """
+        winning_player_numbers = []
+        if winning_units is not None:
+            for unit in winning_units:
+                winning_player_numbers.append(unit.playerNumber)
+        return tuple(winning_player_numbers)
+
+    @abstractmethod
+    def _isFinished(self) -> (bool, list):
+        """
+        Checks if the game is finished and returns the winning units or None if the game drew
+        Returns: a tuple : (bool telling if the game is finished, Units the winning units or None if draw or unfinished)
         """
         pass
 

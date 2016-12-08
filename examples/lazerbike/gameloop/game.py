@@ -18,16 +18,6 @@ class LazerBikeGame(Game):
         self._previousTraces = {}
         self.setSuicide(True)
 
-    def _handleGameFinished(self, winning_units: list):
-        if winning_units is None:
-            return "DRAW"
-        else:
-            msg = "WON: "
-            for player in winning_units:
-                msg += "Player " + str(player.playerNumber) + ", "
-            msg = msg[:-2]
-            return msg
-
     def _isFinished(self) -> (bool, list):
         teams_alive = 0
         team_units = []

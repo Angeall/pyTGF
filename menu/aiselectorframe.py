@@ -6,12 +6,13 @@ from tkinter import *
 from tkinter.ttk import *
 from menu.basicframe import BasicFrameBuilder
 import utils.gui
-
+from types import FunctionType as function
 
 class AISelectorFrameBuilder(BasicFrameBuilder):
     NONE_STRING = "None"
 
-    def __init__(self, title: str, parent: Tk, ai_type, ok_action, cancel_action, min_players=2, max_players=4,
+    def __init__(self, title: str, parent: Tk, ai_type, ok_action: function, cancel_action: function,
+                 min_players: int=2, max_players: int=4, min_teams: int=2, max_teams: int=4,
                  players_description: dict=None):
         """
         Instantiates the builder
@@ -21,8 +22,10 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             ai_type: The AI class type to look for
             ok_action: The action performed when the Confirm button is pressed
             cancel_action: The action performed when the Cancel button is pressed
-            min_players: The minimum number of players to play this game
-            max_players: The maximum number of players to play this game
+            min_players: The minimum number of players required to play this game
+            max_players: The maximum number of players allowed to play this game
+            min_teams: The minimum number of teams required to play this game
+            max_teams: The maximum number of teams allowed to play this game
             players_description:
                 An optional dictionary containing additional information to display for the players.
                 Keys: player numbers. Values: additional description
@@ -33,7 +36,9 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         self.aiClasses = None
         self._aiType = ai_type
         self.minPlayers = min_players
+        self.minTeams = min_teams
         self.maxPlayers = max_players
+        self.maxTeams = max_teams
         self.okAction = ok_action
         self.selectedAIs = {}
         self.teamsSelection = {}
@@ -79,7 +84,8 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         combobox.set("Team " + str(player_number))
         self.teamsSelection[player_number] = player_number
         combobox.state(("readonly",))
-        combobox.bind("<<ComboboxSelected>>", lambda event: self._addTeamToSelection(player_number, combobox.get()))
+        combobox.bind("<<ComboboxSelected>>",
+                      lambda event: self._addTeamToSelection(player_number, int(combobox.get().split(" ")[1])))
         combobox.grid(column=2, row=0)
 
     def _setupPlayerLabel(self, label, player_number):
@@ -158,10 +164,18 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         Put a frame around the action to perform when the OK button is pressed.
         It ensures that there is enough players selected to play
         """
-        if len(self.selectedAIs) >= self.minPlayers:
-            self.okAction()
-        else:
+        different_teams = []
+        for ai in self.selectedAIs:
+            team_number = self.teamsSelection[ai]
+            if team_number not in different_teams:
+                different_teams.append(team_number)
+
+        if len(self.selectedAIs) < self.minPlayers:
             self._showNotEnoughPopup()
+        elif self.minTeams > len(different_teams) or len(different_teams) > self.maxTeams:
+            self._showIncorrectTeamsPopup()
+        else:
+            self.okAction()
 
     def _addButtons(self, frame) -> None:
         """
@@ -183,6 +197,20 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         popup.resizable(False, False)
         label = Label(popup, text="Not enough players selected. The minimum number of players is " +
                                   str(self.minPlayers))
+        label.grid(row=0, column=0, columnspan=3)
+        bt = Button(popup, text="OK", command=popup.destroy)
+        bt.grid(row=1, column=1)
+        utils.gui.center_popup(popup, self.parent)
+
+    def _showIncorrectTeamsPopup(self):
+        """
+        Displays a popup that announces to the user that there is not a correct number of teams selected.
+        """
+        popup = Toplevel(self.parent)
+        popup.transient(self.parent)
+        popup.resizable(False, False)
+        label = Label(popup, text="The number of teams selected is incorrect. The number of teams must be between " +
+                                  str(self.minTeams) + " and " + str(self.maxTeams))
         label.grid(row=0, column=0, columnspan=3)
         bt = Button(popup, text="OK", command=popup.destroy)
         bt.grid(row=1, column=1)

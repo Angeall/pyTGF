@@ -3,8 +3,12 @@ from queue import Queue
 
 
 class Controller(metaclass=ABCMeta):
-    def __init__(self):
+    def __init__(self, player_number: int):
         """
         Instantiates a controller for a unit.
+        Args:
+            player_number: The identifier of the unit controlled by this controller
         """
         self.moves = Queue()  # Will contain constants that will be interpreted by the game
+        self.playerNumber = player_number
+

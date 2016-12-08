@@ -4,8 +4,7 @@ from examples.lazerbike.controls.allowed_moves import *
 
 class LazerBikePlayer(Controller):
     def __init__(self, player_number):
-        super().__init__()
-        self.playerNumber = player_number
+        super().__init__(player_number)
 
     def goLeft(self):
         self.moves.put(GO_LEFT)

@@ -41,6 +41,7 @@ def buildSelectionFrame(window: Tk, gui: GUI) -> Frame:
     global selection_frame
     builder = AISelectorFrameBuilder("Player selection", window, LazerBikePlayer,
                                      lambda: launch_game(gui, builder.getSelection()), gui.goToPreviousFrame,
+                                     max_teams=4, min_teams=2,
                                      players_description={1: "Blue", 2: "Red", 3: "Green", 4: "Yellow"})
     selection_frame = builder.create()
     return selection_frame
@@ -90,7 +91,11 @@ def launch_game(gui: GUI, player_info: tuple):
         add_player(game, player_class, player_number, player_teams[player_number], speed)
 
     result = game.run()
-    print(result)
+    if len(result) == 0:
+        print("DRAW")
+    else:
+        winning_players_strings = ["Player " + str(number) for number in result]
+        print("WON: ", winning_players_strings)
 
 
 def launch_gui():
