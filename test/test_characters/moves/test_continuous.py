@@ -20,7 +20,7 @@ class TestContinuousMove(unittest.TestCase):
         """
         Makes sure each step is working correctly
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
@@ -40,7 +40,7 @@ class TestContinuousMove(unittest.TestCase):
         """
         Makes sure the cancel method is working correctly
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
@@ -59,7 +59,7 @@ class TestContinuousMove(unittest.TestCase):
         """
         Makes sure the actions are done right on time
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)

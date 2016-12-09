@@ -9,7 +9,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that the good number of steps is performed to complete a move
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
@@ -26,7 +26,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that a deadly move raises the good exception
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), deadly=True)
         source_tile.addNeighbour(destination_tile.identifier)
@@ -38,7 +38,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that a deadly move raises the good exception even when the tile is not walkable
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), deadly=True, walkable=False)
         source_tile.addNeighbour(destination_tile.identifier)
@@ -50,7 +50,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that a deadly move raises the good exception even when the tiles are not neighbours
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), deadly=True)
         # Distance separating the two tiles is 30 pixels
@@ -61,7 +61,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that an impossible move raises the good exception
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), walkable=False)
         source_tile.addNeighbour(destination_tile.identifier)
@@ -73,7 +73,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that a illegal move raises the good exception
         """
-        unit = MovingUnit(speed=30)  # Speed = 30 pixels per second
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         # Distance separating the two tiles is 30 pixels
