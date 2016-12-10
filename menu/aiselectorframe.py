@@ -1,6 +1,6 @@
 from os import listdir, curdir
 from os.path import isfile, join, splitext
-import sys, inspect
+import inspect, pickle
 
 from tkinter import *
 from tkinter.ttk import *
@@ -10,6 +10,9 @@ from types import FunctionType as function
 
 class AISelectorFrameBuilder(BasicFrameBuilder):
     NONE_STRING = "None"
+    CONFIG_FILE_NAME = "config.bin"
+    TEAM_STRING = "Team "
+    PLAYER_STRING = "Player "
 
     def __init__(self, title: str, parent: Tk, ai_type, ok_action: function, cancel_action: function,
                  min_players: int=2, max_players: int=4, min_teams: int=2, max_teams: int=4,
@@ -41,7 +44,9 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         self.maxTeams = max_teams
         self.okAction = ok_action
         self.selectedAIs = {}
-        self.teamsSelection = {}
+        self.selectedTeams = {}
+        self._aiSelectors = []
+        self._teamSelectors = []
         self.cancelAction = cancel_action
         self.playersDescription = players_description
 
@@ -51,7 +56,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             - The selection as a dictionary with player number as key and the selected controller class as value.
             - The teams for each players in a dictionary. Key : player number, Value : team number
         """
-        return self.selectedAIs, self.teamsSelection
+        return self.selectedAIs, self.selectedTeams
 
     def create(self) -> Frame:
         """
@@ -61,7 +66,39 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         for i in range(1, self.maxPlayers + 1):
             self._addSelector(frame, i)
         self._addButtons(frame)
+        self._loadInstance()
         return frame
+
+    def _saveInstance(self) -> None:
+        lst = [self.selectedAIs, self.selectedTeams]
+        file = open(self.CONFIG_FILE_NAME, mode="bw")
+        pickle.dump(lst, file)
+
+    def _loadInstance(self) -> None:
+        try:
+            file = open(self.CONFIG_FILE_NAME, mode="br")
+            lst = pickle.load(file)
+            self.selectedAIs = lst[0]
+            self.selectedTeams = lst[1]
+            self._updateSelection()
+        except FileNotFoundError:
+            pass
+
+    def _updateSelection(self) -> None:
+        """
+        Updates the values in the combobox's using self.selectedAIs and self.selectedTeams
+        """
+        for player_number in self.selectedAIs:
+            try:
+                self._aiSelectors[player_number-1].set(self.selectedAIs[player_number].__name__)
+            except Exception:
+                continue
+
+        for player_number in self.selectedTeams:
+            try:
+                self._teamSelectors[player_number-1].set(self.TEAM_STRING + str(self.selectedTeams[player_number]))
+            except Exception:
+                continue
 
     def _setupControllerCombobox(self, combobox, player_number):
         """
@@ -77,19 +114,21 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         combobox.state(("readonly",))
         combobox.bind("<<ComboboxSelected>>", lambda event: self._addControllerToSelection(player_number, combobox.get()))
         combobox.grid(column=1, row=0)
+        self._aiSelectors.append(combobox)
 
     def _setupTeamCombobox(self, combobox, player_number):
-        values = ["Team " + str(team) for team in range(1, self.maxPlayers+1)]
+        values = [self.TEAM_STRING + str(team) for team in range(1, self.maxPlayers+1)]
         combobox['values'] = values
-        combobox.set("Team " + str(player_number))
-        self.teamsSelection[player_number] = player_number
+        combobox.set(self.TEAM_STRING + str(player_number))
+        self.selectedTeams[player_number] = player_number
         combobox.state(("readonly",))
         combobox.bind("<<ComboboxSelected>>",
                       lambda event: self._addTeamToSelection(player_number, int(combobox.get().split(" ")[1])))
         combobox.grid(column=2, row=0)
+        self._teamSelectors.append(combobox)
 
     def _setupPlayerLabel(self, label, player_number):
-        player_desc = "Player " + str(player_number)
+        player_desc = self.PLAYER_STRING + str(player_number)
         if self.playersDescription is not None and player_number in self.playersDescription.keys():
             player_desc += " (" + self.playersDescription[player_number] + ")"
         label['text'] = player_desc
@@ -103,9 +142,6 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         Args:
             player_number:
             class_name:
-
-        Returns:
-
         """
         if class_name != self.NONE_STRING:
             self.selectedAIs[player_number] = self.aiClasses[class_name]
@@ -114,7 +150,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
                 del self.selectedAIs[player_number]
 
     def _addTeamToSelection(self, player_number, team_number):
-        self.teamsSelection[player_number] = team_number
+        self.selectedTeams[player_number] = team_number
 
     def _addSelector(self, frame, player_number: int) -> None:
         """
@@ -166,7 +202,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         """
         different_teams = []
         for ai in self.selectedAIs:
-            team_number = self.teamsSelection[ai]
+            team_number = self.selectedTeams[ai]
             if team_number not in different_teams:
                 different_teams.append(team_number)
 
@@ -175,6 +211,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         elif self.minTeams > len(different_teams) or len(different_teams) > self.maxTeams:
             self._showIncorrectTeamsPopup()
         else:
+            self._saveInstance()
             self.okAction()
 
     def _addButtons(self, frame) -> None:

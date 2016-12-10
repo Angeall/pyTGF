@@ -55,13 +55,13 @@ class Game(metaclass=ABCMeta):
         """
         self._suicide = suicide_enabled
 
-    def run(self, max_fps: int=MAX_FPS) -> str:
+    def run(self, max_fps: int=MAX_FPS) -> tuple:
         """
         Launch the game and its logical loop
         Args:
             max_fps: The maximum frame per seconds of the game
 
-        Returns:
+        Returns: a tuple containing all the winning players, or an empty tuple in case of draw
         """
         pygame.init()
         clock = pygame.time.Clock()

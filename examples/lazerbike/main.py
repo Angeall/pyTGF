@@ -10,7 +10,7 @@ from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
 from menu.gui import GUI
 from tkinter import Tk
-from tkinter.ttk import Frame
+from tkinter.ttk import Frame, Label, Button
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),
@@ -63,13 +63,24 @@ def add_player(game: LazerBikeGame, player_class, player_number: int, player_tea
     try:
         controller = player_class(player_number)
     except TypeError:
-        controls = human_controls[nb_human]
+        controls = human_controls[nb_human % len(human_controls)]
         nb_human += 1
         controller = player_class(player_number, controls[0], controls[1], controls[2], controls[3])
     player_info = get_player_info(player_number)
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
     game.addUnit(Bike(speed, player_number, max_trace=-1), controller, start_pos, initial_direction, team=player_team)
+
+
+def end_popup(string_result):
+    popup = Tk()
+    popup.title('Game finished')
+    label = Label(popup, text=string_result)
+    label.grid(row=0, column=0, columnspan=4)
+    button1 = Button(text="Play again", command=lambda: relaunch_gui(popup), width=15)
+    button1.grid(row=1, column=1)
+    button2 = Button(text="Quit", command=popup.destroy, width=15)
+    button2.grid(row=1, column=2)
 
 
 def launch_game(gui: GUI, player_info: tuple):
@@ -91,10 +102,19 @@ def launch_game(gui: GUI, player_info: tuple):
 
     result = game.run()
     if len(result) == 0:
-        print("DRAW")
+        string_result = "DRAW"
     else:
         winning_players_strings = ["Player " + str(number) for number in result]
-        print("WON: ", winning_players_strings)
+        string_result = "WON: " + str(winning_players_strings)
+    end_popup(string_result)
+
+
+def relaunch_gui(window):
+    global nb_human
+    nb_human = 0
+    pygame.quit()
+    window.destroy()
+    launch_gui()
 
 
 def launch_gui():
