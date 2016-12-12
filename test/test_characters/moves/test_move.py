@@ -1,6 +1,6 @@
 import unittest
 from characters.units.moving_unit import MovingUnit
-from characters.moves.move import ShortMove, DeadlyMove, ImpossibleMove, IllegalMove
+from characters.moves.move import ShortMove, ImpossibleMove, IllegalMove
 from display.tile import Tile
 
 
@@ -22,40 +22,17 @@ class TestShortMove(unittest.TestCase):
         move.performStep()
         self.assertTrue(move.isPerformed)
 
-    def test_deadly_move(self):
-        """
-        Test that a deadly move raises the good exception
-        """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), deadly=True)
-        source_tile.addNeighbour(destination_tile.identifier)
-        # Distance separating the two tiles is 30 pixels
-        move = ShortMove(unit, source_tile, destination_tile, fps=60)
-        self.assertRaises(DeadlyMove, move.performStep)
-
-    def test_deadly_not_walkable_move(self):
-        """
-        Test that a deadly move raises the good exception even when the tile is not walkable
-        """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), deadly=True, walkable=False)
-        source_tile.addNeighbour(destination_tile.identifier)
-        # Distance separating the two tiles is 30 pixels
-        move = ShortMove(unit, source_tile, destination_tile, fps=60)
-        self.assertRaises(DeadlyMove, move.performStep)
-
-    def test_deadly_not_neighbour_move(self):
-        """
-        Test that a deadly move raises the good exception even when the tiles are not neighbours
-        """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), deadly=True)
-        # Distance separating the two tiles is 30 pixels
-        move = ShortMove(unit, source_tile, destination_tile, fps=60)
-        self.assertRaises(DeadlyMove, move.performStep)
+    # def test_deadly_move(self):
+    #     """
+    #     Test that a deadly move raises the good exception
+    #     """
+    #     unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+    #     source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
+    #     destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1), deadly=True)
+    #     source_tile.addNeighbour(destination_tile.identifier)
+    #     # Distance separating the two tiles is 30 pixels
+    #     move = ShortMove(unit, source_tile, destination_tile, fps=60)
+    #     self.assertRaises(DeadlyMove, move.performStep)
 
     def test_impossible_move(self):
         """

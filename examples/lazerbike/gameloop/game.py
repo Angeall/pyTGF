@@ -1,14 +1,15 @@
-from characters.controllers.human import Human
-from characters.controller import Controller
-from characters.moves.continous import ContinuousMove
-from examples.lazerbike.controls.allowed_moves import *
-from examples.lazerbike.sprites.bike import Bike
-from examples.lazerbike.sprites.trace import Trace
-from display.tile import Tile
-from display.boards.square_board import SquareBoard
-from loop.game import Game, MAX_FPS
 from functools import partial
-from types import FunctionType as function
+
+from examples.lazerbike.units.trace import Trace
+
+from characters.controller import Controller
+from characters.controllers.human import Human
+from characters.moves.continous import ContinuousMove
+from display.boards.square_board import SquareBoard
+from display.tile import Tile
+from examples.lazerbike.controls.allowed_moves import *
+from examples.lazerbike.units.bike import Bike
+from loop.game import Game, MAX_FPS
 
 
 class LazerBikeGame(Game):

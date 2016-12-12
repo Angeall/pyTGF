@@ -1,10 +1,12 @@
 import unittest
+
 import pygame
-from examples.lazerbike.AIs.bottest import BotTest
-from examples.lazerbike.sprites.bike import Bike
-from examples.lazerbike.gameloop.game import LazerBikeGame
-from examples.lazerbike.controls.allowed_moves import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
+
 from display.boards.square_board import SquareBoardBuilder
+from examples.lazerbike.AIs.bottest import BotTest
+from examples.lazerbike.controls.allowed_moves import GO_UP, GO_DOWN, GO_RIGHT
+from examples.lazerbike.gameloop.game import LazerBikeGame
+from examples.lazerbike.units.bike import Bike
 
 
 class TestLazerbike(unittest.TestCase):

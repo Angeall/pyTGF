@@ -7,7 +7,7 @@ from pygame.locals import *
 from characters.controller import Controller
 from characters.controllers.human import Human
 from characters.moves.path import Path
-from characters.moves.move import IllegalMove, DeadlyMove, ImpossibleMove
+from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.units.unit import Unit
 from display.board import Board
 from display.tile import Tile
@@ -220,8 +220,8 @@ class Game(metaclass=ABCMeta):
         """
         for controller in self._controllers.keys():
             unit = self._controllers[controller]
+            current_move = self._getNextMoveForControllerIfNeeded(controller)
             if unit.isAlive():
-                current_move = self._getNextMoveForControllerIfNeeded(controller)
                 if current_move is not None:
                     try:
                         tile_id = current_move.performNextMove()
@@ -230,13 +230,13 @@ class Game(metaclass=ABCMeta):
                         if current_move.cancelled or current_move.completed:
                             pass
                     except IllegalMove:
-                        self.kill(unit)
-                        self._cancelCurrentMoves(unit)
-                    except DeadlyMove:
-                        self.kill(unit)
-                        current_move.cancel(cancel_post_action=True)
+                        unit.kill()
+                        self._cancelCurrentMoves(controller)
                     except ImpossibleMove:
-                        self._cancelCurrentMoves(unit)
+                        self._cancelCurrentMoves(controller)
+            else:
+                if current_move is not None:
+                    current_move.cancel(cancel_post_action=True)
 
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
         """
@@ -266,13 +266,13 @@ class Game(metaclass=ABCMeta):
             tile_id:
         """
         unit = self._controllers[controller]
-        old_tile_id = self._units[unit]
+        # old_tile_id = self._units[unit]
         self._units[unit] = tile_id
-        tile = self.board.getTileById(old_tile_id)
-        if unit in tile.occupants:
-            tile.removeOccupant(unit)
+        # tile = self.board.getTileById(old_tile_id)
+        # if unit in tile.occupants:
+        #     tile.removeOccupant(unit)
         new_tile = self.board.getTileById(tile_id)
-        new_tile.addOccupant(unit)
+        # new_tile.addOccupant(unit)
         if new_tile.hasTwoOrMoreOccupants():
             self._handleCollision(unit, new_tile.occupants)
         self._gameStateChanged = True
@@ -330,12 +330,9 @@ class Game(metaclass=ABCMeta):
         same_team = self._fromSameTeam(player1, player2)
         suicide = player1 is player2
         if (not same_team or self._teamKill) or (suicide and self._suicide):
-            self.kill(player1)
+            player1.kill()
             if frontal:
-                self.kill(player2)
-
-    def kill(self, unit):
-        unit.kill()
+                player2.kill()
 
     def _checkGameState(self) -> int:
         """

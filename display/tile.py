@@ -134,8 +134,13 @@ class Tile(object):
             new_occupant: The occupant to add to this tile
         """
         self.occupants.append(new_occupant)
+        if self.deadly:
+            new_occupant.kill()
 
     def __contains__(self, item):
+        """
+        Returns: True if the item is part of this tile's occupants
+        """
         return item in self.occupants
 
     def removeOccupant(self, occupant_to_remove) -> None:

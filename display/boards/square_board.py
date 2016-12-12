@@ -66,8 +66,6 @@ class SquareBoard(Board):
 
 class SquareBoardBuilder(Builder):
 
-    BOARD_TYPE = SquareBoard
-
     def __init__(self, width: int, height: int, lines: int, columns: int):
         """
 

@@ -3,7 +3,8 @@ from characters.units.unit import Unit
 
 
 class MovingUnit(Unit):
-    def __init__(self, player_number: int, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1, speed: int=150):
+    def __init__(self, player_number: int, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
+                 speed: int=150, surviving_particles: bool=False):
         """
         Instantiates a moving unit in the game
         Args:
@@ -12,8 +13,9 @@ class MovingUnit(Unit):
             max_particles: The maximum number of particles for this unit (-1 = infinite)
             nb_lives: The number of lives this unit has before it dies
             speed: The speed, in pixels per seconds, of the unit when moving
+            surviving_particles: If true, the particles of this unit won't die with this unit
         """
-        super().__init__(sprite, max_particles, nb_lives=nb_lives)
+        super().__init__(sprite, max_particles, nb_lives=nb_lives, surviving_particles=surviving_particles)
         self.playerNumber = player_number
         self.speed = speed
         self.currentAction = None

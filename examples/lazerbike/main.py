@@ -1,16 +1,17 @@
-from examples.lazerbike.controls.player import LazerBikePlayer
-from display.boards.square_board import SquareBoardBuilder
+from tkinter import Tk
+from tkinter.ttk import Frame, Label, Button
+
 import pygame
 from pygame.locals import *
 
+from display.boards.square_board import SquareBoardBuilder
 from examples.lazerbike.controls.allowed_moves import *
+from examples.lazerbike.controls.player import LazerBikePlayer
 from examples.lazerbike.gameloop.game import LazerBikeGame
-from examples.lazerbike.sprites.bike import Bike
+from examples.lazerbike.units.bike import Bike
 from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
 from menu.gui import GUI
-from tkinter import Tk
-from tkinter.ttk import Frame, Label, Button
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),
@@ -58,7 +59,7 @@ def get_player_info(player_number: int):
         return 45, 37, GO_UP
 
 
-def add_player(game: LazerBikeGame, player_class, player_number: int, player_team: int, speed: int):
+def add_player(game: LazerBikeGame, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
     global nb_human
     try:
         controller = player_class(player_number)
@@ -69,7 +70,8 @@ def add_player(game: LazerBikeGame, player_class, player_number: int, player_tea
     player_info = get_player_info(player_number)
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
-    game.addUnit(Bike(speed, player_number, max_trace=-1), controller, start_pos, initial_direction, team=player_team)
+    game.addUnit(Bike(speed, player_number, max_trace=max_trace), controller, start_pos, initial_direction,
+                 team=player_team)
 
 
 def end_popup(string_result):
@@ -86,9 +88,11 @@ def end_popup(string_result):
 def launch_game(gui: GUI, player_info: tuple):
     gui.quit()
     pygame.init()
-    width = 1280
-    height = 500
-    builder = SquareBoardBuilder(width, height, 50, 75)
+    width = 1920
+    height = 1080
+    lines = 50
+    columns = 75
+    builder = SquareBoardBuilder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
@@ -98,7 +102,7 @@ def launch_game(gui: GUI, player_info: tuple):
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
-        add_player(game, player_class, player_number, player_teams[player_number], speed)
+        add_player(game, player_class, player_number, player_teams[player_number], speed, min(lines, columns) * (2/3))
 
     result = game.run()
     if len(result) == 0:

@@ -6,15 +6,18 @@ from characters.sprite import UnitSprite
 
 
 class Unit(Particle):
-    def __init__(self, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1):
+    def __init__(self, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
+                 surviving_particles: bool=False):
         """
         Instantiates a unit in the game
         Args:
             sprite: The sprite to draw on the board
             max_particles: The maximum number of particles for this unit (-1 = infinite)
             nb_lives: The number of lives this unit has before it dies
+            surviving_particles: If true, the particles of this unit won't die with this unit
         """
         super().__init__(sprite, nb_lives=nb_lives)
+        self.survivingParticles = surviving_particles
         self._particlesSpriteGroup = pygame.sprite.Group()
         self._particlesQueue = Queue()
         self._particlesList = []
@@ -31,8 +34,9 @@ class Unit(Particle):
 
     def kill(self):
         super().kill()
-        while len(self._particlesSpriteGroup) != 0:
-            self.removeOldestParticle()
+        if not self.survivingParticles:
+            while len(self._particlesSpriteGroup) != 0:
+                self.removeOldestParticle()
 
     def addParticle(self, particle: Particle) -> None:
         """
