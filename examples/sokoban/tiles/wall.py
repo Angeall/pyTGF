@@ -1,4 +1,4 @@
-from display.tile import Tile
+from board.tile import Tile
 
 
 WALL_COLOR = (53, 35, 3)

@@ -2,7 +2,7 @@ import unittest
 
 import pygame
 
-from display.boards.square_board import SquareBoardBuilder
+from board.boards.square_board import SquareBoardBuilder
 
 
 class TestSquareBoard(unittest.TestCase):

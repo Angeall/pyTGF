@@ -2,7 +2,7 @@ import unittest
 
 import pygame
 
-from display.boards.square_board import SquareBoardBuilder
+from board.boards.square_board import SquareBoardBuilder
 from examples.lazerbike.AIs.bottest import BotTest
 from examples.lazerbike.controls.allowed_moves import GO_UP, GO_DOWN, GO_RIGHT
 from examples.lazerbike.gameloop.game import LazerBikeGame

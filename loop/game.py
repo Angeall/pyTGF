@@ -9,8 +9,8 @@ from characters.controllers.human import Human
 from characters.moves.path import Path
 from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.units.unit import Unit
-from display.board import Board
-from display.tile import Tile
+from board.board import Board
+from board.tile import Tile
 
 MAX_FPS = 60
 

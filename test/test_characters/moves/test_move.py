@@ -1,7 +1,7 @@
 import unittest
 from characters.units.moving_unit import MovingUnit
 from characters.moves.move import ShortMove, ImpossibleMove, IllegalMove
-from display.tile import Tile
+from board.tile import Tile
 
 
 class TestShortMove(unittest.TestCase):

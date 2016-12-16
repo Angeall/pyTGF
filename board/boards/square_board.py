@@ -1,5 +1,5 @@
-from display.board import Board, Builder
-from display.tile import Tile
+from board.board import Board, Builder
+from board.tile import Tile
 import pygame
 from pygame.locals import *
 

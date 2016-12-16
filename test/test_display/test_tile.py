@@ -1,5 +1,5 @@
 import unittest
-from display.tile import Tile
+from board.tile import Tile
 from characters.units.unit import Unit
 
 

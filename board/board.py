@@ -1,4 +1,4 @@
-from display.tile import Tile
+from board.tile import Tile
 from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
 import numpy as np

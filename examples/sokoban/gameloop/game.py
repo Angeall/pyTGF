@@ -1,7 +1,7 @@
 from loop.game import Game
 from characters.controller import Controller
 from characters.controllers.human import Human
-from display.tile import Tile
+from board.tile import Tile
 
 
 class SokobanGame(Game):

@@ -4,7 +4,7 @@ from tkinter.ttk import Frame, Label, Button
 import pygame
 from pygame.locals import *
 
-from display.boards.square_board import SquareBoardBuilder
+from board.boards.square_board import SquareBoardBuilder
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.controls.player import LazerBikePlayer
 from examples.lazerbike.gameloop.game import LazerBikeGame

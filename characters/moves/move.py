@@ -1,6 +1,6 @@
 import utils.geom
 from characters.units.moving_unit import MovingUnit
-from display.tile import Tile
+from board.tile import Tile
 
 
 class IllegalMove(BaseException):  # The move is illegal but not deadly
