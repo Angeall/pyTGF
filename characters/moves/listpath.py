@@ -28,5 +28,3 @@ class ListPath(Path):
             move = self.list[self.index]
             self.index += 1
             return move
-        else:
-            return None

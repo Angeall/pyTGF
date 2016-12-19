@@ -1,0 +1,21 @@
+from board.parsers.board_parser import BoardParser
+from board.tile import Tile
+from examples.sokoban.tiles.hole import Hole
+from examples.sokoban.tiles.wall import Wall
+from examples.sokoban.units.box import Box
+from examples.sokoban.units.player import Player
+
+
+class SokobanBoardParser(BoardParser):
+    def characterToTileType(self, character: str):
+        character = character.lower()
+        if character == "h":
+            return Hole
+        elif character == "b":
+            return Box
+        elif character == "p":
+            return Player
+        elif character == " ":
+            return Tile
+        elif character == "w":
+            return Wall

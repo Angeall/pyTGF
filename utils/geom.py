@@ -13,7 +13,27 @@ from scipy.spatial import ConvexHull
 
 
 def dist(a: tuple, b: tuple):
+    """
+    Computes the distance between the two given points
+    Args:
+        a: The first point
+        b: The second point
+
+    Returns: The distance between a and b
+    """
     return abs(euclidean(a, b))
+
+
+def get_polygon_radius(nb_sides: int, side_length: int) -> float:
+    """
+    Get the radius of a regular polygon (the distance between its center and any of its vertices
+    Args:
+        nb_sides: The number of sides in the polygon
+        side_length: The length of any side of the polygon
+
+    Returns: The length of the polygon radius
+    """
+    return side_length / (2 * np.sin((180 / nb_sides)))
 
 
 def get_hypotenuse_length(a: int, b: int):

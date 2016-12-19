@@ -3,7 +3,7 @@ from characters.units.moving_unit import MovingUnit
 from board.tile import Tile
 
 
-class IllegalMove(BaseException):  # The move is illegal but not deadly
+class IllegalMove(BaseException):  # The move is illegal
     pass
 
 

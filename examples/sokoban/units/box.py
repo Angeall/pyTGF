@@ -1,5 +1,16 @@
-from characters.units.unit import Unit
+import os
+
+from characters.sprite import UnitSprite
+from characters.units.moving_unit import MovingUnit
 
 
-class Box(Unit):
-    pass
+class BoxSprite(UnitSprite):
+    @property
+    def imageName(self):
+        return os.path.join("sprites", "box.png")
+
+
+class Box(MovingUnit):
+    def __init__(self, speed: int, player_number: int=-1):
+        super().__init__(player_number, BoxSprite(), speed=speed, surviving_particles=True)
+        self.playerNumber = player_number

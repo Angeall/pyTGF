@@ -11,6 +11,7 @@ from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.units.unit import Unit
 from board.board import Board
 from board.tile import Tile
+from utils.geom import get_hypotenuse_length, get_polygon_radius
 
 MAX_FPS = 60
 
@@ -20,7 +21,6 @@ END = 2
 
 
 class Game(metaclass=ABCMeta):
-
     def __init__(self, board: Board):
         self.board = board
         self._screen = None
@@ -38,8 +38,10 @@ class Game(metaclass=ABCMeta):
         self._controllers = {}
         # self._controllersMoves -> keys: controls; values: tuples (current_move, pending_moves)
         self._controllersMoves = {}
+        # self._otherMoves -> keys: units; values: queue
+        self._otherMoves = {}
 
-    def setTeamKill(self, team_kill_enabled: bool=True):
+    def setTeamKill(self, team_kill_enabled: bool = True):
         """
         Sets the team kill of the game. If true, a unit can harm another unit from its own team
         Args:
@@ -47,7 +49,7 @@ class Game(metaclass=ABCMeta):
         """
         self._teamKill = team_kill_enabled
 
-    def setSuicide(self, suicide_enabled: bool=True):
+    def setSuicide(self, suicide_enabled: bool = True):
         """
         Sets the suicide handling of the game. If true, a unit can suicide itself on its own particles.
         Args:
@@ -55,7 +57,7 @@ class Game(metaclass=ABCMeta):
         """
         self._suicide = suicide_enabled
 
-    def run(self, max_fps: int=MAX_FPS) -> tuple:
+    def run(self, max_fps: int = MAX_FPS) -> tuple:
         """
         Launch the game and its logical loop
         Args:
@@ -76,7 +78,7 @@ class Game(metaclass=ABCMeta):
             clock.tick(max_fps)
         return self._handleGameFinished(self.winningPlayers)
 
-    def addUnit(self, unit: Unit, controller: Controller, tile_id, initial_action: Path=None, team: int=-1) -> None:
+    def addUnit(self, unit: Unit, controller: Controller, tile_id, initial_action: Path = None, team: int = -1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
         to the the given tile id and controlled by the given controller
@@ -87,6 +89,7 @@ class Game(metaclass=ABCMeta):
             initial_action: The initial action of the unit
             team: The number of the team this player is in (-1 = no team)
         """
+
         self._controllers[controller] = unit
         self._controllersMoves[controller] = (None, Queue())
         self._units[unit] = tile_id
@@ -97,6 +100,7 @@ class Game(metaclass=ABCMeta):
         tile = self.board.getTileById(tile_id)
         tile.addOccupant(unit)
         unit.moveTo(tile.center)
+        self._resizeUnit(unit, tile)
         if initial_action is not None:
             self._handleControllerEvent(controller, initial_action)
 
@@ -140,6 +144,19 @@ class Game(metaclass=ABCMeta):
         fifo = self._controllersMoves[controller][1]  # type: Queue
         fifo.put(move)
 
+    def _addOtherMove(self, unit: Unit, move: Path) -> None:
+        """
+        Adds a move that is NOT PERFORMED BY A CONTROLLER
+        Args:
+            unit: The unit that will be moved
+            move: The move that will be performed
+        """
+        if unit in self._otherMoves:
+            self._otherMoves[unit].put(move)
+        else:
+            self._otherMoves[unit] = Queue()
+            self._otherMoves[unit].put(move)
+
     def _getUnitFromController(self, controller: Controller) -> Unit:
         """
         Args:
@@ -165,7 +182,7 @@ class Game(metaclass=ABCMeta):
             controller: The controller for which cancel the movements
         """
         try:
-            move_tuple = self._controllersMoves[controller] # type: tuple
+            move_tuple = self._controllersMoves[controller]  # type: tuple
             fifo = move_tuple[1]  # type: Queue
             last_move = move_tuple[0]  # type: Path
             new_fifo = Queue()
@@ -218,25 +235,45 @@ class Game(metaclass=ABCMeta):
         """
         Get the next move to be performed and perform its next step
         """
+        moved_units = []
         for controller in self._controllers.keys():
             unit = self._controllers[controller]
             current_move = self._getNextMoveForControllerIfNeeded(controller)
-            if unit.isAlive():
-                if current_move is not None:
-                    try:
-                        tile_id = current_move.performNextMove()
-                        if tile_id is not None:  # A new tile has been reached by the movement
-                            self._updateGameState(controller, tile_id)
-                        if current_move.cancelled or current_move.completed:
-                            pass
-                    except IllegalMove:
-                        unit.kill()
-                        self._cancelCurrentMoves(controller)
-                    except ImpossibleMove:
-                        self._cancelCurrentMoves(controller)
-            else:
-                if current_move is not None:
-                    current_move.cancel(cancel_post_action=True)
+            self._handleMoveForUnit(unit, current_move, controller)
+            moved_units.append(unit)
+
+        for unit in self._otherMoves:  # type: Unit
+            if unit not in moved_units:  # Two moves on the same unit cannot be performed at the same time...
+                unit_controller = None
+                for controller in self._controllers:
+                    if self._controllers[controller] is unit:
+                        unit_controller = controller
+                if unit_controller is not None:
+                    self._handleMoveForUnit(unit, self._otherMoves[unit].get_nowait(), unit_controller)
+
+    def _handleMoveForUnit(self, unit: Unit, current_move: Path, controller: Controller):
+        """
+        Perform the next step of the given move on the given unit
+        Args:
+            unit: The unit that performs the move
+            current_move: The current move to perform
+            controller: The controller that controls this move (can be None if the move is not linked with a controller)
+        """
+        if unit.isAlive():
+            if current_move is not None:
+                try:
+                    tile_id = current_move.performNextMove()
+                    if tile_id is not None:  # A new tile has been reached by the movement
+                        self._updateGameState(controller, tile_id)
+                    if current_move.cancelled or current_move.completed:
+                        pass
+                except IllegalMove:
+                    unit.kill()
+                    self._cancelCurrentMoves(controller)
+                except ImpossibleMove:
+                    self._cancelCurrentMoves(controller)
+        else:
+            current_move.cancel(cancel_post_action=True)
 
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
         """
@@ -262,17 +299,12 @@ class Game(metaclass=ABCMeta):
         """
         Change the unit's tile and checks for collisions
         Args:
-            controller:
-            tile_id:
+            controller: The controller to update
+            tile_id: The new tile id to link with the given controller
         """
         unit = self._controllers[controller]
-        # old_tile_id = self._units[unit]
         self._units[unit] = tile_id
-        # tile = self.board.getTileById(old_tile_id)
-        # if unit in tile.occupants:
-        #     tile.removeOccupant(unit)
         new_tile = self.board.getTileById(tile_id)
-        # new_tile.addOccupant(unit)
         if new_tile.hasTwoOrMoreOccupants():
             self._handleCollision(unit, new_tile.occupants)
         self._gameStateChanged = True
@@ -305,7 +337,7 @@ class Game(metaclass=ABCMeta):
             other_units: The other units that are on the same tile than the moving unit
         """
         for other_unit in other_units:
-            if not(unit is other_unit):
+            if not (unit is other_unit):
                 if other_unit in self._units.keys():  # If the other unit is a controlled unit
                     self._collidePlayers(unit, other_unit, frontal=True)
                 else:  # If the other unit is a Particle
@@ -317,7 +349,7 @@ class Game(metaclass=ABCMeta):
                     if other_player is not None:  # If we found the player to which belongs the colliding particle
                         self._collidePlayers(unit, other_player)
 
-    def _collidePlayers(self, player1, player2, frontal: bool=False):
+    def _collidePlayers(self, player1, player2, frontal: bool = False):
         """
         Makes what it has to be done when the first given player collides with a particle of the second given player
         (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
@@ -371,6 +403,25 @@ class Game(metaclass=ABCMeta):
                 winning_player_numbers.append(unit.playerNumber)
         return tuple(winning_player_numbers)
 
+    @staticmethod
+    def _resizeUnit(unit: Unit, tile: Tile) -> None:
+        """
+        Resize a unit to fit the given tile
+        Args:
+            unit: The unit to resize
+            tile: The tile to fit in
+        """
+        multiply_ratio = tile.sideLength / max(unit.sprite.rect.height, unit.sprite.rect.width)
+        hypotenuse = get_hypotenuse_length(unit.sprite.rect.height * multiply_ratio,
+                                           unit.sprite.rect.width * multiply_ratio)
+        tile_diameter = get_polygon_radius(tile.nbrOfSides, tile.sideLength) * 2
+        while hypotenuse > tile_diameter:
+            multiply_ratio *= 0.99
+            hypotenuse = get_hypotenuse_length(unit.sprite.rect.height * multiply_ratio,
+                                               unit.sprite.rect.width * multiply_ratio)
+        unit.sprite.size(int(round(unit.sprite.rect.width * multiply_ratio)),
+                         int(round(unit.sprite.rect.height * multiply_ratio)))
+
     @abstractmethod
     def _isFinished(self) -> (bool, list):
         """
@@ -390,7 +441,8 @@ class Game(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple, click_up: bool)->None:
+    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
+                                         click_up: bool) -> None:
         """
         Can optionally filter the mouse events to send
         Args:

@@ -65,6 +65,7 @@ class LazerBikeGame(Game):
                                                      step_post_action=partial(self._letTraceOnPreviousTile, unit=unit)))
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
+        # TODO: continuous line using center-to-center trace but need previous_previous_tile
         tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)
         self._resizeTrace(trace, tile_to_place_trace)

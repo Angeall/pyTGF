@@ -9,17 +9,16 @@ class InvalidCharacterError(BaseException):
     pass
 
 
-class InvalidCharacterConverterError(BaseException):
+class InvalidCharacterConversionError(BaseException):
     pass
 
 
 class BoardParser(metaclass=ABCMeta):
 
-    @property
     @abstractmethod
-    def characterToTileTypeDict(self) -> dict:
+    def characterToTileType(self, character: str):
         """
-        Returns: the dict that will be used to convert a character into a Tile type, which can be instantiated later
+        Returns: the Tile type, which can be instantiated later, corresponding to the given character
         """
         pass
 
@@ -59,15 +58,16 @@ class BoardParser(metaclass=ABCMeta):
         """
         if not self.isRectangularShape(lines):
             raise IncorrectShapeError("The given board has not a rectangular shape: the lines have not the same length")
-        if not isinstance(self.characterToTileTypeDict, dict):
-            error_msg = "The character to tile type converter of the parser is invalid and should be a dict"
-            raise InvalidCharacterConverterError(error_msg)
         tiles = []
         for line in lines:
             tiles_line = []
             for char in line:
                 try:
-                    tile_type = self.characterToTileTypeDict[char]  # type: class
+                    tile_type = self.characterToTileType(char)  # type: class
+                    if type(tile_type) != type:
+                        msg = "The character %s was converted into a %s rather than a instantiable class" \
+                                % (char, str(type(tile_type)))
+                        raise InvalidCharacterConversionError(msg)
                     tiles_line.append(tile_type)
                 except KeyError:
                     raise InvalidCharacterError("The character %s is unknown for this board parser" % char)

@@ -1,7 +1,5 @@
 import unittest
 
-import pygame
-
 from board.boards.square_board import SquareBoardBuilder
 
 
