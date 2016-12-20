@@ -4,13 +4,13 @@ from characters.sprite import UnitSprite
 from characters.units.moving_unit import MovingUnit
 
 
-class PlayerSprite(UnitSprite):
+class SokobanPlayerSprite(UnitSprite):
     @property
     def imageName(self):
         return os.path.join("sprites", "player.png")
 
 
-class Player(MovingUnit):
+class SokobanDrawstick(MovingUnit):
     def __init__(self, speed: int, player_number: int):
-        super().__init__(player_number, PlayerSprite(), speed=speed, surviving_particles=True)
+        super().__init__(player_number, SokobanPlayerSprite(), speed=speed, surviving_particles=True)
         self.playerNumber = player_number

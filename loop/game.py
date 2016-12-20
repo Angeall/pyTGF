@@ -99,8 +99,8 @@ class Game(metaclass=ABCMeta):
             self._teams[team] = [unit]
         tile = self.board.getTileById(tile_id)
         tile.addOccupant(unit)
-        unit.moveTo(tile.center)
         self._resizeUnit(unit, tile)
+        unit.moveTo(tile.center)
         if initial_action is not None:
             self._handleControllerEvent(controller, initial_action)
 

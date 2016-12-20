@@ -13,7 +13,7 @@ class SokobanGame(Game):
         controller.reactToInput(input_key)
 
     def _isFinished(self) -> (bool, list):
-        pass
+        return False, []
 
     def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
                                          click_up: bool) -> None:

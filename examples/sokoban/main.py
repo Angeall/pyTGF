@@ -1,3 +1,4 @@
+import os
 from tkinter import Tk
 from tkinter.ttk import Frame, Label, Button
 
@@ -5,10 +6,9 @@ import pygame
 from pygame.locals import *
 
 from board.boards.square_board import SquareBoardBuilder
-from examples.lazerbike.controls.allowed_moves import *
-from examples.lazerbike.controls.player import LazerBikePlayer
-from examples.lazerbike.gameloop.game import LazerBikeGame
-from examples.lazerbike.units.bike import Bike
+from examples.sokoban.parser.builder import SokobanBoardBuilder
+from examples.sokoban.parser.parser import SokobanBoardParser
+from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
 from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
 from menu.gui import GUI
@@ -30,7 +30,7 @@ def get_selection_frame() -> Frame:
 
 def buildMainFrame(window: Tk, gui: GUI) -> Frame:
     global selection_frame, main_frame
-    builder = ButtonFrameBuilder("LazerBike", window)
+    builder = ButtonFrameBuilder("Sokoban", window)
     builder.setTitleColor("#FF0000")
     builder.addButton(("Play", lambda: gui.goToFrame(get_selection_frame())))
     builder.addButton(("Quit", gui.quit))
@@ -40,38 +40,11 @@ def buildMainFrame(window: Tk, gui: GUI) -> Frame:
 
 def buildSelectionFrame(window: Tk, gui: GUI) -> Frame:
     global selection_frame
-    builder = AISelectorFrameBuilder("Player selection", window, LazerBikePlayer,
+    builder = AISelectorFrameBuilder("Player selection", window, SokobanDrawstick,
                                      lambda: launch_game(gui, builder.getSelection()), gui.goToPreviousFrame,
-                                     max_teams=4, min_teams=2,
-                                     players_description={1: "Blue", 2: "Red", 3: "Green", 4: "Yellow"})
+                                     max_teams=1, min_teams=1)
     selection_frame = builder.create()
     return selection_frame
-
-
-def get_player_info(player_number: int):
-    if player_number == 1:
-        return 17, 25, GO_RIGHT
-    elif player_number == 2:
-        return 37, 50, GO_LEFT
-    elif player_number == 3:
-        return 4, 37, GO_DOWN
-    else:
-        return 45, 37, GO_UP
-
-
-def add_player(game: LazerBikeGame, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
-    global nb_human
-    try:
-        controller = player_class(player_number)
-    except TypeError:
-        controls = human_controls[nb_human % len(human_controls)]
-        nb_human += 1
-        controller = player_class(player_number, controls[0], controls[1], controls[2], controls[3])
-    player_info = get_player_info(player_number)
-    start_pos = player_info[0:2]
-    initial_direction = player_info[2]
-    game.addUnit(Bike(speed, player_number, max_trace=max_trace), controller, start_pos, initial_direction,
-                 team=player_team)
 
 
 def end_popup(string_result):
@@ -88,22 +61,15 @@ def end_popup(string_result):
 def launch_game(gui: GUI, player_info: tuple):
     gui.quit()
     pygame.init()
-    width = 1920
-    height = 1080
-    lines = 50
-    columns = 75
-    builder = SquareBoardBuilder(width, height, lines, columns)
-    builder.setBordersColor((0, 125, 125))
-    builder.setBackgroundColor((25, 25, 25))
-    builder.setTilesVisible(False)
-    board = builder.create()
+    width = 1280
+    height = 720
     speed = int(round((min(width, height) / 1080) * 150))
-    game = LazerBikeGame(board)
-    player_classes = player_info[0]
-    player_teams = player_info[1]
-    for player_number, player_class in player_classes.items():
-        add_player(game, player_class, player_number, player_teams[player_number], speed, min(lines, columns) * (2/3))
-
+    controllers = []
+    for player_number, player_class in player_info[0].items():
+        controllers.append(player_class)
+    parser_result = SokobanBoardParser().parseFile(os.path.join("boards", "test1.txt"))
+    builder = SokobanBoardBuilder(width, height, parser_result, controllers, speed)
+    game = builder.createGame()
     result = game.run()
     if len(result) == 0:
         string_result = "DRAW"

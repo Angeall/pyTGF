@@ -3,7 +3,7 @@ from board.tile import Tile
 from characters.controllers.passive import PassiveController
 from examples.sokoban.gameloop.game import SokobanGame
 from examples.sokoban.units.box import Box
-from examples.sokoban.units.player import Player
+from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
 
 
 class NotEnoughPlayersException(Exception):
@@ -29,7 +29,7 @@ class SokobanBoardBuilder(SquareBoardBuilder):
                 if tile_type == Box:
                     self._boxLocations.append((i, j))
                     tile_type = Tile
-                elif tile_type == Player:
+                elif tile_type == SokobanDrawstick:
                     self._playerLocations.append((i, j))
                     tile_type = Tile
                 board.tiles[i][j] = tile_type(tile.center, tile.points, tile.identifier)
@@ -48,7 +48,9 @@ class SokobanBoardBuilder(SquareBoardBuilder):
         player_number = 1
 
         for (i, j) in self._playerLocations:
-            game.addUnit(Player(self._unitSpeed, player_number), self._controllers[player_number-1], (i, j))
+            game.addUnit(SokobanDrawstick(self._unitSpeed, player_number),
+                         self._controllers[player_number - 1](player_number), (i, j))
             player_number += 1
+        return game
 
 

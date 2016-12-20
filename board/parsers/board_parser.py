@@ -33,7 +33,7 @@ class BoardParser(metaclass=ABCMeta):
         file = open(file_name, "r")
         text = ""
         for line in file:
-            text += (line.strip() + "\n")
+            text += (line)
         tiles_types = self.parse(text)
         return tiles_types
 
@@ -46,6 +46,8 @@ class BoardParser(metaclass=ABCMeta):
         Returns: A list of lists containing the types of the tiles in the lines of the future board.
         """
         lines = text.split("\n")  # Split the text into lines
+        while lines[-1] == "":
+            lines.pop()
         return self.parseLines(lines)
 
     def parseLines(self, lines) -> list:

@@ -28,7 +28,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             min_players: The minimum number of players required to play this game
             max_players: The maximum number of players allowed to play this game
             min_teams: The minimum number of teams required to play this game
-            max_teams: The maximum number of teams allowed to play this game
+            max_teams: The maximum number of teams allowed to play this game (1 = no teams)
             players_description:
                 An optional dictionary containing additional information to display for the players.
                 Keys: player numbers. Values: additional description
@@ -102,7 +102,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
 
     def _setupControllerCombobox(self, combobox, player_number):
         """
-        Setups the combobox so it displays the different controllers available
+        Setups the combobox so it displays the different controls available
         Args:
             combobox: The combobox to setup
             player_number: The player for which the combobox is being set up
@@ -165,13 +165,14 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         combo_controller = Combobox(container, width=20)
         combo_team = Combobox(container)
         self._setupControllerCombobox(combo_controller, player_number)
-        self._setupTeamCombobox(combo_team, player_number)
+        if self.maxTeams > 1:
+            self._setupTeamCombobox(combo_team, player_number)
 
         container.grid(row=player_number + 2, column=1)
 
     def _lookForAIs(self) -> None:
         """
-        Look into the "AIs" folder for compatibles AIs or Human controllers and fill *self.ais*
+        Look into the "AIs" folder for compatibles AIs or Human controls and fill *self.ais*
         """
         folder = "AIs"
         files = [f for f in listdir(folder) if isfile(join(folder, f))]
@@ -200,16 +201,19 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         Put a frame around the action to perform when the OK button is pressed.
         It ensures that there is enough players selected to play
         """
-        different_teams = []
-        for ai in self.selectedAIs:
-            team_number = self.selectedTeams[ai]
-            if team_number not in different_teams:
-                different_teams.append(team_number)
-
         if len(self.selectedAIs) < self.minPlayers:
             self._showNotEnoughPopup()
-        elif self.minTeams > len(different_teams) or len(different_teams) > self.maxTeams:
-            self._showIncorrectTeamsPopup()
+        elif self.maxTeams > 1:
+            different_teams = []
+            for ai in self.selectedAIs:
+                team_number = self.selectedTeams[ai]
+                if team_number not in different_teams:
+                    different_teams.append(team_number)
+            if self.minTeams > len(different_teams) or len(different_teams) > self.maxTeams:
+                self._showIncorrectTeamsPopup()
+            else:
+                self._saveInstance()
+                self.okAction()
         else:
             self._saveInstance()
             self.okAction()

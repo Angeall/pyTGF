@@ -3,7 +3,7 @@ from board.tile import Tile
 from examples.sokoban.tiles.hole import Hole
 from examples.sokoban.tiles.wall import Wall
 from examples.sokoban.units.box import Box
-from examples.sokoban.units.player import Player
+from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
 
 
 class SokobanBoardParser(BoardParser):
@@ -14,7 +14,7 @@ class SokobanBoardParser(BoardParser):
         elif character == "b":
             return Box
         elif character == "p":
-            return Player
+            return SokobanDrawstick
         elif character == " ":
             return Tile
         elif character == "w":
