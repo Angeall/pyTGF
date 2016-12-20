@@ -1,7 +1,7 @@
 from board.tile import Tile
 
 
-WALL_COLOR = (53, 35, 3)
+WALL_COLOR = (125, 85, 7)
 
 
 class Wall(Tile):
