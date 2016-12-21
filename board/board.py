@@ -135,7 +135,7 @@ class Board(metaclass=ABCMeta):
 
 class Builder(metaclass=ABCMeta):
     """
-    Class used to instantiate a test_display board
+    Class used to instantiate a test_board board
     """
 
     _BASE_MARGIN = 33
