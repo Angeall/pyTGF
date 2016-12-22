@@ -7,8 +7,8 @@ OK_COLOR = (255, 0, 0)
 
 
 class Hole(Tile):
-    def __init__(self, center: tuple, points: list, identifier):
-        super().__init__(center, points, identifier, True, True)
+    def __init__(self, center: tuple, points: list, identifier, neighbours=None):
+        super().__init__(center, points, identifier, True, True, neighbours)
         self.setInternalColor(DEADLY_COLOR)
 
     def addOccupant(self, new_occupant):

@@ -20,7 +20,8 @@ class Tile(object):
 
     TILE_LENGTH_EPSILON = 0.1
 
-    def __init__(self, center: tuple, points: list, identifier, walkable: bool=True, deadly: bool=False) -> None:
+    def __init__(self, center: tuple, points: list, identifier, walkable: bool=True, deadly: bool=False,
+                 neighbours=None) -> None:
         """
         Args:
             center: The equidistant center of the tile
@@ -29,12 +30,15 @@ class Tile(object):
             identifier: The identifier of the tile in the board
             walkable: Boolean that defines if a unit can walk on this tile or not
             deadly: Boolean that defines if a unit must die when walking on this tile
+            neighbours: The IDs of the neighbours of this tile
         """
         self.nbrOfSides = len(points)
         if self.nbrOfSides < 3:
             raise NotAPolygonError("A polygon is made of minimum 3 points")
         self.identifier = identifier
         self.neighbours = []
+        if neighbours is not None:
+            self.neighbours.extend(neighbours)
         self.center = center
         self.points = points
         self.sideLength = int(utils.geom.dist(self.points[-1], self.points[0]))

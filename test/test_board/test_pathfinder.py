@@ -13,6 +13,11 @@ class TestPathfinder(unittest.TestCase):
         self.assertEqual(len(path), 3)
         self.assertEqual(path, [(0, 1), (0, 2), (0, 3)])
 
+    def test_get_shortest_path_no_wall2(self):
+        path = get_shortest_path(self.board, (1, 1), (1, 2), None)
+        self.assertEqual(len(path), 1)
+        self.assertEqual(path, [(1, 2)])
+
     def test_get_shortest_path_with_wall(self):
         self.board.getTileById((0, 2)).walkable = False
         path = get_shortest_path(self.board, (0, 0), (0, 3), None)

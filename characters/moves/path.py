@@ -41,12 +41,13 @@ class Path(metaclass=ABCMeta):
         Returns: The id of the new tile of the unit, or None if the current move is not performed yet.
         """
         self._handleFirstMove()
-        if not self._pathFinished():
+        if not self.finished():
             if self._currentMove is None and self._isFirstMoveEmpty():
                 return
             else:
                 self._currentMove.performStep()
                 if self._currentMove.isPerformed:
+
                     new_tile_id = self._handleStepFinished()
                     self._getNextStepIfNeeded()
                     return new_tile_id
@@ -66,7 +67,7 @@ class Path(metaclass=ABCMeta):
         else:
             self._performAction(self._stepPreAction)
 
-    def _pathFinished(self):
+    def finished(self):
         return self.cancelled or self.completed
 
     def _handleStepFinished(self):

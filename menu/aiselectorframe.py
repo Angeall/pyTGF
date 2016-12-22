@@ -83,6 +83,8 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             self._updateSelection()
         except FileNotFoundError:
             pass
+        except ImportError:
+            pass
 
     def _updateSelection(self) -> None:
         """

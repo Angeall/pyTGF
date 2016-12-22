@@ -10,7 +10,7 @@ class HumanPlayer(LazerBikePlayer, Human):
         self.upKey = up_key
         self.downKey = down_key
 
-    def reactToInput(self, input_key, *game_info: ...) -> None:
+    def reactToInput(self, input_key, **game_info: ...) -> None:
             if input_key == self.rightKey:
                 self.goRight()
             elif input_key == self.leftKey:
@@ -20,7 +20,7 @@ class HumanPlayer(LazerBikePlayer, Human):
             elif input_key == self.downKey:
                 self.goDown()
 
-    def reactToTileClicked(self, tile=None, mouse_state=(False, False, False), click_up=False, *game_info) -> None:
+    def reactToTileClicked(self, tile_id=None, mouse_state=(False, False, False), click_up=False, **game_info) -> None:
         pass
 
 

@@ -4,6 +4,10 @@ from board.board import Board
 from types import FunctionType as function
 
 
+class UnreachableDestination(Exception):
+    pass
+
+
 def get_shortest_path(board: Board, source_tile_id, dest_tile_id,  walkable_tile_function: function) -> (list, int):
     """
     Uses the A* algorithm to find the shortest path between the source tile and
@@ -21,6 +25,7 @@ def get_shortest_path(board: Board, source_tile_id, dest_tile_id,  walkable_tile
     Returns:
         The shortest path (list of tile_ids) to travel to reach the destination tile from the source tile.
         The cost of this path is equal to the length of this list.
+        Returns None if the destination is unreachable
     """
 
     def heuristic(a, b):
@@ -41,7 +46,6 @@ def get_shortest_path(board: Board, source_tile_id, dest_tile_id,  walkable_tile
 
         if current == dest_tile_id:
             break
-
         for next_tile_id in board.getTileById(current).neighbours:
             new_cost = cost_so_far[current] + 1  # Cost just one more because all the cost in the graph == 1
             next_tile = board.getTileById(next_tile_id)
@@ -98,10 +102,14 @@ def get_shortest_paths(board: Board, source_tile_id, max_dist: int, walkable_til
 
 
 def reconstruct_path(came_from, source_tile_id, dest_tile_id):
-    current = came_from[dest_tile_id]
-    path = [dest_tile_id]
-    while current != source_tile_id:
-        path.append(current)
-        current = came_from[current]
-    path.reverse()
-    return path
+    try:
+        current = came_from[dest_tile_id]
+        path = [dest_tile_id]
+        while current != source_tile_id:
+            path.append(current)
+            current = came_from[current]
+        path.reverse()
+        return path
+    except KeyError:
+        raise UnreachableDestination("The tile " + str(dest_tile_id) +
+                                     " is unreachable from the tile " + str(source_tile_id))

@@ -8,6 +8,7 @@ from characters.controller import Controller
 from characters.controllers.human import Human
 from characters.moves.path import Path
 from characters.moves.move import IllegalMove, ImpossibleMove
+from characters.units.moving_unit import MovingUnit
 from characters.units.unit import Unit
 from board.board import Board
 from board.tile import Tile
@@ -34,9 +35,9 @@ class Game(metaclass=ABCMeta):
         self._teams = {}
         # self._units -> keys: Units; values: tile_ids
         self._units = {}  # type: dict
-        # self._controllers -> keys: controls; values: Units
+        # self._controllers -> keys: controllers; values: Units
         self._controllers = {}
-        # self._controllersMoves -> keys: controls; values: tuples (current_move, pending_moves)
+        # self._controllersMoves -> keys: controllers; values: tuples (current_move, pending_moves)
         self._controllersMoves = {}
         # self._otherMoves -> keys: units; values: queue
         self._otherMoves = {}
@@ -140,9 +141,11 @@ class Game(metaclass=ABCMeta):
             controller: The controller f*or which add a move
             move: The move to add for the given controller
         """
-        self._cancelCurrentMoves(controller)
+        if self._controllersMoves[controller][0] is not None:
+            self._cancelCurrentMoves(controller)
         fifo = self._controllersMoves[controller][1]  # type: Queue
         fifo.put(move)
+        # print((self._controllersMoves[controller][0], fifo))
 
     def _addOtherMove(self, unit: Unit, move: Path) -> None:
         """
@@ -157,7 +160,7 @@ class Game(metaclass=ABCMeta):
             self._otherMoves[unit] = Queue()
             self._otherMoves[unit].put(move)
 
-    def _getUnitFromController(self, controller: Controller) -> Unit:
+    def _getUnitFromController(self, controller: Controller) -> MovingUnit:
         """
         Args:
             controller: The controller that controls the wanted unit
@@ -181,18 +184,15 @@ class Game(metaclass=ABCMeta):
         Args:
             controller: The controller for which cancel the movements
         """
-        try:
-            move_tuple = self._controllersMoves[controller]  # type: tuple
-            fifo = move_tuple[1]  # type: Queue
-            last_move = move_tuple[0]  # type: Path
-            new_fifo = Queue()
-            if last_move is not None:
-                last_move.cancel()
-                new_fifo.put(last_move)
-            del fifo
-            self._controllersMoves[controller] = (last_move, new_fifo)
-        except Empty:
-            pass
+        move_tuple = self._controllersMoves[controller]  # type: tuple
+        fifo = move_tuple[1]  # type: Queue
+        last_move = move_tuple[0]  # type: Path
+        new_fifo = Queue()
+        if last_move is not None:
+            last_move.cancel()
+            new_fifo.put(last_move)
+        del fifo
+        self._controllersMoves[controller] = (last_move, new_fifo)
 
     def _dispatchInputToHumanControllers(self, input_key) -> None:
         """
@@ -217,7 +217,7 @@ class Game(metaclass=ABCMeta):
         self._previouslyClickedTile = tile
         mouse_state = pygame.mouse.get_pressed()
         for controller in self._controllers.keys():  # type: Human
-            if type(controller) == Human:
+            if issubclass(type(controller), Human):
                 self._sendMouseEventToHumanController(controller, tile, mouse_state, click_up)
 
     def _handleControllersEvents(self) -> None:
@@ -273,7 +273,8 @@ class Game(metaclass=ABCMeta):
                 except ImpossibleMove:
                     self._cancelCurrentMoves(controller)
         else:
-            current_move.cancel(cancel_post_action=True)
+            if current_move is not None:
+                current_move.cancel(cancel_post_action=True)
 
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
         """
@@ -285,7 +286,7 @@ class Game(metaclass=ABCMeta):
         """
         moves = self._controllersMoves[controller]
         current_move = moves[0]  # type: Path
-        if current_move is None or current_move.cancelled or current_move.completed:
+        if current_move is None or current_move.finished():
             try:
                 move = moves[1].get_nowait()  # type: Path
                 self._controllersMoves[controller] = (move, moves[1])

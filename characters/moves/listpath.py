@@ -10,7 +10,7 @@ class ListPath(Path):
         """
         Creates a path containing all the short moves to perform in the given list
         Args:
-            move_list: The list containing all the moves for the path
+            move_list: The list containing all the moves (of type 'ShortMove') for the path
             pre_action: The action to perform before the first move is performed
             post_action: The action to perform after the last move was performed
             step_pre_action: The action to perform each time a step (ShortMove) has been started.
