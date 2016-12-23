@@ -19,6 +19,7 @@ MAX_FPS = 60
 CONTINUE = 0
 PAUSE = 1
 END = 2
+FINISH = 3
 
 
 class Game(metaclass=ABCMeta):
@@ -64,7 +65,9 @@ class Game(metaclass=ABCMeta):
         Args:
             max_fps: The maximum frame per seconds of the game
 
-        Returns: a tuple containing all the winning players, or an empty tuple in case of draw
+        Returns:
+            a tuple containing all the winning players, or an empty tuple in case of draw,
+            or None if the game was closed by the user
         """
         pygame.init()
         clock = pygame.time.Clock()
@@ -76,6 +79,8 @@ class Game(metaclass=ABCMeta):
                 self._handlePendingMoves()
                 self._refreshScreen()
                 self._state = self._checkGameState()
+            elif self._state == FINISH:
+                return None
             clock.tick(max_fps)
         return self._handleGameFinished(self.winningPlayers)
 
@@ -120,7 +125,7 @@ class Game(metaclass=ABCMeta):
         """
         for event in pygame.event.get():
             if event.type == QUIT:
-                self._state = END
+                self._state = FINISH
             elif event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
                     if self._state == CONTINUE:

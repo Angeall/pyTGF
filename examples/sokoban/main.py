@@ -64,7 +64,9 @@ def launch_game(gui: GUI, player_info: tuple):
     builder = SokobanBoardBuilder(width, height, parser_result, controllers, speed)
     game = builder.createGame()
     result = game.run()
-    if len(result) == 0:
+    if result is None:
+        return
+    elif len(result) == 0:
         string_result = "DRAW"
     else:
         winning_players_strings = ["Player " + str(number) for number in result]

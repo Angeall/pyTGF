@@ -105,7 +105,9 @@ def launch_game(gui: GUI, player_info: tuple):
         add_player(game, player_class, player_number, player_teams[player_number], speed, min(lines, columns) * (2/3))
 
     result = game.run()
-    if len(result) == 0:
+    if result is None:
+        return
+    elif len(result) == 0:
         string_result = "DRAW"
     else:
         winning_players_strings = ["Player " + str(number) for number in result]
