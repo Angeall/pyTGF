@@ -36,11 +36,13 @@ class SokobanGame(Game):
                                                                 destination_tile.identifier,
                                                                 lambda tile: not tile.deadly)
                         current_tile = source_tile
-                        for next_tile_id in tile_ids:
-                            next_tile = self.board.getTileById(next_tile_id)
-                            moves.append(ShortMove(unit, current_tile, next_tile, game.MAX_FPS))
-                            current_tile = next_tile
-                        self._addMove(controller, ListPath(moves, step_pre_action=self._pushBoxIfNeeded))
+                        tile_ids = self._checkIfBoxInTheWay(source_tile, tile_ids)
+                        if len(tile_ids) > 0:
+                            for next_tile_id in tile_ids:
+                                next_tile = self.board.getTileById(next_tile_id)
+                                moves.append(ShortMove(unit, current_tile, next_tile, game.MAX_FPS))
+                                current_tile = next_tile
+                            self._addMove(controller, ListPath(moves, step_pre_action=self._pushBoxIfNeeded))
                     except UnreachableDestination:
                         pass
 
@@ -56,7 +58,21 @@ class SokobanGame(Game):
             tile_diff = cur_tile_id[0] - prev_tile_id[0], cur_tile_id[1] - prev_tile_id[1]
             box_next_tile_id = (cur_tile_id[0] + tile_diff[0], cur_tile_id[1] + tile_diff[1])
             box_next_tile = self.board.getTileById(box_next_tile_id)
-            if box_next_tile is self.board.OUT_OF_BOARD_TILE or not box_next_tile.walkable:
-                raise ImpossibleMove("The box cannot be moved that way")
-            else:
-                self._addOtherMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, game.MAX_FPS)]))
+            self._addOtherMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, game.MAX_FPS)]))
+
+    def _checkIfBoxInTheWay(self, source_tile: Tile, next_tile_ids: list) -> list:
+        i = 0
+        current = source_tile
+        for tile_id in next_tile_ids:
+            nxt = self.board.getTileById(tile_id)
+            for occupant in nxt.occupants:
+                if isinstance(occupant, Box):
+                    diff = (nxt.identifier[0] - current.identifier[0], nxt.identifier[1] - current.identifier[1])
+                    box_next_tile_id = (nxt.identifier[0] + diff[0], nxt.identifier[1] + diff[1])
+                    box_next_tile = self.board.getTileById(box_next_tile_id)  # The tile where the box will be pushed
+                    if not box_next_tile.walkable:
+                        next_tile_ids = next_tile_ids[:i]
+                        break
+            current = nxt
+            i += 1
+        return next_tile_ids

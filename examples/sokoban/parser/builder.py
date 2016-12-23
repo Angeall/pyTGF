@@ -46,25 +46,29 @@ class SokobanBoardBuilder(SquareBoardBuilder):
             i += 1
         game = SokobanGame(board)
         box_identifier = -1
+
+        # PUT BOXES INTO THE GAME
         for (i, j) in self._boxLocations:
-            game.addUnit(Box(self._unitSpeed, box_identifier), PassiveController(box_identifier), (i, j), team=2)
+            game.addUnit(Box(self._unitSpeed, box_identifier), PassiveController(box_identifier), (i, j), team=1)
             box_identifier -= 1
 
+        # CHECK IF THERE IS ENOUGH PLAYERS SELECTED
         if len(self._controllers) < len(self._playerLocations):
             msg = "The number of players needed for this board is %d, got %d" % \
                     (len(self._controllers), len(self._playerLocations))
             raise NotEnoughPlayersException(msg)
         player_number = 1
 
+        # PUT THE PLAYERS INTO THE GAME
         for (i, j) in self._playerLocations:
             controller = self._controllers[player_number - 1]
             try:
                 controller = controller(player_number)
-            except TypeError:
+            except TypeError:  # Human player waiting for input keys
                 keys = human_controls[self._humanCounter]
                 self._humanCounter += 1
                 controller = controller(player_number, keys[0], keys[1], keys[2], keys[3])
-            game.addUnit(SokobanDrawstick(self._unitSpeed, player_number), controller, (i, j))
+            game.addUnit(SokobanDrawstick(self._unitSpeed, player_number), controller, (i, j), team=1)
             player_number += 1
         return game
 

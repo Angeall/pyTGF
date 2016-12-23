@@ -159,11 +159,8 @@ class Game(metaclass=ABCMeta):
             unit: The unit that will be moved
             move: The move that will be performed
         """
-        if unit in self._otherMoves:
-            self._otherMoves[unit].put(move)
-        else:
-            self._otherMoves[unit] = Queue()
-            self._otherMoves[unit].put(move)
+        if unit not in self._otherMoves or self._otherMoves[unit] is None:
+            self._otherMoves[unit] = move
 
     def _getUnitFromController(self, controller: Controller) -> MovingUnit:
         """
@@ -244,8 +241,9 @@ class Game(metaclass=ABCMeta):
         for controller in self._controllers.keys():
             unit = self._controllers[controller]
             current_move = self._getNextMoveForControllerIfNeeded(controller)
-            self._handleMoveForUnit(unit, current_move, controller)
-            moved_units.append(unit)
+            moved = self._handleMoveForUnit(unit, current_move, controller)
+            if moved:
+                moved_units.append(unit)
 
         for unit in self._otherMoves:  # type: Unit
             if unit not in moved_units:  # Two moves on the same unit cannot be performed at the same time...
@@ -254,7 +252,10 @@ class Game(metaclass=ABCMeta):
                     if self._controllers[controller] is unit:
                         unit_controller = controller
                 if unit_controller is not None:
-                    self._handleMoveForUnit(unit, self._otherMoves[unit].get_nowait(), unit_controller)
+                    if self._otherMoves[unit] is not None:
+                        self._handleMoveForUnit(unit, self._otherMoves[unit], unit_controller)
+                        if self._otherMoves[unit].finished():
+                            self._otherMoves[unit] = None
 
     def _handleMoveForUnit(self, unit: Unit, current_move: Path, controller: Controller):
         """
@@ -270,16 +271,18 @@ class Game(metaclass=ABCMeta):
                     tile_id = current_move.performNextMove()
                     if tile_id is not None:  # A new tile has been reached by the movement
                         self._updateGameState(controller, tile_id)
-                    if current_move.cancelled or current_move.completed:
-                        pass
+                    return True
                 except IllegalMove:
                     unit.kill()
                     self._cancelCurrentMoves(controller)
                 except ImpossibleMove:
                     self._cancelCurrentMoves(controller)
+                finally:
+                    return False
         else:
             if current_move is not None:
                 current_move.cancel(cancel_post_action=True)
+                return False
 
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
         """
