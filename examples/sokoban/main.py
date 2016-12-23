@@ -56,7 +56,7 @@ def launch_game(gui: GUI, player_info: tuple):
     pygame.init()
     width = 1280
     height = 720
-    speed = int(round((min(width, height) / 1080) * 150))
+    speed = int(round((min(width, height) / 1080) * 300))
     controllers = []
     for player_number, player_class in player_info[0].items():
         controllers.append(player_class)
