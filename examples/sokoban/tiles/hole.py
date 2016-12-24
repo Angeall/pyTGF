@@ -3,7 +3,7 @@ from examples.sokoban.units.box import Box
 
 
 DEADLY_COLOR = (0, 0, 0)
-OK_COLOR = (255, 0, 0)
+OK_COLOR = (125, 125, 125)
 
 
 class Hole(Tile):
