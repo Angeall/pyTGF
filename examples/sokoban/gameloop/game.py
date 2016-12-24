@@ -1,5 +1,6 @@
 import loop.game as game
 from board import pathfinder
+from board.board import Board
 from board.pathfinder import UnreachableDestination
 from board.tile import Tile
 from characters.controller import Controller
@@ -10,12 +11,34 @@ from examples.sokoban.units.box import Box
 from loop.game import Game
 
 
+class NeverEndingGame(Exception):
+    pass
+
+
 class SokobanGame(Game):
+    def __init__(self, board: Board, winning_tiles: list):
+        super().__init__(board)
+        if len(winning_tiles) == 0:
+            raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
+        self._winningTiles = winning_tiles
+
     def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
         controller.reactToInput(input_key, player_tile=self._units[self._controllers[controller]])
 
     def _isFinished(self) -> (bool, list):
-        return False, []
+        units = []
+        for controller in self._controllers:
+            winning = False
+            unit = self._controllers[controller]
+            if not isinstance(unit, Box):
+                units.append(unit)
+                for winning_tile in self._winningTiles:
+                    if self._units[unit] == winning_tile:
+                        winning = True
+                        break
+                if not winning:
+                    return False, []
+        return True, units
 
     def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
                                          click_up: bool) -> None:

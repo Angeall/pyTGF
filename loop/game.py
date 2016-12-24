@@ -14,7 +14,7 @@ from board.board import Board
 from board.tile import Tile
 from utils.geom import get_hypotenuse_length, get_polygon_radius
 
-MAX_FPS = 60
+MAX_FPS = 30
 
 CONTINUE = 0
 PAUSE = 1
@@ -59,7 +59,7 @@ class Game(metaclass=ABCMeta):
         """
         self._suicide = suicide_enabled
 
-    def run(self, max_fps: int = MAX_FPS) -> tuple:
+    def run(self, max_fps: int=MAX_FPS) -> tuple:
         """
         Launch the game and its logical loop
         Args:
@@ -71,8 +71,9 @@ class Game(metaclass=ABCMeta):
         """
         pygame.init()
         clock = pygame.time.Clock()
-        self._screen = pygame.display.set_mode(self.board.size, DOUBLEBUF + HWSURFACE)
+        self._screen = pygame.display.set_mode(self.board.size, DOUBLEBUF)
         while self._state != END:
+            clock.tick(max_fps)
             self._handleInputs()
             if self._state == CONTINUE:
                 self._handleControllersEvents()
@@ -81,7 +82,6 @@ class Game(metaclass=ABCMeta):
                 self._state = self._checkGameState()
             elif self._state == FINISH:
                 return None
-            clock.tick(max_fps)
         return self._handleGameFinished(self.winningPlayers)
 
     def addUnit(self, unit: Unit, controller: Controller, tile_id, initial_action: Path = None, team: int = -1) -> None:

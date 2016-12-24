@@ -2,6 +2,7 @@ from board.parsers.board_parser import BoardParser
 from board.tile import Tile
 from examples.sokoban.tiles.hole import Hole
 from examples.sokoban.tiles.wall import Wall
+from examples.sokoban.tiles.winning import Winning
 from examples.sokoban.units.box import Box
 from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
 
@@ -19,3 +20,5 @@ class SokobanBoardParser(BoardParser):
             return Tile
         elif character == "w":
             return Wall
+        elif character == "e":
+            return Winning
