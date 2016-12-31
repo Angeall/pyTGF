@@ -14,8 +14,8 @@ class Particle:
         """
         self._nbLives = nb_lives
         self.sprite = sprite  # type: UnitSprite
-        self._drawable = None
         self._isAlive = True
+        self._drawable = None
 
     def isAlive(self) -> bool:
         """
@@ -48,10 +48,11 @@ class Particle:
         Args:
             destination: The pixel on which the unit will be drawn.
         """
-        current_position = self.sprite.rect.center
-        if current_position != destination:
-            x, y = utils.geom.vectorize(current_position, destination)
-            self.sprite.rect.move_ip(x, y)
+        if self.sprite is not None:
+            current_position = self.sprite.rect.center
+            if current_position != destination:
+                x, y = utils.geom.vectorize(current_position, destination)
+                self.sprite.rect.move_ip(x, y)
 
     def move(self, destination_offset) -> None:
         """
@@ -59,7 +60,8 @@ class Particle:
         Args:
             destination_offset: The translation offset to perform
         """
-        self.sprite.rect.move_ip(destination_offset[0], destination_offset[1])
+        if self.sprite is not None:
+            self.sprite.rect.move_ip(destination_offset[0], destination_offset[1])
 
     def getSpriteGroup(self) -> pygame.sprite.Group:
         """

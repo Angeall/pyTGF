@@ -1,14 +1,15 @@
-from characters.controllers.human import Human
-from characters.controller import Controller
-from characters.moves.continous import ContinuousMove
-from examples.lazerbike.controls.allowed_moves import *
-from examples.lazerbike.sprites.bike import Bike
-from examples.lazerbike.sprites.trace import Trace
-from display.tile import Tile
-from display.boards.square_board import SquareBoard
-from loop.game import Game, MAX_FPS
 from functools import partial
-from types import FunctionType as function
+
+from examples.lazerbike.units.trace import Trace
+
+from characters.controller import Controller
+from characters.controllers.human import Human
+from characters.moves.continous import ContinuousMove
+from board.boards.square_board import SquareBoard
+from board.tile import Tile
+from examples.lazerbike.controls.allowed_moves import *
+from examples.lazerbike.units.bike import Bike
+from loop.game import Game, MAX_FPS
 
 
 class LazerBikeGame(Game):
@@ -17,16 +18,6 @@ class LazerBikeGame(Game):
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
         self.setSuicide(True)
-
-    def _handleGameFinished(self, winning_units: list):
-        if winning_units is None:
-            return "DRAW"
-        else:
-            msg = "WON: "
-            for player in winning_units:
-                msg += "Player " + str(player.playerNumber) + ", "
-            msg = msg[:-2]
-            return msg
 
     def _isFinished(self) -> (bool, list):
         teams_alive = 0
@@ -74,6 +65,7 @@ class LazerBikeGame(Game):
                                                      step_post_action=partial(self._letTraceOnPreviousTile, unit=unit)))
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
+        # TODO: continuous line using center-to-center trace but need previous_previous_tile
         tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)
         self._resizeTrace(trace, tile_to_place_trace)

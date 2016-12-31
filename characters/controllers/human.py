@@ -6,7 +6,7 @@ from characters.controller import Controller
 class Human(Controller, metaclass=ABCMeta):
 
     @abstractmethod
-    def reactToInput(self, input_key: int, *game_info: ...) -> None:
+    def reactToInput(self, input_key: int, **game_info: ...) -> None:
         """
         Makes the controller react to an input. (e.g. input_key == K_RIGHT: self.moves.put(Move(right=True)) )
         Args:
@@ -16,11 +16,11 @@ class Human(Controller, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def reactToTileClicked(self, tile, mouse_state=(True, False, False), click_up=False, *game_info: ...) -> None:
+    def reactToTileClicked(self, tile_id, mouse_state=(True, False, False), click_up=False, **game_info: ...) -> None:
         """
 
         Args:
-            tile: The tile clicked on (can be None if click_up = True)
+            tile_id: The ID of the tile clicked on (can be None if the click was outside any tile)
             mouse_state: A triplet containing the mouse state (can be 3*False): (b1_clicked, b2_clicked, b3_clicked)
                          Default: left click down
             click_up: True if the event is a "mouseup" event. False otherwise

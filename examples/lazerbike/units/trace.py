@@ -14,36 +14,24 @@ BOTTOM_RIGHT = 3
 
 def _getDirectionChangeType(previous_direction, current_direction):
     if previous_direction == GO_UP:
-        print("previous: up")
         if current_direction == GO_LEFT:
-            print("current: left")
             return BOTTOM_LEFT
         elif current_direction == GO_RIGHT:
-            print("current: right")
             return BOTTOM_RIGHT
     elif previous_direction == GO_LEFT:
-        print("previous: left")
         if current_direction == GO_UP:
-            print("current: up")
             return TOP_RIGHT
         elif current_direction == GO_DOWN:
-            print("current: down")
             return BOTTOM_RIGHT
     elif previous_direction == GO_RIGHT:
-        print("previous: right")
         if current_direction == GO_UP:
-            print("current: up")
             return TOP_LEFT
         elif current_direction == GO_DOWN:
-            print("current: down")
             return BOTTOM_LEFT
     elif previous_direction == GO_DOWN:
-        print("previous: down")
         if current_direction == GO_LEFT:
-            print("current: left")
             return TOP_LEFT
         elif current_direction == GO_RIGHT:
-            print("current: right")
             return TOP_RIGHT
 
 
@@ -80,12 +68,11 @@ class TraceSprite(UnitSprite):
         # self.image = bottom_half_surface
         # self.rect = self.image.get_rect()
         bottom_half_surface = transform.rotate(bottom_half_surface, 90)
-        #self.image = transform.chop(self.image, bottom_half_rect)
+        # self.image = transform.chop(self.image, bottom_half_rect)
         bottom_half_surface.blit(self.image, (0, 0))
         self.image = bottom_half_surface
         self.rect = self.image.get_rect()
         # print("rotation")
-        print(rotation_type)
         self.rotate(rotation_type*90)
         # print("finished rotation")
 

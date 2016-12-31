@@ -1,13 +1,9 @@
 import utils.geom
-from characters.units.unit import Unit
-from display.tile import Tile
+from characters.units.moving_unit import MovingUnit
+from board.tile import Tile
 
 
-class DeadlyMove(BaseException):  # The move is deadly
-    pass
-
-
-class IllegalMove(BaseException):  # The move is illegal but not deadly
+class IllegalMove(BaseException):  # The move is illegal
     pass
 
 
@@ -22,7 +18,7 @@ class ShortMove(object):
 
     This class supposes that the unit comes from the center of the sourceTile.
     """
-    def __init__(self, unit: Unit, source_tile: Tile, destination_tile: Tile, fps: int):
+    def __init__(self, unit: MovingUnit, source_tile: Tile, destination_tile: Tile, fps: int):
         """
         Instantiates a move object between two tiles
         Args:
@@ -49,8 +45,6 @@ class ShortMove(object):
         Returns:
 
         """
-        if self.destinationTile.deadly:
-            raise DeadlyMove("The move that has been done is deadly and ends the game for this unit")
         if not self.destinationTile.walkable:
             raise ImpossibleMove("The destination is not walkable")
         if self.destinationTile.identifier not in self.sourceTile.neighbours:
@@ -61,15 +55,22 @@ class ShortMove(object):
         if not self.isPerformed:
             if self._frameNeeded <= 1:  # Last step => Complete the move (kill precision error)
                 self.unit.moveTo(self.destinationTile.center)
-
+                self._handleLastStep()
                 self.isPerformed = True
-
-
             else:
                 temp_x = self._currentPos[0] + self._pixelsPerFrame[0]
                 temp_y = self._currentPos[1] + self._pixelsPerFrame[1]
                 self._currentPos = temp_x, temp_y
                 self.unit.moveTo(self._currentPos)
                 self._frameNeeded -= 1
+
+    def completeMove(self):
+        for _ in range(self._frameNeeded):
+            self.performStep()
+
+    def _handleLastStep(self):
+        if self.unit in self.sourceTile:
+            self.sourceTile.removeOccupant(self.unit)
+            self.destinationTile.addOccupant(self.unit)
 
 

@@ -18,9 +18,10 @@ class ContinuousMove(Path):
             pre_action: The action to perform before the first move is performed
             post_action: The action to perform after the last move was performed
             step_pre_action: The action to perform each time a step (ShortMove) has been started.
-            step_post_action: The action to perform each time a step (ShortMove) has been completed.
+            step_post_action:
+                The action to perform each time a step (ShortMove) has been completed.
                 (step actions can have an unfulfilled "previous_tile" parameter, which will be filled with the last tile
-                 and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
+                and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
         """
         super().__init__(pre_action=pre_action, post_action=post_action, step_pre_action=step_pre_action,
                          step_post_action=step_post_action)

@@ -20,7 +20,8 @@ class Tile(object):
 
     TILE_LENGTH_EPSILON = 0.1
 
-    def __init__(self, center: tuple, points: list, identifier, walkable: bool=True, deadly: bool=False) -> None:
+    def __init__(self, center: tuple, points: list, identifier, walkable: bool=True, deadly: bool=False,
+                 neighbours=None) -> None:
         """
         Args:
             center: The equidistant center of the tile
@@ -29,12 +30,15 @@ class Tile(object):
             identifier: The identifier of the tile in the board
             walkable: Boolean that defines if a unit can walk on this tile or not
             deadly: Boolean that defines if a unit must die when walking on this tile
+            neighbours: The IDs of the neighbours of this tile
         """
         self.nbrOfSides = len(points)
         if self.nbrOfSides < 3:
             raise NotAPolygonError("A polygon is made of minimum 3 points")
         self.identifier = identifier
         self.neighbours = []
+        if neighbours is not None:
+            self.neighbours.extend(neighbours)
         self.center = center
         self.points = points
         self.sideLength = int(utils.geom.dist(self.points[-1], self.points[0]))
@@ -126,10 +130,6 @@ class Tile(object):
         if self.internalColor is not None:
             gfxdraw.filled_polygon(surface, self.points, self.internalColor)
         gfxdraw.aapolygon(surface, self.points, self.externalColor)
-        # pygame.draw.aaline(surface, self.externalColor, self.points[-1], self.points[0])
-
-        # for occupant in self.occupants:  # type: Particle
-        #     occupant.draw(surface)
 
     def addOccupant(self, new_occupant) -> None:
         """
@@ -138,10 +138,14 @@ class Tile(object):
             new_occupant: The occupant to add to this tile
         """
         self.occupants.append(new_occupant)
+        if self.deadly:
+            new_occupant.kill()
 
     def __contains__(self, item):
-        # TODO: Checks if the tile contains a unit and if the unit is alive ! if not, remove it from the tile
-        pass
+        """
+        Returns: True if the item is part of this tile's occupants
+        """
+        return item in self.occupants
 
     def removeOccupant(self, occupant_to_remove) -> None:
         """
@@ -161,7 +165,7 @@ class Tile(object):
         elif isinstance(occupant_to_remove, list):
             new_occupants = []
             for occupant in self._occupants:  # type: Particle
-                if new_occupants not in occupant_to_remove:
+                if occupant not in occupant_to_remove:
                     new_occupants.append(occupant)
             self.occupants = new_occupants
 

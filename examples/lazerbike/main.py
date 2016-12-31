@@ -1,16 +1,17 @@
-from examples.lazerbike.controls.player import LazerBikePlayer
-from display.boards.square_board import SquareBoardBuilder
+from tkinter import Tk
+from tkinter.ttk import Frame, Label, Button
+
 import pygame
 from pygame.locals import *
 
+from board.boards.square_board import SquareBoardBuilder
 from examples.lazerbike.controls.allowed_moves import *
+from examples.lazerbike.controls.player import LazerBikePlayer
 from examples.lazerbike.gameloop.game import LazerBikeGame
-from examples.lazerbike.sprites.bike import Bike
+from examples.lazerbike.units.bike import Bike
 from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
 from menu.gui import GUI
-from tkinter import Tk
-from tkinter.ttk import Frame
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),
@@ -41,6 +42,7 @@ def buildSelectionFrame(window: Tk, gui: GUI) -> Frame:
     global selection_frame
     builder = AISelectorFrameBuilder("Player selection", window, LazerBikePlayer,
                                      lambda: launch_game(gui, builder.getSelection()), gui.goToPreviousFrame,
+                                     max_teams=4, min_teams=2,
                                      players_description={1: "Blue", 2: "Red", 3: "Green", 4: "Yellow"})
     selection_frame = builder.create()
     return selection_frame
@@ -57,27 +59,40 @@ def get_player_info(player_number: int):
         return 45, 37, GO_UP
 
 
-def add_player(game: LazerBikeGame, player_class, player_number: int, player_team: int, speed: int):
+def add_player(game: LazerBikeGame, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
     global nb_human
-    print(player_class)
     try:
         controller = player_class(player_number)
     except TypeError:
-        controls = human_controls[nb_human]
+        controls = human_controls[nb_human % len(human_controls)]
         nb_human += 1
         controller = player_class(player_number, controls[0], controls[1], controls[2], controls[3])
     player_info = get_player_info(player_number)
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
-    game.addUnit(Bike(speed, player_number, max_trace=-1), controller, start_pos, initial_direction, team=player_team)
+    game.addUnit(Bike(speed, player_number, max_trace=max_trace), controller, start_pos, initial_direction,
+                 team=player_team)
+
+
+def end_popup(string_result):
+    popup = Tk()
+    popup.title('Game finished')
+    label = Label(popup, text=string_result)
+    label.grid(row=0, column=0, columnspan=4)
+    button1 = Button(text="Play again", command=lambda: relaunch_gui(popup), width=15)
+    button1.grid(row=1, column=1)
+    button2 = Button(text="Quit", command=popup.destroy, width=15)
+    button2.grid(row=1, column=2)
 
 
 def launch_game(gui: GUI, player_info: tuple):
     gui.quit()
     pygame.init()
-    width = 1280
-    height = 500
-    builder = SquareBoardBuilder(width, height, 50, 75)
+    width = 1920
+    height = 1080
+    lines = 50
+    columns = 75
+    builder = SquareBoardBuilder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
@@ -87,10 +102,25 @@ def launch_game(gui: GUI, player_info: tuple):
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
-        add_player(game, player_class, player_number, player_teams[player_number], speed)
+        add_player(game, player_class, player_number, player_teams[player_number], speed, min(lines, columns) * (2/3))
 
     result = game.run()
-    print(result)
+    if result is None:
+        return
+    elif len(result) == 0:
+        string_result = "DRAW"
+    else:
+        winning_players_strings = ["Player " + str(number) for number in result]
+        string_result = "WON: " + str(winning_players_strings)
+    end_popup(string_result)
+
+
+def relaunch_gui(window):
+    global nb_human
+    nb_human = 0
+    pygame.quit()
+    window.destroy()
+    launch_gui()
 
 
 def launch_gui():

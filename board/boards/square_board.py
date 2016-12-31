@@ -1,12 +1,12 @@
-from display.board import Board, Builder
-from display.tile import Tile
+from board.board import Board, Builder
+from board.tile import Tile
 import pygame
 from pygame.locals import *
 
 
 class SquareBoard(Board):
 
-    OUT_OF_BOARD_TILE = Tile((0, 0), [(0, 0), (0, 1), (1, 1), (1, 0)], None, deadly=True)
+    OUT_OF_BOARD_TILE = Tile((0, 0), [(0, 0), (0, 1), (1, 1), (1, 0)], None, deadly=True, walkable=False)
 
     def getTileById(self, identifier: tuple) -> Tile:
         """
@@ -65,8 +65,6 @@ class SquareBoard(Board):
 
 
 class SquareBoardBuilder(Builder):
-
-    BOARD_TYPE = SquareBoard
 
     def __init__(self, width: int, height: int, lines: int, columns: int):
         """

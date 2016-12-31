@@ -41,24 +41,16 @@ class Path(metaclass=ABCMeta):
         Returns: The id of the new tile of the unit, or None if the current move is not performed yet.
         """
         self._handleFirstMove()
-        if not self._pathFinished():
+        if not self.finished():
             if self._currentMove is None and self._isFirstMoveEmpty():
-                    return
-            if self._currentMove.isPerformed:
-                new_tile_id = self._handleStepFinished()
-                self._getNextStepIfNeeded()
-                return new_tile_id
+                return
             else:
                 self._currentMove.performStep()
-        else:
-            self._handlePathFinished()
+                if self._currentMove.isPerformed:
 
-    @abstractmethod
-    def _getNextShortMove(self) -> ShortMove:
-        """
-        Returns: The next move in the path or None if there is none
-        """
-        pass
+                    new_tile_id = self._handleStepFinished()
+                    self._getNextStepIfNeeded()
+                    return new_tile_id
 
     def _handleFirstMove(self):
         if self._isFirstMove:
@@ -72,8 +64,10 @@ class Path(metaclass=ABCMeta):
         if self._currentMove is None:  # Empty case: getNextShortMove returns nothing => Stops directly
             self.completed = True
             return
+        else:
+            self._performAction(self._stepPreAction)
 
-    def _pathFinished(self):
+    def finished(self):
         return self.cancelled or self.completed
 
     def _handleStepFinished(self):
@@ -92,11 +86,14 @@ class Path(metaclass=ABCMeta):
         """
         if self.cancelTriggered:
             self.cancelled = True
+            self._handlePathFinished()
         else:
             self._currentMove = self._getNextShortMove()
             if self._currentMove is not None:
                 self._performAction(self._stepPreAction)
-                self._currentMove.performStep()
+            else:
+                self.completed = True
+                self._handlePathFinished()
 
     def _performAction(self, action):
         if action is not None:
@@ -110,3 +107,10 @@ class Path(metaclass=ABCMeta):
         if self._postAction is not None:
             self._postAction()
             self._postAction = None
+
+    @abstractmethod
+    def _getNextShortMove(self) -> ShortMove:
+        """
+        Returns: The next move in the path or None if there is none
+        """
+        pass
