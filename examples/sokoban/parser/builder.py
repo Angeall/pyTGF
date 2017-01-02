@@ -49,12 +49,12 @@ class SokobanBoardBuilder(SquareBoardBuilder):
                 j += 1
             i += 1
         game = SokobanGame(board, winning_tiles)
-        box_identifier = -1
+        box_number = -1
 
         # PUT BOXES INTO THE GAME
         for (i, j) in self._boxLocations:
-            game.addUnit(Box(self._unitSpeed, box_identifier), PassiveController(box_identifier), (i, j), team=1)
-            box_identifier -= 1
+            game.addUnit(Box(self._unitSpeed, box_number), PassiveController(box_number), (i, j), team=1)
+            box_number -= 1
 
         # CHECK IF THERE IS ENOUGH PLAYERS SELECTED
         if len(self._controllers) < len(self._playerLocations):

@@ -20,7 +20,7 @@ class Tile(object):
 
     TILE_LENGTH_EPSILON = 0.1
 
-    def __init__(self, center: tuple, points: list, identifier, walkable: bool=True, deadly: bool=False,
+    def __init__(self, center: tuple, points: list, identifier: tuple, walkable: bool=True, deadly: bool=False,
                  neighbours=None) -> None:
         """
         Args:
@@ -96,7 +96,7 @@ class Tile(object):
         """
         self.neighbours.extend(neighbours_identifier)
 
-    def hasDirectAccess(self, other_tile_identifier) -> bool:
+    def hasDirectAccess(self, other_tile_identifier: tuple) -> bool:
         """
         Checks if the tile has a direct access to another tile.
         Args:

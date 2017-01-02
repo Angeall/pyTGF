@@ -121,7 +121,7 @@ class Board(metaclass=ABCMeta):
         surface.blit(surf, (0, 0))
 
     @abstractmethod
-    def getTileById(self, identifier) -> Tile:
+    def getTileById(self, identifier: tuple) -> Tile:
         """
         Gets the tile with the corresponding identifier in the board
         Args:
@@ -278,7 +278,7 @@ class Builder(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _generateTile(self, center: tuple, identifier) -> Tile:
+    def _generateTile(self, center: tuple, identifier: tuple) -> Tile:
         """
         Generates a tile for the grid
         Args:
