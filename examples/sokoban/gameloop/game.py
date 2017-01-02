@@ -7,6 +7,7 @@ from characters.controller import Controller
 from characters.controllers.human import Human
 from characters.moves.listpath import ListPath
 from characters.moves.move import ImpossibleMove, ShortMove
+from characters.units.unit import Unit
 from examples.sokoban.units.box import Box
 from loop.game import Game
 
@@ -16,20 +17,29 @@ class NeverEndingGame(Exception):
 
 
 class SokobanGame(Game):
+    def updateGameState(self, unit, tile_id):
+        players_units = [unit for unit in self._units if not isinstance(unit, Box)]
+
+        super().updateGameState(unit, tile_id)
+
+
     def __init__(self, board: Board, winning_tiles: list):
         super().__init__(board)
         if len(winning_tiles) == 0:
             raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
         self._winningTiles = winning_tiles
+        self._endingUnit = Unit()
+        self.addUnit(self._endingUnit, None)
+        self.addToTeam(1000, self._endingUnit)
 
     def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
-        controller.reactToInput(input_key, player_tile=self._units[self._controllers[controller]])
+        controller.reactToInput(input_key, player_tile=self._units[self.controllers[controller]])
 
     def _isFinished(self) -> (bool, list):
         units = []
-        for controller in self._controllers:
+        for controller in self.controllers:
             winning = False
-            unit = self._controllers[controller]
+            unit = self.controllers[controller]
             if not isinstance(unit, Box):
                 units.append(unit)
                 for winning_tile in self._winningTiles:
@@ -44,7 +54,7 @@ class SokobanGame(Game):
                                          click_up: bool) -> None:
         if tile is not None:
             controller.reactToTileClicked(tile.identifier, mouse_state, click_up,
-                                          player_tile=self._units[self._controllers[controller]])
+                                          player_tile=self._units[self.controllers[controller]])
 
     def _handleControllerEvent(self, controller: Controller, event) -> None:
         if type(event) == tuple and len(event) == 2:
@@ -55,9 +65,9 @@ class SokobanGame(Game):
                     source_tile = self.board.getTileById(self._units[unit])
                     moves = []
                     try:
-                        tile_ids = pathfinder.get_shortest_path(self.board, source_tile.identifier,
-                                                                destination_tile.identifier,
-                                                                lambda tile: not tile.deadly)
+                        tile_ids = pathfinder.get_shortest_path(source_tile.identifier, destination_tile.identifier,
+                                                                self.board.getTileById, lambda tile: tile.neighbours,
+                                                                lambda tile: tile.walkable and not tile.deadly)
                         current_tile = source_tile
                         tile_ids = self._checkIfBoxInTheWay(source_tile, tile_ids)
                         if len(tile_ids) > 0:

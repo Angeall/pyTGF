@@ -34,9 +34,10 @@ class Unit(Particle):
 
     def kill(self):
         super().kill()
-        if not self.survivingParticles:
-            while len(self._particlesSpriteGroup) != 0:
-                self.removeOldestParticle()
+        if not self.isAlive():
+            if not self.survivingParticles:
+                while len(self._particlesSpriteGroup) != 0:
+                    self.removeOldestParticle()
 
     def addParticle(self, particle: Particle) -> None:
         """

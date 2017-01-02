@@ -23,6 +23,14 @@ class Particle:
         """
         return self._isAlive
 
+    def setNbLives(self, nb_lives: int) -> None:
+        """
+        Sets the given number of lives of the particle
+        Args:
+            nb_lives: The number of lives to set to the particle
+        """
+        self._nbLives = nb_lives
+
     def kill(self) -> None:
         """
         Remove a life from the particle
