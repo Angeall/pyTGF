@@ -30,6 +30,10 @@ class Particle:
             nb_lives: The number of lives to set to the particle
         """
         self._nbLives = nb_lives
+        if self._nbLives <= 0:
+            self._isAlive = False
+        else:
+            self._isAlive = True
 
     def kill(self) -> None:
         """
