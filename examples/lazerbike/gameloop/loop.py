@@ -9,35 +9,20 @@ from board.boards.square_board import SquareBoard
 from board.tile import Tile
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.units.bike import Bike
-from loop.game import Game, MAX_FPS
+from loop.game import Game
+from loop.mainloop import MAX_FPS, MainLoop
 
 
-class LazerBikeGame(Game):
+class LazerBikeLoop(MainLoop):
     def __init__(self, board: SquareBoard):
-        super().__init__(board)
+        super().__init__(Game(board))
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
-        self.setSuicide(True)
-
-    def _isFinished(self) -> (bool, list):
-        teams_alive = 0
-        team_units = []
-        for team in self._teams.values():
-            for unit in team:
-                if unit.isAlive():
-                    teams_alive += 1
-                    team_units = team
-                    break
-        if teams_alive > 1:
-            return False, None
-        elif teams_alive == 0:
-            return True, None
-        else:
-            return True, team_units
+        self.game.setSuicide(True)
 
     def _handleControllerEvent(self, controller: Controller, event) -> None:
         unit = self._getUnitFromController(controller)  # type: Bike
-        board = self.board  # type: SquareBoard
+        board = self.game.board  # type: SquareBoard
         fct = None
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys()
@@ -60,7 +45,7 @@ class LazerBikeGame(Game):
         if fct is not None:
             if initial_move:
                 self._unitsPreviousMoves[unit] = event
-            self._addMove(controller, ContinuousMove(unit, self._getTileForUnit, fct, MAX_FPS,
+            self._addMove(controller, ContinuousMove(unit, self.game.getTileForUnit, fct, MAX_FPS,
                                                      pre_action=pre_action,
                                                      step_post_action=partial(self._letTraceOnPreviousTile, unit=unit)))
 

@@ -36,6 +36,15 @@ class Game:
         else:
             self._teams[team_number] = [unit]
 
+    def getTileForUnit(self, unit: Unit) -> Tile:
+        """
+        Args:
+            unit: The unit for which the Tile will be given
+
+        Returns: The tile on which the given unit is located
+        """
+        return self.board.getTileById(self._units[unit])
+
     def isFinished(self) -> bool:
         """
         Returns: True if the game is finished and False otherwise
@@ -117,6 +126,8 @@ class Game:
         If there is, the game is not finished.
         Returns: True if the game is finished, False if the game is not finished
         """
+        if self._finished:
+            return True
         teams_alive = 0
         team_units = []
         for team in self._teams.values():
@@ -150,27 +161,3 @@ class Game:
             player1.kill()
             if frontal:
                 player2.kill()
-
-    def _getTileForUnit(self, unit: Unit) -> Tile:
-        """
-        Args:
-            unit: The unit for which the Tile will be given
-
-        Returns: The tile on which the given unit is located
-        """
-        return self.board.getTileById(self._units[unit])
-
-    def _handleGameFinished(self, winning_units: list) -> None:
-        """
-        Handle the end of the game
-        Args:
-            winning_units: The units that won the game
-
-        Returns: A tuple containing the winning units or an empty tuple if there is a draw
-        """
-        winning_player_numbers = []
-        if winning_units is not None:
-            for unit in winning_units:
-                winning_player_numbers.append(unit.playerNumber)
-        self.winningPlayers = tuple(winning_player_numbers)
-        self._finished = True

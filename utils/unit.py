@@ -1,6 +1,6 @@
 from board.tile import Tile
 from characters.units.unit import Unit
-from utils.geom import get_hypotenuse_length
+from utils.geom import get_hypotenuse_length, get_polygon_radius
 
 
 def resize_unit(unit: Unit, tile: Tile) -> None:

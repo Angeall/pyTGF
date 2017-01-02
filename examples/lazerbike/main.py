@@ -7,7 +7,7 @@ from pygame.locals import *
 from board.boards.square_board import SquareBoardBuilder
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.controls.player import LazerBikePlayer
-from examples.lazerbike.gameloop.game import LazerBikeGame
+from examples.lazerbike.gameloop.loop import LazerBikeLoop
 from examples.lazerbike.units.bike import Bike
 from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
@@ -59,7 +59,7 @@ def get_player_info(player_number: int):
         return 45, 37, GO_UP
 
 
-def add_player(game: LazerBikeGame, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
+def add_player(game: LazerBikeLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
     global nb_human
     try:
         controller = player_class(player_number)
@@ -88,8 +88,8 @@ def end_popup(string_result):
 def launch_game(gui: GUI, player_info: tuple):
     gui.quit()
     pygame.init()
-    width = 1920
-    height = 1080
+    width = 1024
+    height = 768
     lines = 50
     columns = 75
     builder = SquareBoardBuilder(width, height, lines, columns)
@@ -98,7 +98,7 @@ def launch_game(gui: GUI, player_info: tuple):
     builder.setTilesVisible(False)
     board = builder.create()
     speed = int(round((min(width, height) / 1080) * 150))
-    game = LazerBikeGame(board)
+    game = LazerBikeLoop(board)
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
@@ -110,7 +110,7 @@ def launch_game(gui: GUI, player_info: tuple):
     elif len(result) == 0:
         string_result = "DRAW"
     else:
-        winning_players_strings = ["Player " + str(number) for number in result]
+        winning_players_strings = ["Player " + str(player.playerNumber) for player in result]
         string_result = "WON: " + str(winning_players_strings)
     end_popup(string_result)
 

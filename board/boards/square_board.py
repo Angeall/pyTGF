@@ -6,7 +6,7 @@ from pygame.locals import *
 
 class SquareBoard(Board):
 
-    OUT_OF_BOARD_TILE = Tile((0, 0), [(0, 0), (0, 1), (1, 1), (1, 0)], None, deadly=True, walkable=False)
+    OUT_OF_BOARD_TILE = Tile((0, 0), [(0, 0), (0, 1), (1, 1), (1, 0)], None, deadly=True, walkable=True)
 
     def getTileById(self, identifier: tuple) -> Tile:
         """

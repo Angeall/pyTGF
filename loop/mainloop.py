@@ -56,7 +56,7 @@ class MainLoop(metaclass=ABCMeta):
                 self._state = self._checkGameState()
             elif self._state == FINISH:
                 return None
-        return self._handleGameFinished(self.winningPlayers)
+        return self.game.winningPlayers
 
     def addUnit(self, unit: Unit, controller: Controller, tile_id, initial_action: Path = None, team: int = -1) -> None:
         """
@@ -271,9 +271,8 @@ class MainLoop(metaclass=ABCMeta):
         Checks if the game is finished
         Returns: 0 = CONTINUE; 2 = END
         """
-        state = self._isFinished()
-        if state[0]:
-            self.winningPlayers = state[1]
+        if self.game.isFinished():
+            self.winningPlayers = self.game.winningPlayers
             return END
         return CONTINUE
 
