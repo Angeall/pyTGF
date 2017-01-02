@@ -23,13 +23,21 @@ class Particle:
         """
         return self._isAlive
 
-    def kill(self) -> bool:
+    def kill(self) -> None:
         """
-        Kills the particle
+        Remove a life from the particle
         """
         self._nbLives -= 1
         if self._nbLives <= 0:
             self._isAlive = False
+
+    def oneUp(self) -> None:
+        """
+        Adds a life to the particle
+        """
+        self._nbLives += 1
+        if self._nbLives > 0:
+            self._isAlive = True
 
     def draw(self, surface: pygame.Surface) -> None:
         """
