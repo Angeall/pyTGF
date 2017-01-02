@@ -38,22 +38,23 @@ class TestLazerbike(unittest.TestCase):
     def test_p1_win(self):
         self.game.addUnit(Bike(100, 1, max_trace=-1), BotTest(1), (15, 0), GO_RIGHT, team=1)
         self.game.addUnit(Bike(200, 2, max_trace=-1), BotTest(2), (30, 0), GO_UP, team=2)
-        self.assertEqual(self.game.run(), (1,))
+        self.assertEqual(self.game.run()[0].playerNumber, 1)
 
     def test_p2_win(self):
         self.game.addUnit(Bike(200, 1, max_trace=-1), BotTest(1), (15, 0), GO_DOWN, team=1)
         self.game.addUnit(Bike(100, 2, max_trace=-1), BotTest(2), (30, 0), GO_RIGHT, team=2)
-        self.assertEqual(self.game.run(), (2,))
+        self.assertEqual(self.game.run()[0].playerNumber, 2)
 
     def test_p3_win(self):
         self.game.addUnit(Bike(200, 1, max_trace=-1), BotTest(1), (15, 25), GO_DOWN, team=1)
         self.game.addUnit(Bike(200, 2, max_trace=-1), BotTest(2), (30, 25), GO_UP, team=2)
         self.game.addUnit(Bike(200, 3, max_trace=-1), BotTest(3), (30, 35), GO_UP, team=3)
-        self.assertEqual(self.game.run(), (3,))
+        self.assertEqual(self.game.run()[0].playerNumber, 3)
 
     def test_team1_win(self):
         self.game.addUnit(Bike(200, 1, max_trace=-1), BotTest(1), (15, 25), GO_DOWN, team=1)
         self.game.addUnit(Bike(200, 2, max_trace=-1), BotTest(2), (30, 25), GO_UP, team=2)
         self.game.addUnit(Bike(200, 3, max_trace=-1), BotTest(3), (30, 35), GO_UP, team=1)
-        self.assertEqual(self.game.run(), (1, 3))
+        self.assertEqual(self.game.run()[0].playerNumber, 1)
+        self.assertEqual(self.game.run()[1].playerNumber, 3)
 
