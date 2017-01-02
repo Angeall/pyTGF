@@ -69,7 +69,7 @@ def launch_game(gui: GUI, player_info: tuple):
     elif len(result) == 0:
         string_result = "DRAW"
     else:
-        winning_players_strings = ["Player " + str(number) for number in result]
+        winning_players_strings = ["Player " + str(player.playerNumber) for player in result]
         string_result = "WON: " + str(winning_players_strings)
     end_popup(string_result)
 

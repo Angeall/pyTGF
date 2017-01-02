@@ -3,7 +3,7 @@ from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o
 from board.boards.square_board import SquareBoardBuilder
 from board.tile import Tile
 from characters.controllers.passive import PassiveController
-from examples.sokoban.gameloop.game import SokobanGame
+from examples.sokoban.gameloop.loop import SokobanGame, SokobanMainLoop
 from examples.sokoban.tiles.winning import Winning
 from examples.sokoban.units.box import Box
 from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
@@ -48,7 +48,7 @@ class SokobanBoardBuilder(SquareBoardBuilder):
                     winning_tiles.append((i, j))
                 j += 1
             i += 1
-        game = SokobanGame(board, winning_tiles)
+        game = SokobanMainLoop(board, winning_tiles)
         box_number = -1
 
         # PUT BOXES INTO THE GAME
