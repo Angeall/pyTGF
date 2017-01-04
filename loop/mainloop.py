@@ -11,7 +11,7 @@ from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
 from characters.units.unit import Unit
-from loop.game import Game
+from loop.game import Game, UnfeasibleMoveException
 from utils.unit import resize_unit
 
 CONTINUE = 0
@@ -21,9 +21,10 @@ FINISH = 3
 MAX_FPS = 30
 
 
-class MainLoop(metaclass=ABCMeta):
+class MainLoop:
     def __init__(self, game: Game):
         self.game = game
+        self.game.addCustomMoveFunc = self._addCustomMove
         self._screen = None
         self._state = CONTINUE  # The game must go on at start
         # self._controllers -> keys: controllers; values: Units
@@ -123,7 +124,7 @@ class MainLoop(metaclass=ABCMeta):
         """
         Adds a move (cancelling the pending moves)
         Args:
-            controller: The controller f*or which add a move
+            controller: The controller for which add a move
             move: The move to add for the given controller
         """
         if self._controllersMoves[controller][0] is not None:
@@ -132,7 +133,7 @@ class MainLoop(metaclass=ABCMeta):
         fifo.put(move)
         # print((self._controllersMoves[controller][0], fifo))
 
-    def _addOtherMove(self, unit: Unit, move: Path) -> None:
+    def _addCustomMove(self, unit: Unit, move: Path) -> None:
         """
         Adds a move that is NOT PERFORMED BY A CONTROLLER
         Args:
@@ -154,7 +155,6 @@ class MainLoop(metaclass=ABCMeta):
         new_fifo = Queue()
         if last_move is not None:
             last_move.cancel()
-            new_fifo.put(last_move)
         del fifo
         self._controllersMoves[controller] = (last_move, new_fifo)
 
@@ -288,7 +288,6 @@ class MainLoop(metaclass=ABCMeta):
         """
         self._state = CONTINUE
 
-    @abstractmethod
     def _handleControllerEvent(self, controller: Controller, event) -> None:
         """
         The goal of this method is to grab controls from the given controller and handle them in the game
@@ -296,9 +295,12 @@ class MainLoop(metaclass=ABCMeta):
             controller: The controller to handle
             event: The event sent by the controller
         """
-        pass
+        try:
+            move = self.game.createMoveForEvent(self.controllers[controller], event)
+            self._addMove(controller, move)
+        except UnfeasibleMoveException:
+            pass
 
-    @abstractmethod
     def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
                                          click_up: bool) -> None:
         """
@@ -309,9 +311,10 @@ class MainLoop(metaclass=ABCMeta):
             mouse_state: The mouse state (To know which button of the mouse is pressed)
             click_up: True if the button was released, False if the button was pressed
         """
-        pass
+        if tile is not None:
+            controller.reactToTileClicked(tile.identifier, mouse_state, click_up,
+                                          player_tile=self.game.getTileForUnit(self.controllers[controller]).identifier)
 
-    @abstractmethod
     def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
         """
         Can optionally filter the keyboard events to send
@@ -319,4 +322,5 @@ class MainLoop(metaclass=ABCMeta):
             controller: The controller to which the event must be sent
             input_key: The key pressed on the keyboard
         """
-        pass
+        controller.reactToInput(input_key,
+                                player_tile=self.game.getTileForUnit(self.controllers[controller]).identifier)

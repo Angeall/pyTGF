@@ -3,10 +3,11 @@ from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o
 from board.boards.square_board import SquareBoardBuilder
 from board.tile import Tile
 from characters.controllers.passive import PassiveController
-from examples.sokoban.gameloop.loop import SokobanGame, SokobanMainLoop
+from examples.sokoban.gameloop.loop import SokobanGame
 from examples.sokoban.tiles.winning import Winning
 from examples.sokoban.units.box import Box
 from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
+from loop.mainloop import MainLoop
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),
@@ -48,12 +49,13 @@ class SokobanBoardBuilder(SquareBoardBuilder):
                     winning_tiles.append((i, j))
                 j += 1
             i += 1
-        game = SokobanMainLoop(board, winning_tiles)
+        game = SokobanGame(board, winning_tiles)
+        main_controller = MainLoop(game)
         box_number = -1
 
         # PUT BOXES INTO THE GAME
         for (i, j) in self._boxLocations:
-            game.addUnit(Box(self._unitSpeed, box_number), PassiveController(box_number), (i, j), team=1)
+            main_controller.addUnit(Box(self._unitSpeed, box_number), PassiveController(box_number), (i, j), team=1)
             box_number -= 1
 
         # CHECK IF THERE IS ENOUGH PLAYERS SELECTED
@@ -72,8 +74,8 @@ class SokobanBoardBuilder(SquareBoardBuilder):
                 keys = human_controls[self._humanCounter]
                 self._humanCounter += 1
                 controller = controller(player_number, keys[0], keys[1], keys[2], keys[3])
-            game.addUnit(SokobanDrawstick(self._unitSpeed, player_number), controller, (i, j), team=1)
+                main_controller.addUnit(SokobanDrawstick(self._unitSpeed, player_number), controller, (i, j), team=1)
             player_number += 1
-        return game
+        return main_controller
 
 

@@ -25,6 +25,6 @@ class ListPath(Path):
 
     def _getNextShortMove(self) -> ShortMove:
         if self.index < len(self.list):
-            move = self.list[self.index]
+            move = self.list[self.index]  # type: ShortMove
             self.index += 1
             return move

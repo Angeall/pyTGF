@@ -3,14 +3,14 @@ from board import pathfinder
 from board.board import Board
 from board.pathfinder import UnreachableDestination
 from board.tile import Tile
-from characters.controller import Controller
-from characters.controllers.human import Human
 from characters.moves.listpath import ListPath
-from characters.moves.move import ImpossibleMove, ShortMove
+from characters.moves.move import ShortMove
+from characters.moves.path import Path
+from characters.units.moving_unit import MovingUnit
 from characters.units.unit import Unit
 from examples.sokoban.units.box import Box
 from loop.game import Game
-from loop.mainloop import MainLoop, MAX_FPS
+from loop.mainloop import MAX_FPS
 
 
 class NeverEndingGame(Exception):
@@ -19,67 +19,49 @@ class NeverEndingGame(Exception):
 
 class SokobanGame(Game):
     def __init__(self, board: Board, winning_tiles: list):
-        super().__init__(board)
-        if len(winning_tiles) == 0:
+        if winning_tiles is None or len(winning_tiles) == 0:
             raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
+        super().__init__(board)
         self._winningTiles = winning_tiles
         self._endingUnit = Unit()
         self.addUnit(self._endingUnit, (-1, -1))
         self.addToTeam(1000, self._endingUnit)
 
+    def createMoveForEvent(self, unit: MovingUnit, event) -> Path:
+        if type(event) == tuple and len(event) == 2:
+            destination_tile = self.board.getTileById(event)
+            if destination_tile.walkable:
+                source_tile = self.board.getTileById(self.getTileForUnit(unit).identifier)
+                moves = []
+                try:
+                    tile_ids = pathfinder.get_shortest_path(source_tile.identifier, destination_tile.identifier,
+                                                            self.board.getTileById,
+                                                            lambda tile: tile.neighbours,
+                                                            lambda tile: tile.walkable and not tile.deadly)
+                    current_tile = source_tile
+                    tile_ids = self._checkIfBoxInTheWay(source_tile, tile_ids)
+                    if len(tile_ids) > 0:
+                        for next_tile_id in tile_ids:
+                            next_tile = self.board.getTileById(next_tile_id)
+                            moves.append(ShortMove(unit, current_tile, next_tile, MAX_FPS))
+                            current_tile = next_tile
+                        return ListPath(moves, step_pre_action=self._pushBoxIfNeeded)
+                except UnreachableDestination:
+                    pass
+        raise game.UnfeasibleMoveException()
+
     def updateGameState(self, unit, tile_id):
         if tile_id in self._winningTiles:
-            players_units = [u for u in self._units if not isinstance(u, Box) and u is not self._endingUnit]
+            players_units = [u for u in self.units if not isinstance(u, Box) and u is not self._endingUnit]
             nb_player = len(players_units) - 1
             for u in players_units:
-                if self._units[u] in self._winningTiles:
+                if self.units[u] in self._winningTiles:
                     nb_player -= 1
             self._endingUnit.setNbLives(nb_player)
         super().updateGameState(unit, tile_id)
         if self.isFinished():
             self.winningPlayers = [player for player in self.winningPlayers
                                    if not isinstance(player, Box) and player is not self._endingUnit]
-
-
-class SokobanMainLoop(MainLoop):
-    def __init__(self, board: Board, winning_tiles: list):
-        super().__init__(SokobanGame(board, winning_tiles))
-        if len(winning_tiles) == 0:
-            raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
-
-    def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
-        controller.reactToInput(input_key,
-                                player_tile=self.game.getTileForUnit(self.controllers[controller]).identifier)
-
-    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
-                                         click_up: bool) -> None:
-        if tile is not None:
-            controller.reactToTileClicked(tile.identifier, mouse_state, click_up,
-                                          player_tile=self.game.getTileForUnit(self.controllers[controller]).identifier)
-
-    def _handleControllerEvent(self, controller: Controller, event) -> None:
-        if type(event) == tuple and len(event) == 2:
-            if self._controllersMoves[controller][0] is None:
-                destination_tile = self.game.board.getTileById(event)
-                if destination_tile.walkable:
-                    unit = self._getUnitFromController(controller)
-                    source_tile = self.game.board.getTileById(self.game.getTileForUnit(unit).identifier)
-                    moves = []
-                    try:
-                        tile_ids = pathfinder.get_shortest_path(source_tile.identifier, destination_tile.identifier,
-                                                                self.game.board.getTileById,
-                                                                lambda tile: tile.neighbours,
-                                                                lambda tile: tile.walkable and not tile.deadly)
-                        current_tile = source_tile
-                        tile_ids = self._checkIfBoxInTheWay(source_tile, tile_ids)
-                        if len(tile_ids) > 0:
-                            for next_tile_id in tile_ids:
-                                next_tile = self.game.board.getTileById(next_tile_id)
-                                moves.append(ShortMove(unit, current_tile, next_tile, MAX_FPS))
-                                current_tile = next_tile
-                            self._addMove(controller, ListPath(moves, step_pre_action=self._pushBoxIfNeeded))
-                    except UnreachableDestination:
-                        pass
 
     def _pushBoxIfNeeded(self, previous_tile: Tile, current_tile: Tile):
         box = None
@@ -92,19 +74,19 @@ class SokobanMainLoop(MainLoop):
             cur_tile_id = current_tile.identifier
             tile_diff = cur_tile_id[0] - prev_tile_id[0], cur_tile_id[1] - prev_tile_id[1]
             box_next_tile_id = (cur_tile_id[0] + tile_diff[0], cur_tile_id[1] + tile_diff[1])
-            box_next_tile = self.game.board.getTileById(box_next_tile_id)
-            self._addOtherMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, MAX_FPS)]))
+            box_next_tile = self.board.getTileById(box_next_tile_id)
+            self._addCustomMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, MAX_FPS)]))
 
     def _checkIfBoxInTheWay(self, source_tile: Tile, next_tile_ids: list) -> list:
         i = 0
         current = source_tile
         for tile_id in next_tile_ids:
-            nxt = self.game.board.getTileById(tile_id)
+            nxt = self.board.getTileById(tile_id)
             for occupant in nxt.occupants:
                 if isinstance(occupant, Box):
                     diff = (nxt.identifier[0] - current.identifier[0], nxt.identifier[1] - current.identifier[1])
                     box_next_tile_id = (nxt.identifier[0] + diff[0], nxt.identifier[1] + diff[1])
-                    box_next_tile = self.game.board.getTileById(box_next_tile_id)  # The tile where the box will be
+                    box_next_tile = self.board.getTileById(box_next_tile_id)  # The tile where the box will be
                     if not box_next_tile.walkable:
                         next_tile_ids = next_tile_ids[:i]
                         break

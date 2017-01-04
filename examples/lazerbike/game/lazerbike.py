@@ -1,5 +1,6 @@
 from functools import partial
 
+from characters.moves.path import Path
 from examples.lazerbike.units.trace import Trace
 
 from characters.controller import Controller
@@ -9,20 +10,18 @@ from board.boards.square_board import SquareBoard
 from board.tile import Tile
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.units.bike import Bike
-from loop.game import Game
+from loop.game import Game, UnfeasibleMoveException
 from loop.mainloop import MAX_FPS, MainLoop
 
 
-class LazerBikeLoop(MainLoop):
+class LazerBikeGame(Game):
     def __init__(self, board: SquareBoard):
-        super().__init__(Game(board))
+        super().__init__(board)
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
-        self.game.setSuicide(True)
 
-    def _handleControllerEvent(self, controller: Controller, event) -> None:
-        unit = self._getUnitFromController(controller)  # type: Bike
-        board = self.game.board  # type: SquareBoard
+    def createMoveForEvent(self, unit: Bike, event) -> Path:
+        board = self.board  # type: SquareBoard
         fct = None
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys()
@@ -45,9 +44,10 @@ class LazerBikeLoop(MainLoop):
         if fct is not None:
             if initial_move:
                 self._unitsPreviousMoves[unit] = event
-            self._addMove(controller, ContinuousMove(unit, self.game.getTileForUnit, fct, MAX_FPS,
-                                                     pre_action=pre_action,
-                                                     step_post_action=partial(self._letTraceOnPreviousTile, unit=unit)))
+            return ContinuousMove(unit, self.getTileForUnit, fct, MAX_FPS,
+                                  pre_action=pre_action,
+                                  step_post_action=partial(self._letTraceOnPreviousTile, unit=unit))
+        raise UnfeasibleMoveException("The event couldn't create a valid move")
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
         # TODO: continuous line using center-to-center trace but need previous_previous_tile
@@ -81,9 +81,3 @@ class LazerBikeLoop(MainLoop):
     @staticmethod
     def _isMovementVertical(previous_tile: Tile, current_tile: Tile) -> bool:
         return previous_tile.identifier[1] - current_tile.identifier[1] == 0
-
-    def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple, click_up: bool):
-        pass
-
-    def _sendInputToHumanController(self, controller: Human, input_key: int):
-        controller.reactToInput(input_key)

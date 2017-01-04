@@ -60,7 +60,7 @@ class Path(metaclass=ABCMeta):
             self._isFirstMove = False
 
     def _isFirstMoveEmpty(self):
-        self._currentMove = self._getNextShortMove()
+        self._currentMove = self._getNextConsistentMove()
         if self._currentMove is None:  # Empty case: getNextShortMove returns nothing => Stops directly
             self.completed = True
             return
@@ -88,7 +88,7 @@ class Path(metaclass=ABCMeta):
             self.cancelled = True
             self._handlePathFinished()
         else:
-            self._currentMove = self._getNextShortMove()
+            self._currentMove = self._getNextConsistentMove()
             if self._currentMove is not None:
                 self._performAction(self._stepPreAction)
             else:
@@ -107,6 +107,19 @@ class Path(metaclass=ABCMeta):
         if self._postAction is not None:
             self._postAction()
             self._postAction = None
+
+    def _getNextConsistentMove(self):
+        """
+        Makes sure the next considered move is consistent (i.e. correct)
+
+        Returns: The move, with the guarantee it is either a correct move or it is None
+        """
+        current_move = None
+        consistent_move = False
+        while not consistent_move:
+            current_move = self._getNextShortMove()
+            consistent_move = current_move is None or current_move.isConsistent()
+        return current_move
 
     @abstractmethod
     def _getNextShortMove(self) -> ShortMove:

@@ -1,9 +1,26 @@
+from abc import ABCMeta, abstractmethod
+from types import FunctionType as function
+
 from board.board import Board
 from board.tile import Tile
+from characters.moves.path import Path
 from characters.units.unit import Unit
 
 
-class Game:
+class InconsistentGameStateException(Exception):
+    pass
+
+
+class UnknownUnitException(Exception):
+    pass
+
+
+class UnfeasibleMoveException(Exception):
+    pass
+
+
+class Game(metaclass=ABCMeta):
+    # TODO: add simulation capabilities. Careful to the units occupant update !
     def __init__(self, board: Board):
         self.board = board
         self._teamKill = False
@@ -11,9 +28,17 @@ class Game:
         self._finished = False
         self.winningPlayers = None
         # self._teams -> keys: int; values: units
-        self._teams = {}
+        self.teams = {}
         # self._units -> keys: Units; values: tile_ids
-        self._units = {}
+        self.units = {}
+        self.addCustomMoveFunc = None  # type: function
+
+    def _addCustomMove(self, unit: Unit, move: Path):
+        if self.addCustomMoveFunc is not None:
+            try:
+                self.addCustomMoveFunc(unit, move)
+            except TypeError:
+                pass
 
     def addUnit(self, unit: Unit, origin_tile_id: tuple) -> None:
         """
@@ -22,7 +47,7 @@ class Game:
             unit: The unit to add
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
-        self._units[unit] = origin_tile_id
+        self.units[unit] = origin_tile_id
 
     def addToTeam(self, team_number, unit) -> None:
         """
@@ -31,10 +56,10 @@ class Game:
             team_number: The number of the team to which add the unit
             unit: The unit to add to the given team number
         """
-        if team_number in self._teams.keys():
-            self._teams[team_number].append(unit)
+        if team_number in self.teams.keys():
+            self.teams[team_number].append(unit)
         else:
-            self._teams[team_number] = [unit]
+            self.teams[team_number] = [unit]
 
     def getTileForUnit(self, unit: Unit) -> Tile:
         """
@@ -43,7 +68,7 @@ class Game:
 
         Returns: The tile on which the given unit is located
         """
-        return self.board.getTileById(self._units[unit])
+        return self.board.getTileById(self.units[unit])
 
     def isFinished(self) -> bool:
         """
@@ -67,14 +92,27 @@ class Game:
         """
         self._suicide = suicide_enabled
 
-    def updateGameState(self, unit, tile_id):
+    def updateGameState(self, unit: Unit, tile_id: tuple) -> None:
         """
         Change the unit's tile and checks for collisions
+
         Args:
             unit: The unit that triggered the update
-            tile_id: The new tile id to link with the given controller
+            tile_id: The new tile id on which the unit has been recently placed on.
+
+        Raises:
+             InconsistentGameStateException:
+                If this method is used illegally (when the unit is not effectively placed on the tile corresponding to
+                the given tile_id).
         """
-        self._units[unit] = tile_id
+        if unit not in self.board.getTileById(tile_id):
+            if unit not in self.units:
+                raise UnknownUnitException("The game is trying to be updated using an unknown unit")
+            else:
+                error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
+                                % (self.units[unit].identifier, tile_id)
+                raise InconsistentGameStateException(error_msg)
+        self.units[unit] = tile_id
         new_tile = self.board.getTileById(tile_id)
         if new_tile.hasTwoOrMoreOccupants():
             self._handleCollision(unit, new_tile.occupants)
@@ -89,8 +127,8 @@ class Game:
 
         Returns: True if the two units are in the same team
         """
-        for team in self._teams.keys():
-            team_units = self._teams[team]
+        for team in self.teams.keys():
+            team_units = self.teams[team]
             if unit1 in team_units:
                 if unit2 in team_units:
                     return True
@@ -109,11 +147,11 @@ class Game:
         """
         for other_unit in other_units:
             if not (unit is other_unit):
-                if other_unit in self._units.keys():  # If the other unit is a controlled unit
+                if other_unit in self.units.keys():  # If the other unit is a controlled unit
                     self._collidePlayers(unit, other_unit, frontal=True)
                 else:  # If the other unit is a Particle
                     other_player = None
-                    for player in self._units.keys():  # type: Unit
+                    for player in self.units.keys():  # type: Unit
                         if player.hasParticle(other_unit):
                             other_player = player
                             break
@@ -130,7 +168,7 @@ class Game:
             return True
         teams_alive = 0
         team_units = []
-        for team in self._teams.values():
+        for team in self.teams.values():
             for unit in team:
                 if unit.isAlive():
                     teams_alive += 1
@@ -161,3 +199,19 @@ class Game:
             player1.kill()
             if frontal:
                 player2.kill()
+
+    @abstractmethod
+    def createMoveForEvent(self, unit: Unit, event) -> Path:
+        """
+        Creates a move following the given event coming from the given unit
+
+        Args:
+            unit: The unit that triggered the event
+            event: The event triggered by the given unit and that will generate the move
+
+        Returns: A Path of move(s) triggered by the given event for the given unit
+
+        Raises:
+            UnfeasibleMoveException: If the move is not possible.
+        """
+        pass

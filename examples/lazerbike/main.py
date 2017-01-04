@@ -7,8 +7,9 @@ from pygame.locals import *
 from board.boards.square_board import SquareBoardBuilder
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.controls.player import LazerBikePlayer
-from examples.lazerbike.gameloop.loop import LazerBikeLoop
+from examples.lazerbike.game.lazerbike import LazerBikeGame
 from examples.lazerbike.units.bike import Bike
+from loop.mainloop import MainLoop
 from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
 from menu.gui import GUI
@@ -59,7 +60,7 @@ def get_player_info(player_number: int):
         return 45, 37, GO_UP
 
 
-def add_player(game: LazerBikeLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
+def add_controller(main_loop: MainLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
     global nb_human
     try:
         controller = player_class(player_number)
@@ -70,8 +71,8 @@ def add_player(game: LazerBikeLoop, player_class, player_number: int, player_tea
     player_info = get_player_info(player_number)
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
-    game.addUnit(Bike(speed, player_number, max_trace=max_trace), controller, start_pos, initial_direction,
-                 team=player_team)
+    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace), controller, start_pos, initial_direction,
+                      team=player_team)
 
 
 def end_popup(string_result):
@@ -98,13 +99,15 @@ def launch_game(gui: GUI, player_info: tuple):
     builder.setTilesVisible(False)
     board = builder.create()
     speed = int(round((min(width, height) / 1080) * 150))
-    game = LazerBikeLoop(board)
+    game = LazerBikeGame(board)
+    game.setSuicide(True)
+    main_loop = MainLoop(game)
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
-        add_player(game, player_class, player_number, player_teams[player_number], speed, min(lines, columns) * (2/3))
+        add_controller(main_loop, player_class, player_number, player_teams[player_number], speed, min(lines, columns) * (2 / 3))
 
-    result = game.run()
+    result = main_loop.run()
     if result is None:
         return
     elif len(result) == 0:
