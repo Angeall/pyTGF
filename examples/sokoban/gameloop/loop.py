@@ -1,4 +1,4 @@
-import loop.game as game
+import game.game as game
 from board import pathfinder
 from board.board import Board
 from board.pathfinder import UnreachableDestination
@@ -9,8 +9,8 @@ from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
 from characters.units.unit import Unit
 from examples.sokoban.units.box import Box
-from loop.game import Game
-from loop.mainloop import MAX_FPS
+from game.game import Game
+from game.mainloop import MAX_FPS
 
 
 class NeverEndingGame(Exception):

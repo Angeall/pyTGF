@@ -11,7 +11,7 @@ from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
 from characters.units.unit import Unit
-from loop.game import Game, UnfeasibleMoveException
+from game.game import Game, UnfeasibleMoveException
 from utils.unit import resize_unit
 
 CONTINUE = 0
@@ -36,7 +36,7 @@ class MainLoop:
 
     def run(self, max_fps: int=MAX_FPS) -> tuple:
         """
-        Launch the game and its logical loop
+        Launch the game and its logical game
         Args:
             max_fps: The maximum frame per seconds of the game
 

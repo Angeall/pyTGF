@@ -9,7 +9,7 @@ from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.controls.player import LazerBikePlayer
 from examples.lazerbike.game.lazerbike import LazerBikeGame
 from examples.lazerbike.units.bike import Bike
-from loop.mainloop import MainLoop
+from game.mainloop import MainLoop
 from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
 from menu.gui import GUI

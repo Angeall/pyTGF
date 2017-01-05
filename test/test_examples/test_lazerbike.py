@@ -7,7 +7,7 @@ from examples.lazerbike.AIs.bottest import BotTest
 from examples.lazerbike.controls.allowed_moves import GO_UP, GO_DOWN, GO_RIGHT
 from examples.lazerbike.game.lazerbike import LazerBikeGame
 from examples.lazerbike.units.bike import Bike
-from loop.mainloop import MainLoop
+from game.mainloop import MainLoop
 
 
 class TestLazerbike(unittest.TestCase):

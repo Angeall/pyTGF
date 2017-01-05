@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
-from loop.game import Game
+from game.game import Game
 
 
 class GameState(metaclass=ABCMeta):

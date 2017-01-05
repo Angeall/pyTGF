@@ -7,7 +7,7 @@ from examples.sokoban.gameloop.loop import SokobanGame
 from examples.sokoban.tiles.winning import Winning
 from examples.sokoban.units.box import Box
 from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
-from loop.mainloop import MainLoop
+from game.mainloop import MainLoop
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),

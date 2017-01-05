@@ -10,8 +10,8 @@ from board.boards.square_board import SquareBoard
 from board.tile import Tile
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.units.bike import Bike
-from loop.game import Game, UnfeasibleMoveException
-from loop.mainloop import MAX_FPS, MainLoop
+from game.game import Game, UnfeasibleMoveException
+from game.mainloop import MAX_FPS, MainLoop
 
 
 class LazerBikeGame(Game):
