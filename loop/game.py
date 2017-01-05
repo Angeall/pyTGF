@@ -1,10 +1,12 @@
 from abc import ABCMeta, abstractmethod
 from types import FunctionType as function
 
+from copy import deepcopy
+
 from board.board import Board
 from board.tile import Tile
 from characters.moves.path import Path
-from characters.units.unit import Unit
+from characters.units.moving_unit import MovingUnit
 
 
 class InconsistentGameStateException(Exception):
@@ -27,41 +29,46 @@ class Game(metaclass=ABCMeta):
         self._suicide = False
         self._finished = False
         self.winningPlayers = None
-        # self._teams -> keys: int; values: units
+        # self.teams -> keys: int; values: unit
         self.teams = {}
-        # self._units -> keys: Units; values: tile_ids
+        # self.players -> keys: int (player number); values: unit
+        self.players = {}
+        # self.units -> keys: Unit; values: tile_id
         self.units = {}
         self.addCustomMoveFunc = None  # type: function
 
-    def _addCustomMove(self, unit: Unit, move: Path):
+    def _addCustomMove(self, unit: MovingUnit, move: Path) -> None:
+        """
+        Uses the "addCustomMoveFunc" that could have been defined by the mainloop to add a move that will be performed
+         step by step each frame.
+
+        Args:
+            unit: The unit to move
+            move: The move for the given unit to perform
+        """
         if self.addCustomMoveFunc is not None:
             try:
                 self.addCustomMoveFunc(unit, move)
             except TypeError:
                 pass
 
-    def addUnit(self, unit: Unit, origin_tile_id: tuple) -> None:
+    def addUnit(self, unit: MovingUnit, team_number: int, origin_tile_id: tuple) -> None:
         """
         Adds a unit to the game
+
         Args:
             unit: The unit to add
+            team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
         self.units[unit] = origin_tile_id
-
-    def addToTeam(self, team_number, unit) -> None:
-        """
-        Adds a unit to the given team
-        Args:
-            team_number: The number of the team to which add the unit
-            unit: The unit to add to the given team number
-        """
+        self.players[unit.playerNumber] = unit
         if team_number in self.teams.keys():
             self.teams[team_number].append(unit)
         else:
             self.teams[team_number] = [unit]
 
-    def getTileForUnit(self, unit: Unit) -> Tile:
+    def getTileForUnit(self, unit: MovingUnit) -> Tile:
         """
         Args:
             unit: The unit for which the Tile will be given
@@ -79,6 +86,7 @@ class Game(metaclass=ABCMeta):
     def setTeamKill(self, team_kill_enabled: bool = True):
         """
         Sets the team kill of the game. If true, a unit can harm another unit from its own team
+
         Args:
             team_kill_enabled: boolean that enables (True) or disables (False) the teamkill in the game
         """
@@ -87,12 +95,13 @@ class Game(metaclass=ABCMeta):
     def setSuicide(self, suicide_enabled: bool = True):
         """
         Sets the suicide handling of the game. If true, a unit can suicide itself on its own particles.
+
         Args:
             suicide_enabled: boolean that enables (True) or disables (False) the suicide in the game
         """
         self._suicide = suicide_enabled
 
-    def updateGameState(self, unit: Unit, tile_id: tuple) -> None:
+    def updateGameState(self, unit: MovingUnit, tile_id: tuple) -> None:
         """
         Change the unit's tile and checks for collisions
 
@@ -108,7 +117,7 @@ class Game(metaclass=ABCMeta):
         if unit not in self.board.getTileById(tile_id):
             if unit not in self.units:
                 raise UnknownUnitException("The game is trying to be updated using an unknown unit")
-            else:
+            elif unit.isAlive():
                 error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
                                 % (self.units[unit].identifier, tile_id)
                 raise InconsistentGameStateException(error_msg)
@@ -121,6 +130,7 @@ class Game(metaclass=ABCMeta):
     def _fromSameTeam(self, unit1, unit2):
         """
         Checks if the two given units are in the same team
+
         Args:
             unit1: The first unit to check
             unit2: The second unit to check
@@ -141,6 +151,7 @@ class Game(metaclass=ABCMeta):
     def _handleCollision(self, unit, other_units) -> None:
         """
         Handles a collision between a unit and other units
+
         Args:
             unit: The moving units
             other_units: The other units that are on the same tile than the moving unit
@@ -162,6 +173,7 @@ class Game(metaclass=ABCMeta):
         """
         Checks if there is moe than one team alive.
         If there is, the game is not finished.
+
         Returns: True if the game is finished, False if the game is not finished
         """
         if self._finished:
@@ -188,6 +200,7 @@ class Game(metaclass=ABCMeta):
         Makes what it has to be done when the first given player collides with a particle of the second given player
         (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
         units)
+
         Args:
             player1: The first given player
             player2: The second given player
@@ -200,8 +213,16 @@ class Game(metaclass=ABCMeta):
             if frontal:
                 player2.kill()
 
+    def copy(self):
+        """
+        Copy this game so that any change to the copy doesn't affect this game at all.
+
+        Returns: A safe copy of this game which can be used to simulate movements
+        """
+        return deepcopy(self)
+
     @abstractmethod
-    def createMoveForEvent(self, unit: Unit, event) -> Path:
+    def createMoveForEvent(self, unit: MovingUnit, event) -> Path:
         """
         Creates a move following the given event coming from the given unit
 

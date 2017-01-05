@@ -17,8 +17,8 @@ class Path(metaclass=ABCMeta):
                 (step actions can have an unfulfilled "previous_tile" parameter, which will be filled with the last tile
                  and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
         """
-        self.cancelTriggered = False
-        self.cancelled = False
+        self.stopTriggered = False
+        self.stopped = False
         self.completed = False
         self._currentMove = None  # type: ShortMove
         self._preAction = pre_action  # type: function
@@ -27,11 +27,11 @@ class Path(metaclass=ABCMeta):
         self._stepPostAction = step_post_action  # type: function
         self._isFirstMove = True
 
-    def cancel(self, cancel_post_action: bool=True) -> None:
+    def stop(self, cancel_post_action: bool=True) -> None:
         """
         Triggers the cancellation protocol (the path is fully cancelled once the current short move is performed)
         """
-        self.cancelTriggered = True
+        self.stopTriggered = True
         if cancel_post_action:
             self._postAction = None
 
@@ -68,7 +68,7 @@ class Path(metaclass=ABCMeta):
             self._performAction(self._stepPreAction)
 
     def finished(self):
-        return self.cancelled or self.completed
+        return self.stopped or self.completed
 
     def _handleStepFinished(self):
         """
@@ -84,8 +84,8 @@ class Path(metaclass=ABCMeta):
         Returns:
 
         """
-        if self.cancelTriggered:
-            self.cancelled = True
+        if self.stopTriggered:
+            self.stopped = True
             self._handlePathFinished()
         else:
             self._currentMove = self._getNextConsistentMove()

@@ -2,11 +2,11 @@ from types import FunctionType as function
 
 from characters.moves.move import ShortMove
 from characters.moves.path import Path
-from characters.units.unit import Unit
+from characters.units.moving_unit import MovingUnit
 
 
 class ContinuousMove(Path):
-    def __init__(self, unit: Unit, source_tile_func: function, next_tile_func: function,
+    def __init__(self, unit: MovingUnit, source_tile_func: function, next_tile_func: function,
                  fps: int, pre_action: function=None, post_action: function=None,
                  step_pre_action: function=None, step_post_action: function=None):
         """
@@ -34,7 +34,9 @@ class ContinuousMove(Path):
     def _getNextShortMove(self) -> ShortMove:
         if self.sourceTile is None:
             self.sourceTile = self.sourceTileFunc(self.unit)
-        destination_tile = self.nextTileFunc(self.sourceTile)
-        move = ShortMove(self.unit, self.sourceTile, destination_tile, self.fps)
-        self.sourceTile = destination_tile
-        return move
+        if self.sourceTile is not None:
+            destination_tile = self.nextTileFunc(self.sourceTile)
+            if destination_tile is not None and self.sourceTile is not destination_tile:
+                move = ShortMove(self.unit, self.sourceTile, destination_tile, self.fps)
+                self.sourceTile = destination_tile
+                return move

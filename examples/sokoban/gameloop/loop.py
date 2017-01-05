@@ -23,9 +23,8 @@ class SokobanGame(Game):
             raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
         super().__init__(board)
         self._winningTiles = winning_tiles
-        self._endingUnit = Unit()
-        self.addUnit(self._endingUnit, (-1, -1))
-        self.addToTeam(1000, self._endingUnit)
+        self._endingUnit = MovingUnit(1000)
+        self.addUnit(self._endingUnit, 1000, (-1, -1))
 
     def createMoveForEvent(self, unit: MovingUnit, event) -> Path:
         if type(event) == tuple and len(event) == 2:
@@ -59,6 +58,7 @@ class SokobanGame(Game):
                     nb_player -= 1
             self._endingUnit.setNbLives(nb_player)
         super().updateGameState(unit, tile_id)
+        tile = self.board.getTileById(tile_id)
         if self.isFinished():
             self.winningPlayers = [player for player in self.winningPlayers
                                    if not isinstance(player, Box) and player is not self._endingUnit]

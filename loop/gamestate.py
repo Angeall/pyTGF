@@ -1,15 +1,15 @@
 from abc import ABCMeta, abstractmethod
 
+from loop.game import Game
+
 
 class GameState(metaclass=ABCMeta):
 
-    def __init__(self, player_number: tuple, *players_position: tuple):
-        self.playerNumber = player_number
-        self.enemiesPosition = players_position
+    def __init__(self, game: Game):
+        self.game = game.copy()
 
-    @abstractmethod
     def simulateMove(self, player_number, move):
-        pass
+        unit = self.game.players[player_number]
 
     def simulateMoves(self, moves: list):
         for i, move in enumerate(moves):

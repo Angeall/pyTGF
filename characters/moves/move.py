@@ -65,7 +65,7 @@ class ShortMove(object):
                               "cannot be performed")
         if not self.isConsistent():
             self.cancelMove()
-            raise InconsistentMove("The tile %s does not contain the given unit" % self.sourceTile.identifier)
+            raise InconsistentMove("The tile %s does not contain the given unit" % (str(self.sourceTile.identifier)))
 
         if not self.isPerformed:
             if self._frameNeeded <= 1:  # Last step => Complete the move (kill precision error)

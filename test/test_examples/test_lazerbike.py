@@ -2,11 +2,12 @@ import unittest
 
 import pygame
 
-from board.boards.square_board import SquareBoardBuilder
+from board.boards.square_board import SquareBoardBuilder, SquareBoard
 from examples.lazerbike.AIs.bottest import BotTest
 from examples.lazerbike.controls.allowed_moves import GO_UP, GO_DOWN, GO_RIGHT
 from examples.lazerbike.game.lazerbike import LazerBikeGame
 from examples.lazerbike.units.bike import Bike
+from loop.mainloop import MainLoop
 
 
 class TestLazerbike(unittest.TestCase):
@@ -20,8 +21,8 @@ class TestLazerbike(unittest.TestCase):
         builder.setBordersColor((0, 125, 125))
         builder.setBackgroundColor((25, 25, 25))
         builder.setTilesVisible(False)
-        board = builder.create()
-        self.game = LazerBikeGame(board)
+        board = builder.create()  # type: SquareBoard
+        self.game = MainLoop(LazerBikeGame(board))
 
     def test_draw(self):
         self.game.addUnit(Bike(200, 1, max_trace=-1), BotTest(1), (15, 25), GO_DOWN, team=1)

@@ -24,6 +24,7 @@ class TestContinuousMove(unittest.TestCase):
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
         destination_tile.addNeighbour(source_tile.identifier)
         # Distance separating the two tiles is 30 pixels
         unit_tile = source_tile
@@ -44,6 +45,7 @@ class TestContinuousMove(unittest.TestCase):
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
         destination_tile.addNeighbour(source_tile.identifier)
         # Distance separating the two tiles is 30 pixels
         unit_tile = source_tile
@@ -51,9 +53,9 @@ class TestContinuousMove(unittest.TestCase):
         path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60)
         for _ in range(59):
             path.performNextMove()
-        path.cancel()
+        path.stop()
         path.performNextMove()
-        self.assertTrue(path.cancelled)
+        self.assertTrue(path.stopped)
 
     def test_actions(self):
         """
@@ -63,6 +65,7 @@ class TestContinuousMove(unittest.TestCase):
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
         destination_tile.addNeighbour(source_tile.identifier)
         # Distance separating the two tiles is 30 pixels
         pre_action_touchable = Touchable()

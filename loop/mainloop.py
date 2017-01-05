@@ -59,7 +59,7 @@ class MainLoop:
                 return None
         return self.game.winningPlayers
 
-    def addUnit(self, unit: Unit, controller: Controller, tile_id, initial_action: Path = None, team: int = -1) -> None:
+    def addUnit(self, unit: MovingUnit, controller: Controller, tile_id, initial_action: Path = None, team: int = -1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
         to the the given tile id and controlled by the given controller
@@ -72,8 +72,7 @@ class MainLoop:
         """
 
         self.controllers[controller] = unit
-        self.game.addUnit(unit, tile_id)
-        self.game.addToTeam(team, unit)
+        self.game.addUnit(unit, team, tile_id)
         self._controllersMoves[controller] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
         tile.addOccupant(unit)
@@ -154,7 +153,7 @@ class MainLoop:
         last_move = move_tuple[0]  # type: Path
         new_fifo = Queue()
         if last_move is not None:
-            last_move.cancel()
+            last_move.stop()
         del fifo
         self._controllersMoves[controller] = (last_move, new_fifo)
 
@@ -243,7 +242,7 @@ class MainLoop:
                     return False
         else:
             if current_move is not None:
-                current_move.cancel(cancel_post_action=True)
+                current_move.stop(cancel_post_action=True)
                 return False
 
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
