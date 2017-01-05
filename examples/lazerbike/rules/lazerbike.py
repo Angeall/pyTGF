@@ -1,17 +1,16 @@
 from functools import partial
 
-from characters.moves.path import Path
-from examples.lazerbike.units.trace import Trace
+from copy import deepcopy
 
-from characters.controller import Controller
-from characters.controllers.human import Human
-from characters.moves.continous import ContinuousMove
 from board.boards.square_board import SquareBoard
 from board.tile import Tile
+from characters.moves.continous import ContinuousMove
+from characters.moves.path import Path
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.units.bike import Bike
+from examples.lazerbike.units.trace import Trace
 from game.game import Game, UnfeasibleMoveException
-from game.mainloop import MAX_FPS, MainLoop
+from game.mainloop import MAX_FPS
 
 
 class LazerBikeGame(Game):
@@ -20,7 +19,7 @@ class LazerBikeGame(Game):
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
 
-    def createMoveForEvent(self, unit: Bike, event) -> Path:
+    def createMoveForEvent(self, unit: Bike, event, max_moves: int=-1) -> Path:
         board = self.board  # type: SquareBoard
         fct = None
         pre_action = None
@@ -44,8 +43,7 @@ class LazerBikeGame(Game):
         if fct is not None:
             if initial_move:
                 self._unitsPreviousMoves[unit] = event
-            return ContinuousMove(unit, self.getTileForUnit, fct, MAX_FPS,
-                                  pre_action=pre_action,
+            return ContinuousMove(unit, self.getTileForUnit, fct, MAX_FPS, pre_action=pre_action, max_moves=max_moves,
                                   step_post_action=partial(self._letTraceOnPreviousTile, unit=unit))
         raise UnfeasibleMoveException("The event couldn't create a valid move")
 
@@ -81,3 +79,8 @@ class LazerBikeGame(Game):
     @staticmethod
     def _isMovementVertical(previous_tile: Tile, current_tile: Tile) -> bool:
         return previous_tile.identifier[1] - current_tile.identifier[1] == 0
+
+    # def _copyGame(self, game):
+    #     super()._copyGame(game)
+    #     self._unitsPreviousMoves = deepcopy(game._unitsPreviousMoves)
+    #     self._previousTraces = deepcopy(game._previousTraces)

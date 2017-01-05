@@ -1,3 +1,4 @@
+import traceback
 from abc import ABCMeta, abstractmethod
 from types import FunctionType as function
 
@@ -54,11 +55,11 @@ class Game(metaclass=ABCMeta):
 
     def addUnit(self, unit: MovingUnit, team_number: int, origin_tile_id: tuple) -> None:
         """
-        Adds a unit to the game
+        Adds a unit to the rules
 
         Args:
             unit: The unit to add
-            team_number: The number of the team in which the game will put the given unit
+            team_number: The number of the team in which the rules will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
         self.units[unit] = origin_tile_id
@@ -79,25 +80,25 @@ class Game(metaclass=ABCMeta):
 
     def isFinished(self) -> bool:
         """
-        Returns: True if the game is finished and False otherwise
+        Returns: True if the rules is finished and False otherwise
         """
         return self._finished
 
     def setTeamKill(self, team_kill_enabled: bool = True):
         """
-        Sets the team kill of the game. If true, a unit can harm another unit from its own team
+        Sets the team kill of the rules. If true, a unit can harm another unit from its own team
 
         Args:
-            team_kill_enabled: boolean that enables (True) or disables (False) the teamkill in the game
+            team_kill_enabled: boolean that enables (True) or disables (False) the teamkill in the rules
         """
         self._teamKill = team_kill_enabled
 
     def setSuicide(self, suicide_enabled: bool = True):
         """
-        Sets the suicide handling of the game. If true, a unit can suicide itself on its own particles.
+        Sets the suicide handling of the rules. If true, a unit can suicide itself on its own particles.
 
         Args:
-            suicide_enabled: boolean that enables (True) or disables (False) the suicide in the game
+            suicide_enabled: boolean that enables (True) or disables (False) the suicide in the rules
         """
         self._suicide = suicide_enabled
 
@@ -116,9 +117,9 @@ class Game(metaclass=ABCMeta):
         """
         if unit not in self.board.getTileById(tile_id):
             if unit not in self.units:
-                raise UnknownUnitException("The game is trying to be updated using an unknown unit")
+                raise UnknownUnitException("The rules is trying to be updated using an unknown unit")
             elif unit.isAlive():
-                error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
+                error_msg = "The rules is trying to be updated using a unit that is placed on the tile %s instead of %s"\
                                 % (self.units[unit].identifier, tile_id)
                 raise InconsistentGameStateException(error_msg)
         self.units[unit] = tile_id
@@ -172,9 +173,9 @@ class Game(metaclass=ABCMeta):
     def _checkIfFinished(self) -> bool:
         """
         Checks if there is moe than one team alive.
-        If there is, the game is not finished.
+        If there is, the rules is not finished.
 
-        Returns: True if the game is finished, False if the game is not finished
+        Returns: True if the rules is finished, False if the rules is not finished
         """
         if self._finished:
             return True
@@ -214,21 +215,29 @@ class Game(metaclass=ABCMeta):
                 player2.kill()
 
     def copy(self):
-        """
-        Copy this game so that any change to the copy doesn't affect this game at all.
-
-        Returns: A safe copy of this game which can be used to simulate movements
-        """
         return deepcopy(self)
 
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "addCustomMoveFunc":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result
+
     @abstractmethod
-    def createMoveForEvent(self, unit: MovingUnit, event) -> Path:
+    def createMoveForEvent(self, unit: MovingUnit, event, max_moves: int=-1) -> Path:
         """
         Creates a move following the given event coming from the given unit
 
         Args:
             unit: The unit that triggered the event
             event: The event triggered by the given unit and that will generate the move
+            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
 
         Returns: A Path of move(s) triggered by the given event for the given unit
 

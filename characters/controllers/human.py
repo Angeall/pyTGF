@@ -11,7 +11,7 @@ class Human(Controller, metaclass=ABCMeta):
         Makes the controller react to an input. (e.g. input_key == K_RIGHT: self.moves.put(Move(right=True)) )
         Args:
             input_key: The key of the keyboard input to react to. See pygame.locals "K_...".
-            game_info: All the useful game information used, for example, for path-finding purpose.
+            game_info: All the useful rules information used, for example, for path-finding purpose.
         """
         pass
 
@@ -24,6 +24,6 @@ class Human(Controller, metaclass=ABCMeta):
             mouse_state: A triplet containing the mouse state (can be 3*False): (b1_clicked, b2_clicked, b3_clicked)
                          Default: left click down
             click_up: True if the event is a "mouseup" event. False otherwise
-            game_info: All the useful game information used, for example, for path-finding purpose.
+            game_info: All the useful rules information used, for example, for path-finding purpose.
         """
         pass

@@ -15,7 +15,7 @@ class OccupantNotFoundError(BaseException):
 
 class Tile(object):
     """
-    Represent a tile on the game board, which is represented by an equilateral polygon
+    Represent a tile on the rules board, which is represented by an equilateral polygon
     """
 
     TILE_LENGTH_EPSILON = 0.1

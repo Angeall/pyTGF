@@ -1,4 +1,7 @@
+import asyncio
+import concurrent
 from abc import ABCMeta, abstractmethod
+from concurrent.futures import ThreadPoolExecutor
 from queue import Queue, Empty
 
 import pygame
@@ -6,12 +9,14 @@ from pygame.constants import DOUBLEBUF, MOUSEBUTTONDOWN, MOUSEBUTTONUP, K_ESCAPE
 
 from board.tile import Tile
 from characters.controller import Controller
+from characters.controllers.bot import Bot
 from characters.controllers.human import Human
 from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
 from characters.units.unit import Unit
 from game.game import Game, UnfeasibleMoveException
+from game.gamestate import GameState
 from utils.unit import resize_unit
 
 CONTINUE = 0
@@ -26,23 +31,24 @@ class MainLoop:
         self.game = game
         self.game.addCustomMoveFunc = self._addCustomMove
         self._screen = None
-        self._state = CONTINUE  # The game must go on at start
+        self._state = CONTINUE  # The rules must go on at start
         # self._controllers -> keys: controllers; values: Units
         self.controllers = {}
         # self._controllersMoves -> keys: controllers; values: tuples (current_move, pending_moves)
         self._controllersMoves = {}
         # self._otherMoves -> keys: units; values: queue
         self._otherMoves = {}
+        self.executor = None
 
     def run(self, max_fps: int=MAX_FPS) -> tuple:
         """
-        Launch the game and its logical game
+        Launch the rules and its logical rules
         Args:
-            max_fps: The maximum frame per seconds of the game
+            max_fps: The maximum frame per seconds of the rules
 
         Returns:
             a tuple containing all the winning players, or an empty tuple in case of draw,
-            or None if the game was closed by the user
+            or None if the rules was closed by the user
         """
         pygame.init()
         clock = pygame.time.Clock()
@@ -61,10 +67,10 @@ class MainLoop:
 
     def addUnit(self, unit: MovingUnit, controller: Controller, tile_id, initial_action: Path = None, team: int = -1) -> None:
         """
-        Adds a unit to the game, located on the tile corresponding
+        Adds a unit to the rules, located on the tile corresponding
         to the the given tile id and controlled by the given controller
         Args:
-            unit: The unit to add to the game
+            unit: The unit to add to the rules
             controller: The controller of that unit
             tile_id: The identifier of the tile it will be placed on
             initial_action: The initial action of the unit
@@ -92,7 +98,7 @@ class MainLoop:
 
     def _refreshScreen(self) -> None:
         """
-        Update the visual state of the game
+        Update the visual state of the rules
         """
         self.game.board.draw(self._screen)
         for unit in self.controllers.values():
@@ -232,6 +238,7 @@ class MainLoop:
                     tile_id = current_move.performNextMove()
                     if tile_id is not None:  # A new tile has been reached by the movement
                         self.game.updateGameState(self.controllers[controller], tile_id)
+                        self._askNextMoveToBots()
                     return True
                 except IllegalMove:
                     unit.kill()
@@ -267,7 +274,7 @@ class MainLoop:
 
     def _checkGameState(self) -> int:
         """
-        Checks if the game is finished
+        Checks if the rules is finished
         Returns: 0 = CONTINUE; 2 = END
         """
         if self.game.isFinished():
@@ -277,19 +284,19 @@ class MainLoop:
 
     def pause(self) -> None:
         """
-        Change the state of the game to "PAUSE"
+        Change the state of the rules to "PAUSE"
         """
         self._state = PAUSE
 
     def resume(self) -> None:
         """
-        Resume the game
+        Resume the rules
         """
         self._state = CONTINUE
 
     def _handleControllerEvent(self, controller: Controller, event) -> None:
         """
-        The goal of this method is to grab controls from the given controller and handle them in the game
+        The goal of this method is to grab controls from the given controller and handle them in the rules
         Args:
             controller: The controller to handle
             event: The event sent by the controller
@@ -299,6 +306,14 @@ class MainLoop:
             self._addMove(controller, move)
         except UnfeasibleMoveException:
             pass
+
+    def _askNextMoveToBots(self):
+        if self.executor is None:
+            self.executor = ThreadPoolExecutor(max_workers=len(self.controllers))
+        for controller in self.controllers:
+            game_state = GameState(self.game)
+            if isinstance(controller, Bot):
+                self.executor.submit(controller.reactToGameState, game_state)
 
     def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
                                          click_up: bool) -> None:

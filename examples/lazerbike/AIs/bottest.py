@@ -14,5 +14,5 @@ class BotTest(LazerBikePlayer, Bot):
     def _reactToNewGameState(self, game_state) -> None:
         pass
 
-    def _isGameStateHandled(self, game_state) -> bool:
+    def _isGameStateAlreadyHandled(self, game_state) -> bool:
         pass

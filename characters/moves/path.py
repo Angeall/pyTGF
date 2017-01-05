@@ -1,21 +1,26 @@
 from abc import ABCMeta, abstractmethod
 from types import FunctionType as function
 
+import sys
+
 from characters.moves.move import ShortMove
 
 
 class Path(metaclass=ABCMeta):
     def __init__(self, pre_action: function=None, post_action: function=None,
-                 step_pre_action: function=None, step_post_action: function=None):
+                 step_pre_action: function=None, step_post_action: function=None, max_moves: int=-1):
         """
         Instantiates a path, which is a series of ShortMoves
+
         Args:
             pre_action: The action to perform before the first move is performed
             post_action: The action to perform after the last move was performed
             step_pre_action: The action to perform each time a step (ShortMove) has been started.
-            step_post_action: The action to perform each time a step (ShortMove) has been completed.
+            step_post_action:
+                The action to perform each time a step (ShortMove) has been completed.
                 (step actions can have an unfulfilled "previous_tile" parameter, which will be filled with the last tile
-                 and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
+                and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
+            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
         """
         self.stopTriggered = False
         self.stopped = False
@@ -26,6 +31,7 @@ class Path(metaclass=ABCMeta):
         self._stepPreAction = step_pre_action  # type: function
         self._stepPostAction = step_post_action  # type: function
         self._isFirstMove = True
+        self._movesToGo = max_moves
 
     def stop(self, cancel_post_action: bool=True) -> None:
         """
@@ -43,14 +49,21 @@ class Path(metaclass=ABCMeta):
         self._handleFirstMove()
         if not self.finished():
             if self._currentMove is None and self._isFirstMoveEmpty():
+                self.completed = True
                 return
             else:
-                self._currentMove.performStep()
-                if self._currentMove.isPerformed:
+                if not self._currentMove.unit.isAlive():
+                    self.stopped = True
+                else:
+                    self._currentMove.performStep()
+                    if self._currentMove.isPerformed:
 
-                    new_tile_id = self._handleStepFinished()
-                    self._getNextStepIfNeeded()
-                    return new_tile_id
+                        new_tile_id = self._handleStepFinished()
+                        self._getNextStepIfNeeded()
+                        self._movesToGo -= 1
+                        if self._movesToGo == 0:
+                            self.stopTriggered = True 
+                        return new_tile_id
 
     def _handleFirstMove(self):
         if self._isFirstMove:
@@ -120,6 +133,10 @@ class Path(metaclass=ABCMeta):
             current_move = self._getNextShortMove()
             consistent_move = current_move is None or current_move.isConsistent()
         return current_move
+
+    def complete(self):
+        while not self.finished():
+            self.performNextMove()
 
     @abstractmethod
     def _getNextShortMove(self) -> ShortMove:

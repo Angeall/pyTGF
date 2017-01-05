@@ -7,7 +7,7 @@ from pygame.locals import *
 from board.boards.square_board import SquareBoardBuilder
 from examples.lazerbike.controls.allowed_moves import *
 from examples.lazerbike.controls.player import LazerBikePlayer
-from examples.lazerbike.game.lazerbike import LazerBikeGame
+from examples.lazerbike.rules.lazerbike import LazerBikeGame
 from examples.lazerbike.units.bike import Bike
 from game.mainloop import MainLoop
 from menu.aiselectorframe import AISelectorFrameBuilder

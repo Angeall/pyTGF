@@ -4,7 +4,7 @@ import pygame
 
 from board.tile import Tile
 from characters.controllers.passive import PassiveController
-from examples.sokoban.gameloop.loop import SokobanGame
+from examples.sokoban.rules.game import SokobanGame
 from examples.sokoban.parser.builder import SokobanBoardBuilder
 from examples.sokoban.tiles.hole import Hole
 from examples.sokoban.tiles.wall import Wall

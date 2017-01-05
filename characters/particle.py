@@ -1,4 +1,5 @@
 import pygame
+from copy import deepcopy
 
 import utils.geom
 from characters.sprite import UnitSprite
@@ -7,7 +8,7 @@ from characters.sprite import UnitSprite
 class Particle:
     def __init__(self, sprite: UnitSprite=None, nb_lives: int=1):
         """
-        Instantiates a particle unit in the game
+        Instantiates a particle unit in the rules
         Args:
             sprite: The sprite to draw on the board
             nb_lives: The number of lives this unit has before it dies
@@ -88,3 +89,15 @@ class Particle:
         Returns: The group consisting in the unit sprite
         """
         return self._drawable
+
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "_drawable":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result

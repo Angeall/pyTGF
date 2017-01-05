@@ -7,7 +7,6 @@ from characters.moves.listpath import ListPath
 from characters.moves.move import ShortMove
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
-from characters.units.unit import Unit
 from examples.sokoban.units.box import Box
 from game.game import Game
 from game.mainloop import MAX_FPS
@@ -20,13 +19,13 @@ class NeverEndingGame(Exception):
 class SokobanGame(Game):
     def __init__(self, board: Board, winning_tiles: list):
         if winning_tiles is None or len(winning_tiles) == 0:
-            raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
+            raise NeverEndingGame("No winning tiles were given to the rules, resulting in a never ending rules.")
         super().__init__(board)
         self._winningTiles = winning_tiles
         self._endingUnit = MovingUnit(1000)
         self.addUnit(self._endingUnit, 1000, (-1, -1))
 
-    def createMoveForEvent(self, unit: MovingUnit, event) -> Path:
+    def createMoveForEvent(self, unit: MovingUnit, event, max_moves: int=-1) -> Path:
         if type(event) == tuple and len(event) == 2:
             destination_tile = self.board.getTileById(event)
             if destination_tile.walkable:
@@ -39,6 +38,8 @@ class SokobanGame(Game):
                                                             lambda tile: tile.walkable and not tile.deadly)
                     current_tile = source_tile
                     tile_ids = self._checkIfBoxInTheWay(source_tile, tile_ids)
+                    if max_moves > 0:
+                        tile_ids = tile_ids[:max_moves]
                     if len(tile_ids) > 0:
                         for next_tile_id in tile_ids:
                             next_tile = self.board.getTileById(next_tile_id)
@@ -58,7 +59,6 @@ class SokobanGame(Game):
                     nb_player -= 1
             self._endingUnit.setNbLives(nb_player)
         super().updateGameState(unit, tile_id)
-        tile = self.board.getTileById(tile_id)
         if self.isFinished():
             self.winningPlayers = [player for player in self.winningPlayers
                                    if not isinstance(player, Box) and player is not self._endingUnit]

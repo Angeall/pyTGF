@@ -10,7 +10,7 @@ class SokobanPlayer(Controller):
 
     def goToTile(self, tile_id):
         """
-        Asks the game to go to the tile for which the ID has been given
+        Asks the rules to go to the tile for which the ID has been given
         Args:
             tile_id: The IF of the tile to which the player must go
         """

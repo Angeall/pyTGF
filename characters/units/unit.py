@@ -1,6 +1,8 @@
 import pygame
 from queue import Queue, Empty
 
+from copy import deepcopy
+
 from characters.particle import Particle
 from characters.sprite import UnitSprite
 
@@ -9,7 +11,7 @@ class Unit(Particle):
     def __init__(self, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
                  surviving_particles: bool=False):
         """
-        Instantiates a unit in the game
+        Instantiates a unit in the rules
         Args:
             sprite: The sprite to draw on the board
             max_particles: The maximum number of particles for this unit (-1 = infinite)
@@ -105,3 +107,15 @@ class Unit(Particle):
             if pygame.sprite.collide_rect(self.sprite, sprite):
                 return True
         return False
+
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "_drawable" and k != "_particlesQueue":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result

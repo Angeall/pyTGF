@@ -182,7 +182,6 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         self.aiClasses = {}
         path = list(sys.path)
         sys.path.insert(0, folder)
-
         for file in files:
             file_name = splitext(file)[0]
             try:
