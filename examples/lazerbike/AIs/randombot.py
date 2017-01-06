@@ -23,7 +23,7 @@ class RandomBot(LazerBikePlayer, Bot):
 
     def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:
         self._playersMove.append(player_number)
-        if self._playersMove == self.gameState.getNumberOfAlivePlayers():
+        if len(self._playersMove) >= self.gameState.getNumberOfAlivePlayers():
             self._playersMove = []
             return True
         else:

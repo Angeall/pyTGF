@@ -34,13 +34,17 @@ class ShortMove(object):
         self.isPerformed = False
         self.unit = unit
         self.sourceTile = source_tile
-        self._currentPos = self.sourceTile.graphics.center
+        self._frameNeeded = 1
+        pixels_to_go_x = 0
+        pixels_to_go_y = 0
         self.destinationTile = destination_tile
-        pixels_to_go_x = (destination_tile.graphics.center[0] - source_tile.graphics.center[0])
-        pixels_to_go_y = (destination_tile.graphics.center[1] - source_tile.graphics.center[1])
-        pixels_to_go = utils.geom.get_hypotenuse_length(pixels_to_go_x, pixels_to_go_y)
-        seconds_needed = pixels_to_go / unit.speed
-        self._frameNeeded = int(seconds_needed * fps)
+        if self.sourceTile.graphics is not None and self.destinationTile.graphics is not None:
+            self._currentPos = self.sourceTile.graphics.center
+            pixels_to_go_x = (destination_tile.graphics.center[0] - source_tile.graphics.center[0])
+            pixels_to_go_y = (destination_tile.graphics.center[1] - source_tile.graphics.center[1])
+            pixels_to_go = utils.geom.get_hypotenuse_length(pixels_to_go_x, pixels_to_go_y)
+            seconds_needed = pixels_to_go / unit.speed
+            self._frameNeeded = int(seconds_needed * fps)
         self._totalFrameNeeded = self._frameNeeded
         self._pixelsPerFrame = (pixels_to_go_x / self._frameNeeded, pixels_to_go_y / self._frameNeeded)
 
@@ -69,7 +73,8 @@ class ShortMove(object):
 
         if not self.isPerformed:
             if self._frameNeeded <= 1:  # Last step => Complete the move (kill precision error)
-                self.unit.moveTo(self.destinationTile.graphics.center)
+                if self.destinationTile.graphics is not None:
+                    self.unit.moveTo(self.destinationTile.graphics.center)
                 self._handleLastStep()
                 self.isPerformed = True
             else:

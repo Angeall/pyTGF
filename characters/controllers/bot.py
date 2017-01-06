@@ -30,11 +30,11 @@ class Bot(Controller, metaclass=ABCMeta):
         Performs a move in the local copy of the game
 
         Args:
-            player_number:
-            move_event:
+            player_number: The player that performed the given move
+            move_event: The move to perform in the local copy of the game
         """
         self.gameState.performMove(player_number, move_event)
-        if self._isMoveInteresting():
+        if self._isMoveInteresting(player_number, move_event):
             self._selectNewMove(self.gameState)
 
     @abstractmethod
@@ -44,7 +44,7 @@ class Bot(Controller, metaclass=ABCMeta):
 
         Args:
             player_number: The player that performed the given move
-            new_move_event: The new game state, to compare to the previously handled game state
+            new_move_event: The new move performed
 
         Returns: True if the move must trigger a new move. False otherwise.
         """

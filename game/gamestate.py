@@ -1,4 +1,4 @@
-from game.game import Game
+from game.game import Game, UnfeasibleMoveException
 
 
 class GameState:
@@ -45,8 +45,11 @@ class GameState:
             wanted_move: The event triggering the move
         """
         unit = self.game.players[player_number]
-        move = self.game.createMoveForEvent(unit, wanted_move, max_moves=1)
-        move.complete()
+        try:
+            move = self.game.createMoveForEvent(unit, wanted_move, max_moves=1)
+            move.complete()
+        except UnfeasibleMoveException:
+            pass
 
     def belongsToSameTeam(self, player_1_number: int, player_2_number: int):
         return self.game.belongsToSameTeam(self.game.players[player_1_number], self.game.players[player_2_number])

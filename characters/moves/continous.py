@@ -35,7 +35,7 @@ class ContinuousMove(Path):
     def _getNextShortMove(self) -> ShortMove:
         if self.sourceTile is None:
             self.sourceTile = self.sourceTileFunc(self.unit)
-        if self.sourceTile is not None:
+        if self.sourceTile is not None and self.sourceTile.identifier is not None:
             destination_tile = self.nextTileFunc(self.sourceTile)
             if destination_tile is not None and self.sourceTile is not destination_tile:
                 move = ShortMove(self.unit, self.sourceTile, destination_tile, self.fps)

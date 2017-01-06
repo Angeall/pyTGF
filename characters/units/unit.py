@@ -49,7 +49,8 @@ class Unit(Particle):
         """
         if 0 <= self._maxParticles <= len(self._particlesList):
             self.removeOldestParticle()
-        self._particlesQueue.put(particle)
+        if self._particlesQueue is not None:
+            self._particlesQueue.put(particle)
         self._particlesList.append(particle)
         if particle.sprite is not None:
             self._particlesSpriteGroup.add(particle.sprite)

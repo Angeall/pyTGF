@@ -126,24 +126,24 @@ class Game(metaclass=ABCMeta):
                 If this method is used illegally (when the unit is not effectively placed on the tile corresponding to
                 the given tile_id).
         """
-        try:
-            if unit not in self.board.getTileById(tile_id):
-                if unit not in self.units:
-                    raise UnknownUnitException("The game is trying to be updated using an unknown unit")
-                elif unit.isAlive():
-                    error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
-                                    % (self.units[unit].identifier, tile_id)
-                    raise InconsistentGameStateException(error_msg)
-            self.units[unit] = tile_id
-            new_tile = self.board.getTileById(tile_id)
-            if new_tile.hasTwoOrMoreOccupants():
-                self._handleCollision(unit, new_tile.occupants)
-            self._finished = self._checkIfFinished()
-        except:
-            traceback.print_exc()
+        if unit not in self.board.getTileById(tile_id):
+            if unit not in self.units:
+                raise UnknownUnitException("The game is trying to be updated using an unknown unit")
+            elif unit.isAlive():
+                error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
+                                % (self.units[unit].identifier, tile_id)
+                raise InconsistentGameStateException(error_msg)
+        self.units[unit] = tile_id
+        new_tile = self.board.getTileById(tile_id)
+        if new_tile.hasTwoOrMoreOccupants():
+            self._handleCollision(unit, new_tile.occupants)
+        self._finished = self._checkIfFinished()
 
     def copy(self):
-        return deepcopy(self)
+        new_game = deepcopy(self)
+        for unit in new_game.units:
+            new_game.players[unit.playerNumber] = unit
+        return new_game
 
     def __deepcopy__(self, memo={}):
         cls = self.__class__

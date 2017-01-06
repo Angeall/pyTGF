@@ -51,17 +51,19 @@ class LazerBikeGame(Game):
         # TODO: continuous line using center-to-center trace but need previous_previous_tile
         tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)
-        self._resizeTrace(trace, tile_to_place_trace)
-        trace.moveTo(tile_to_place_trace.graphics.center)
+        if tile_to_place_trace.graphics is not None:
+            self._resizeTrace(trace, tile_to_place_trace)
+            trace.moveTo(tile_to_place_trace.graphics.center)
         self._previousTraces[unit] = trace
         tile_to_place_trace.addOccupant(trace)
         unit.addParticle(trace)
 
     @staticmethod
     def _resizeTrace(trace, current_tile: Tile):
-        width = int(round(current_tile.graphics.sideLength / 2))
-        height = int(round(current_tile.graphics.sideLength / 2))
-        trace.sprite.size(width, height)
+        if current_tile.graphics is not None:
+            width = int(round(current_tile.graphics.sideLength / 2))
+            height = int(round(current_tile.graphics.sideLength / 2))
+            trace.sprite.size(width, height)
 
     @staticmethod
     def _determineCurrentDirection(previous_tile: Tile, current_tile: Tile) -> int:

@@ -54,6 +54,9 @@ class MainLoop:
         pygame.init()
         clock = pygame.time.Clock()
         self._screen = pygame.display.set_mode(self.game.board.size, DOUBLEBUF)
+        for controller in self.controllers:
+            if isinstance(controller, Bot):
+                controller.gameState = GameState(self.game.copy())
         while self._state != END:
             clock.tick(max_fps)
             self._handleInputs()
@@ -78,8 +81,6 @@ class MainLoop:
             initial_action: The initial action of the unit
             team: The number of the team this player is in (-1 = no team)
         """
-        # if isinstance(controller, Bot):
-        #     controller.gameState = GameState(self.game.copy())
         self.controllers[controller] = unit
         self.game.addUnit(unit, team, tile_id)
         self._controllersMoves[controller] = (None, Queue())
@@ -252,7 +253,7 @@ class MainLoop:
                     tile_id = current_move.performNextMove()
                     if tile_id is not None:  # A new tile has been reached by the movement
                         self.game.updateGameState(self.controllers[controller], tile_id)
-                        # self._informBotOnPerformedMove(current_move)
+                        self._informBotOnPerformedMove(controller.playerNumber, current_move)
                     return True
                 except IllegalMove:
                     unit.kill()
@@ -327,12 +328,16 @@ class MainLoop:
         except UnfeasibleMoveException:
             pass
 
-    def _informBotOnPerformedMove(self, move: Path):
+    def _informBotOnPerformedMove(self, moved_unit_number: int, move: Path):
         if self.executor is None:
             self.executor = ThreadPoolExecutor(max_workers=len(self.controllers))
         for controller in self.controllers:
             if isinstance(controller, Bot):
-                self.executor.submit(controller.moveGameState, self._movesEvent[move])
+                try:
+                    event = self._movesEvent[move]
+                    controller.moveGameState(moved_unit_number, event)
+                except Exception:
+                    traceback.print_exc()
 
     def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
                                          click_up: bool) -> None:

@@ -52,7 +52,6 @@ class Path(metaclass=ABCMeta):
                 self.completed = True
                 return
             else:
-                print(self._currentMove.sourceTile.identifier)
                 if not self._currentMove.unit.isAlive():
                     self.stopped = True
                 else:
@@ -76,10 +75,10 @@ class Path(metaclass=ABCMeta):
     def _isFirstMoveEmpty(self):
         self._currentMove = self._getNextConsistentMove()
         if self._currentMove is None:  # Empty case: getNextShortMove returns nothing => Stops directly
-            self.completed = True
-            return
+            return True
         else:
             self._performAction(self._stepPreAction)
+        return False
 
     def finished(self):
         return self.stopped or self.completed

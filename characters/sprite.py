@@ -17,12 +17,14 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
         self.rect = img.get_rect()  # type: pygame.Rect
 
     def rotate(self, angle: float):
-        self.image = transform.rotate(self.image, angle)
-        self.rect = self.image.get_rect()  # type: pygame.Rect
+        if self.image is not None and self.rect is not None:
+            self.image = transform.rotate(self.image, angle)
+            self.rect = self.image.get_rect()  # type: pygame.Rect
 
     def size(self, width: int, height: int):
-        self.image = transform.scale(self.image, (width, height))
-        self.rect = self.image.get_rect()
+        if self.image is not None and self.rect is not None:
+            self.image = transform.scale(self.image, (width, height))
+            self.rect = self.image.get_rect()
 
     @property
     @abstractmethod
