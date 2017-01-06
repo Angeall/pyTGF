@@ -38,8 +38,10 @@ class Game(metaclass=ABCMeta):
         self._suicide = False
         self._finished = False
         self.winningPlayers = None
-        # self.teams -> keys: int; values: unit
+        # self.teams -> keys: int; values: list of unit
         self.teams = {}
+        # self.unitsTeam -> keys: unit; values: number of team
+        self.unitsTeam = {}
         # self.players -> keys: int (player number); values: unit
         self.players = {}
         # self.units -> keys: Unit; values: tile_id
@@ -72,6 +74,7 @@ class Game(metaclass=ABCMeta):
         """
         self.units[unit] = origin_tile_id
         self.players[unit.playerNumber] = unit
+        self.unitsTeam[unit] = team_number
         if team_number in self.teams.keys():
             self.teams[team_number].append(unit)
         else:
@@ -123,18 +126,21 @@ class Game(metaclass=ABCMeta):
                 If this method is used illegally (when the unit is not effectively placed on the tile corresponding to
                 the given tile_id).
         """
-        if unit not in self.board.getTileById(tile_id):
-            if unit not in self.units:
-                raise UnknownUnitException("The game is trying to be updated using an unknown unit")
-            elif unit.isAlive():
-                error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
-                                % (self.units[unit].identifier, tile_id)
-                raise InconsistentGameStateException(error_msg)
-        self.units[unit] = tile_id
-        new_tile = self.board.getTileById(tile_id)
-        if new_tile.hasTwoOrMoreOccupants():
-            self._handleCollision(unit, new_tile.occupants)
-        self._finished = self._checkIfFinished()
+        try:
+            if unit not in self.board.getTileById(tile_id):
+                if unit not in self.units:
+                    raise UnknownUnitException("The game is trying to be updated using an unknown unit")
+                elif unit.isAlive():
+                    error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
+                                    % (self.units[unit].identifier, tile_id)
+                    raise InconsistentGameStateException(error_msg)
+            self.units[unit] = tile_id
+            new_tile = self.board.getTileById(tile_id)
+            if new_tile.hasTwoOrMoreOccupants():
+                self._handleCollision(unit, new_tile.occupants)
+            self._finished = self._checkIfFinished()
+        except:
+            traceback.print_exc()
 
     def copy(self):
         return deepcopy(self)
@@ -151,7 +157,7 @@ class Game(metaclass=ABCMeta):
             setattr(result, k, value)
         return result
 
-    def _fromSameTeam(self, unit1, unit2):
+    def belongsToSameTeam(self, unit1: MovingUnit, unit2: MovingUnit):
         """
         Checks if the two given units are in the same team
 
@@ -161,16 +167,10 @@ class Game(metaclass=ABCMeta):
 
         Returns: True if the two units are in the same team
         """
-        for team in self.teams.keys():
-            team_units = self.teams[team]
-            if unit1 in team_units:
-                if unit2 in team_units:
-                    return True
-                else:  # unit 1 in team, but not unit 2
-                    return False
-            elif unit2 in team_units:  # unit 2 in team units, but not unit 1
-                return False
-        return False  # Never found the team...
+        if unit1 in self.unitsTeam and unit2 in self.unitsTeam:
+            return self.unitsTeam[unit1] == self.unitsTeam[unit2]
+        else:
+            return False  # Never found the team...
 
     def _handleCollision(self, unit, other_units) -> None:
         """
@@ -230,7 +230,7 @@ class Game(metaclass=ABCMeta):
             player2: The second given player
             frontal: If true, the collision is frontal and kills the two players
         """
-        same_team = self._fromSameTeam(player1, player2)
+        same_team = self.belongsToSameTeam(player1, player2)
         suicide = player1 is player2
         if (not same_team or self._teamKill) or (suicide and self._suicide):
             player1.kill()

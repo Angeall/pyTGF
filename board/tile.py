@@ -125,9 +125,9 @@ class Tile(object):
         self.deadly = deadly
         self.walkable = walkable
         self._occupants = []
-        self._graphics = None
+        self.graphics = None
         if center is not None and points is not None and len(points) > 0:
-            self._graphics = TileGraphics(center, points)
+            self.graphics = TileGraphics(center, points)
 
     @property
     def occupants(self):
@@ -170,7 +170,7 @@ class Tile(object):
         """
         return other_tile_identifier in self.neighbours
 
-    def containsPoints(self, point: tuple) -> bool:
+    def containsPoint(self, point: tuple) -> bool:
         """
         Checks if a point lies inside the tile
 
@@ -179,8 +179,8 @@ class Tile(object):
 
         Returns: True if the point is inside and False otherwise
         """
-        if self._graphics is not None:
-            return self._graphics.containsPoint(point)
+        if self.graphics is not None:
+            return self.graphics.containsPoint(point)
 
     def draw(self, surface: pygame.Surface) -> None:
         """
@@ -189,8 +189,8 @@ class Tile(object):
         Args:
             surface: The surface on which the tile will be drawn
         """
-        if self._graphics is not None:
-            self._graphics.draw(surface)
+        if self.graphics is not None:
+            self.graphics.draw(surface)
 
     def addOccupant(self, new_occupant) -> None:
         """
@@ -249,7 +249,7 @@ class Tile(object):
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k != "_graphics":
+            if k != "graphics":
                 value = deepcopy(v, memo)
             else:
                 value = None

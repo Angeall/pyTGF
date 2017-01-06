@@ -15,10 +15,16 @@ class RandomBot(LazerBikePlayer, Bot):
         """
         super().__init__(player_number)
         self.availableMoves = [self.goDown, self.goLeft, self.goRight, self.goUp]
+        self._playersMove = []
 
-    def _reactToNewGameState(self, game_state: GameState) -> None:
+    def _selectNewMove(self, game_state: GameState) -> None:
         random_move = random.choice(self.availableMoves)
         random_move()
 
-    def _isGameStateAlreadyHandled(self, game_state: GameState) -> bool:
-        return False
+    def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:
+        self._playersMove.append(player_number)
+        if self._playersMove == self.gameState.getNumberOfAlivePlayers():
+            self._playersMove = []
+            return True
+        else:
+            return False

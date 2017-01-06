@@ -52,6 +52,7 @@ class Path(metaclass=ABCMeta):
                 self.completed = True
                 return
             else:
+                print(self._currentMove.sourceTile.identifier)
                 if not self._currentMove.unit.isAlive():
                     self.stopped = True
                 else:

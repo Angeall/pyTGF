@@ -192,7 +192,7 @@ class Builder(metaclass=ABCMeta):
             for j in range(self._columns):
                 current_center = round(current_center[0], 1), round(current_center[1], 1)
                 tile = self._generateTile(current_center, (i, j))
-                centers.append(tile.center)
+                centers.append(tile.graphics.center)
                 line.append(tile)
                 centers_to_tile_ids[(round(current_center[0], 1), round(current_center[1], 1))] = tile.identifier
                 current_center = self._getNextCenter(current_center, j)

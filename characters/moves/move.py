@@ -34,10 +34,10 @@ class ShortMove(object):
         self.isPerformed = False
         self.unit = unit
         self.sourceTile = source_tile
-        self._currentPos = self.sourceTile.center
+        self._currentPos = self.sourceTile.graphics.center
         self.destinationTile = destination_tile
-        pixels_to_go_x = (destination_tile.center[0] - source_tile.center[0])
-        pixels_to_go_y = (destination_tile.center[1] - source_tile.center[1])
+        pixels_to_go_x = (destination_tile.graphics.center[0] - source_tile.graphics.center[0])
+        pixels_to_go_y = (destination_tile.graphics.center[1] - source_tile.graphics.center[1])
         pixels_to_go = utils.geom.get_hypotenuse_length(pixels_to_go_x, pixels_to_go_y)
         seconds_needed = pixels_to_go / unit.speed
         self._frameNeeded = int(seconds_needed * fps)
@@ -69,7 +69,7 @@ class ShortMove(object):
 
         if not self.isPerformed:
             if self._frameNeeded <= 1:  # Last step => Complete the move (kill precision error)
-                self.unit.moveTo(self.destinationTile.center)
+                self.unit.moveTo(self.destinationTile.graphics.center)
                 self._handleLastStep()
                 self.isPerformed = True
             else:
@@ -96,7 +96,7 @@ class ShortMove(object):
     def cancelMove(self):
         frames_already_done = self._totalFrameNeeded - self._frameNeeded
         for _ in range(frames_already_done):
-            self.unit.moveTo(self.sourceTile.center)
+            self.unit.moveTo(self.sourceTile.graphics.center)
         self.isPerformed = True
 
 

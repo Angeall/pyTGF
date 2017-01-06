@@ -43,7 +43,7 @@ class SokobanBoardBuilder(SquareBoardBuilder):
                 elif tile_type == SokobanDrawstick:
                     self._playerLocations.append((i, j))
                     tile_type = Tile
-                tile = tile_type(tile.center, tile.points, tile.identifier, neighbours=tile.neighbours)
+                tile = tile_type(tile.graphics.center, tile.graphics.points, tile.identifier, neighbours=tile.neighbours)
                 board.tiles[i][j] = tile
                 if tile_type == Winning:
                     winning_tiles.append((i, j))

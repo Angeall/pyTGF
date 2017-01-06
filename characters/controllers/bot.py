@@ -1,6 +1,6 @@
-from characters.controller import Controller
 from abc import ABCMeta, abstractmethod
 
+from characters.controller import Controller
 from game.gamestate import GameState
 
 
@@ -8,40 +8,56 @@ class Bot(Controller, metaclass=ABCMeta):
     def __init__(self, player_number: int):
         """
        Instantiates a bot controller for a unit.
+
        Args:
            player_number: The identifier of the unit controlled by this controller
        """
         super().__init__(player_number)
+        self._gameStateLocalCopy = None
         self.previousGameState = None
 
-    def reactToGameState(self, game_state: GameState):
-        if not self._isGameStateAlreadyHandled(game_state):
-            self._reactToNewGameState(game_state)
-            self.previousGameState = game_state
-        return 1
+    @property
+    def gameState(self):
+        return self._gameStateLocalCopy
 
-    @abstractmethod
-    def _isGameStateAlreadyHandled(self, game_state: GameState) -> bool:
+    @gameState.setter
+    def gameState(self, value):
+        if isinstance(value, GameState):
+            self._gameStateLocalCopy = value
+
+    def moveGameState(self, player_number: int, move_event):
         """
-        Compares the given state with the previously handled rules state and returns if they are equal
-        to one another or not.
-        Please note that the first "previous_state" will be None.
-        Attention : this method must be efficient because it will be called frequently.
+        Performs a move in the local copy of the game
 
         Args:
-            game_state: The new rules state, to compare to the previously handled rules state
+            player_number:
+            move_event:
+        """
+        self.gameState.performMove(player_number, move_event)
+        if self._isMoveInteresting():
+            self._selectNewMove(self.gameState)
 
-        Returns: True if the two rules states are similar (hence, the "new" rules state has no reason to be handled again)
-                 False otherwise, which will trigger the decision-taking algorithm
+    @abstractmethod
+    def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:
+        """
+        Evaluates if the move that has been done must trigger a new move from this controller
+
+        Args:
+            player_number: The player that performed the given move
+            new_move_event: The new game state, to compare to the previously handled game state
+
+        Returns: True if the move must trigger a new move. False otherwise.
         """
         pass
 
     @abstractmethod
-    def _reactToNewGameState(self, game_state: GameState):
+    def _selectNewMove(self, game_state: GameState):
         """
-        Decision taking algorithm that, given the new rules state, will (or won't if not needed) make a move in the rules
+        Decision taking algorithm that, given the new game state, will (or won't if not needed) make a move in the game
 
         Args:
-            game_state: The new rules state to react to
+            game_state:
+                The game state to react to. This game state must not be modified in place, in order to
+                maintain a stable local copy of the game state.
         """
         pass

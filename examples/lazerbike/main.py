@@ -105,7 +105,8 @@ def launch_game(gui: GUI, player_info: tuple):
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
-        add_controller(main_loop, player_class, player_number, player_teams[player_number], speed, min(lines, columns) * (2 / 3))
+        add_controller(main_loop, player_class, player_number, player_teams[player_number], speed,
+                       min(lines, columns) * (2 / 3))
 
     result = main_loop.run()
     if result is None:

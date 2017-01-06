@@ -52,15 +52,15 @@ class LazerBikeGame(Game):
         tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)
         self._resizeTrace(trace, tile_to_place_trace)
-        trace.moveTo(tile_to_place_trace.center)
+        trace.moveTo(tile_to_place_trace.graphics.center)
         self._previousTraces[unit] = trace
         tile_to_place_trace.addOccupant(trace)
         unit.addParticle(trace)
 
     @staticmethod
-    def _resizeTrace(trace, current_tile):
-        width = int(round(current_tile.sideLength / 2))
-        height = int(round(current_tile.sideLength / 2))
+    def _resizeTrace(trace, current_tile: Tile):
+        width = int(round(current_tile.graphics.sideLength / 2))
+        height = int(round(current_tile.graphics.sideLength / 2))
         trace.sprite.size(width, height)
 
     @staticmethod

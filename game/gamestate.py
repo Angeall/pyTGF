@@ -47,3 +47,13 @@ class GameState:
         unit = self.game.players[player_number]
         move = self.game.createMoveForEvent(unit, wanted_move, max_moves=1)
         move.complete()
+
+    def belongsToSameTeam(self, player_1_number: int, player_2_number: int):
+        return self.game.belongsToSameTeam(self.game.players[player_1_number], self.game.players[player_2_number])
+
+    def getNumberOfAlivePlayers(self):
+        alive_units = 0
+        for unit in self.game.players.values():
+            if unit.isAlive():
+                alive_units += 1
+        return alive_units

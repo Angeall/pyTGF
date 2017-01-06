@@ -1,6 +1,4 @@
-import asyncio
-import concurrent
-from abc import ABCMeta, abstractmethod
+import traceback
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue, Empty
 
@@ -31,24 +29,27 @@ class MainLoop:
         self.game = game
         self.game.addCustomMoveFunc = self._addCustomMove
         self._screen = None
-        self._state = CONTINUE  # The rules must go on at start
+        self._state = CONTINUE  # The game must go on at start
         # self._controllers -> keys: controllers; values: Units
         self.controllers = {}
         # self._controllersMoves -> keys: controllers; values: tuples (current_move, pending_moves)
         self._controllersMoves = {}
+        # self._movesEvent -> keys: moves; values: events (that triggered its key move)
+        self._movesEvent = {}
         # self._otherMoves -> keys: units; values: queue
         self._otherMoves = {}
         self.executor = None
 
     def run(self, max_fps: int=MAX_FPS) -> tuple:
         """
-        Launch the rules and its logical rules
+        Launch the game and its logical loop
+
         Args:
-            max_fps: The maximum frame per seconds of the rules
+            max_fps: The maximum frame per seconds of the game
 
         Returns:
             a tuple containing all the winning players, or an empty tuple in case of draw,
-            or None if the rules was closed by the user
+            or None if the game was closed by the user
         """
         pygame.init()
         clock = pygame.time.Clock()
@@ -67,23 +68,25 @@ class MainLoop:
 
     def addUnit(self, unit: MovingUnit, controller: Controller, tile_id, initial_action: Path = None, team: int = -1) -> None:
         """
-        Adds a unit to the rules, located on the tile corresponding
+        Adds a unit to the game, located on the tile corresponding
         to the the given tile id and controlled by the given controller
+
         Args:
-            unit: The unit to add to the rules
+            unit: The unit to add to the game
             controller: The controller of that unit
             tile_id: The identifier of the tile it will be placed on
             initial_action: The initial action of the unit
             team: The number of the team this player is in (-1 = no team)
         """
-
+        # if isinstance(controller, Bot):
+        #     controller.gameState = GameState(self.game.copy())
         self.controllers[controller] = unit
         self.game.addUnit(unit, team, tile_id)
         self._controllersMoves[controller] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
         tile.addOccupant(unit)
         resize_unit(unit, tile)
-        unit.moveTo(tile.center)
+        unit.moveTo(tile.graphics.center)
         if initial_action is not None:
             self._handleControllerEvent(controller, initial_action)
 
@@ -98,7 +101,7 @@ class MainLoop:
 
     def _refreshScreen(self) -> None:
         """
-        Update the visual state of the rules
+        Update the visual state of the game
         """
         self.game.board.draw(self._screen)
         for unit in self.controllers.values():
@@ -128,6 +131,7 @@ class MainLoop:
     def _addMove(self, controller: Controller, move: Path) -> None:
         """
         Adds a move (cancelling the pending moves)
+
         Args:
             controller: The controller for which add a move
             move: The move to add for the given controller
@@ -141,6 +145,7 @@ class MainLoop:
     def _addCustomMove(self, unit: Unit, move: Path) -> None:
         """
         Adds a move that is NOT PERFORMED BY A CONTROLLER
+
         Args:
             unit: The unit that will be moved
             move: The move that will be performed
@@ -151,6 +156,7 @@ class MainLoop:
     def _cancelCurrentMoves(self, controller) -> None:
         """
         Cancel the current movement if there is one and remove all the other pending movements.
+
         Args:
             controller: The controller for which cancel the movements
         """
@@ -160,12 +166,18 @@ class MainLoop:
         new_fifo = Queue()
         if last_move is not None:
             last_move.stop()
-        del fifo
+        while True:
+            try:
+                move = fifo.get_nowait()
+                del self._movesEvent[move]
+            except Empty:
+                break
         self._controllersMoves[controller] = (last_move, new_fifo)
 
     def _dispatchInputToHumanControllers(self, input_key) -> None:
         """
         Handles keyboard events and send them to Human Controllers to trigger actions if needed
+
         Args:
             input_key: The key pressed on the keyboard
         """
@@ -176,6 +188,7 @@ class MainLoop:
     def _dispatchMouseEventToHumanControllers(self, pixel, click_up=False) -> None:
         """
         Handles mouse events and send them to Human Controllers to trigger actions if needed
+
         Args:
             pixel: The pixel clicked
             click_up: True if the button was released, False if the button was pressed
@@ -227,6 +240,7 @@ class MainLoop:
     def _handleMoveForUnit(self, unit: Unit, current_move: Path, controller: Controller):
         """
         Perform the next step of the given move on the given unit
+
         Args:
             unit: The unit that performs the move
             current_move: The current move to perform
@@ -238,7 +252,7 @@ class MainLoop:
                     tile_id = current_move.performNextMove()
                     if tile_id is not None:  # A new tile has been reached by the movement
                         self.game.updateGameState(self.controllers[controller], tile_id)
-                        self._askNextMoveToBots()
+                        # self._informBotOnPerformedMove(current_move)
                     return True
                 except IllegalMove:
                     unit.kill()
@@ -255,6 +269,7 @@ class MainLoop:
     def _getNextMoveForControllerIfNeeded(self, controller) -> Path:
         """
         Checks if a move is available for the given controller, and if so, returns it
+
         Args:
             controller: The given controller
 
@@ -264,6 +279,8 @@ class MainLoop:
         current_move = moves[0]  # type: Path
         if current_move is None or current_move.finished():
             try:
+                if current_move is not None:
+                    del self._movesEvent[current_move]
                 move = moves[1].get_nowait()  # type: Path
                 self._controllersMoves[controller] = (move, moves[1])
                 current_move = move
@@ -274,7 +291,8 @@ class MainLoop:
 
     def _checkGameState(self) -> int:
         """
-        Checks if the rules is finished
+        Checks if the game is finished
+
         Returns: 0 = CONTINUE; 2 = END
         """
         if self.game.isFinished():
@@ -284,41 +302,43 @@ class MainLoop:
 
     def pause(self) -> None:
         """
-        Change the state of the rules to "PAUSE"
+        Change the state of the game to "PAUSE"
         """
         self._state = PAUSE
 
     def resume(self) -> None:
         """
-        Resume the rules
+        Resume the game
         """
         self._state = CONTINUE
 
     def _handleControllerEvent(self, controller: Controller, event) -> None:
         """
-        The goal of this method is to grab controls from the given controller and handle them in the rules
+        The goal of this method is to grab controls from the given controller and handle them in the game
+
         Args:
             controller: The controller to handle
             event: The event sent by the controller
         """
         try:
             move = self.game.createMoveForEvent(self.controllers[controller], event)
+            self._movesEvent[move] = event
             self._addMove(controller, move)
         except UnfeasibleMoveException:
             pass
 
-    def _askNextMoveToBots(self):
+    def _informBotOnPerformedMove(self, move: Path):
         if self.executor is None:
             self.executor = ThreadPoolExecutor(max_workers=len(self.controllers))
         for controller in self.controllers:
-            game_state = GameState(self.game)
             if isinstance(controller, Bot):
-                self.executor.submit(controller.reactToGameState, game_state)
+                self.executor.submit(controller.moveGameState, self._movesEvent[move])
 
     def _sendMouseEventToHumanController(self, controller: Human, tile: Tile, mouse_state: tuple,
                                          click_up: bool) -> None:
         """
         Can optionally filter the mouse events to send
+
         Args:
             controller: The controller to which the event must be sent
             tile: The tile that was clicked on
@@ -332,6 +352,7 @@ class MainLoop:
     def _sendInputToHumanController(self, controller: Human, input_key: int) -> None:
         """
         Can optionally filter the keyboard events to send
+
         Args:
             controller: The controller to which the event must be sent
             input_key: The key pressed on the keyboard

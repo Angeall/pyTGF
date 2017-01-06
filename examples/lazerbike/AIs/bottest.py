@@ -11,8 +11,8 @@ class BotTest(LazerBikePlayer, Bot):
         """
         super().__init__(player_number)
 
-    def _reactToNewGameState(self, game_state) -> None:
+    def _selectNewMove(self, game_state) -> None:
         pass
 
-    def _isGameStateAlreadyHandled(self, game_state) -> bool:
-        pass
+    def _isMoveInteresting(self, player_number, new_move_event) -> bool:
+        return False
