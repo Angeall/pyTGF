@@ -6,7 +6,7 @@ class MovingUnit(Unit):
     def __init__(self, player_number: int, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
                  speed: int=150, surviving_particles: bool=False):
         """
-        Instantiates a moving unit in the rules
+        Instantiates a moving unit in the game
         Args:
             player_number: The number of the player represented by this moving unit
             sprite: The sprite to draw on the board

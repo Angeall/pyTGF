@@ -11,7 +11,7 @@ class Unit(Particle):
     def __init__(self, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
                  surviving_particles: bool=False):
         """
-        Instantiates a unit in the rules
+        Instantiates a unit in the game
         Args:
             sprite: The sprite to draw on the board
             max_particles: The maximum number of particles for this unit (-1 = infinite)

@@ -19,7 +19,7 @@ class NeverEndingGame(Exception):
 class SokobanGame(Game):
     def __init__(self, board: Board, winning_tiles: list):
         if winning_tiles is None or len(winning_tiles) == 0:
-            raise NeverEndingGame("No winning tiles were given to the rules, resulting in a never ending rules.")
+            raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
         super().__init__(board)
         self._winningTiles = winning_tiles
         self._endingUnit = MovingUnit(1000)

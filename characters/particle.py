@@ -8,7 +8,7 @@ from characters.sprite import UnitSprite
 class Particle:
     def __init__(self, sprite: UnitSprite=None, nb_lives: int=1):
         """
-        Instantiates a particle unit in the rules
+        Instantiates a particle unit in the game
         Args:
             sprite: The sprite to draw on the board
             nb_lives: The number of lives this unit has before it dies

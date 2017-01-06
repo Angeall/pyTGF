@@ -9,6 +9,6 @@ class Controller(metaclass=ABCMeta):
         Args:
             player_number: The identifier of the unit controlled by this controller
         """
-        self.moves = Queue()  # Will contain constants that will be interpreted by the rules
+        self.moves = Queue()  # Will contain constants that will be interpreted by the game
         self.playerNumber = player_number
 

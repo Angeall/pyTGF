@@ -14,7 +14,7 @@ class Board(metaclass=ABCMeta):
 
     def __init__(self, size: tuple, borders: list, tiles: list, centers: list, centers_to_tile_ids: dict):
         """
-        Instantiates a rules board using the given parameters
+        Instantiates a game board using the given parameters
         Args:
             size: The size in pixels of the board : (width, height)
             borders: A list of lines, represented by two points each, representing the borders of the board.
