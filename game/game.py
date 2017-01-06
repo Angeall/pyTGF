@@ -25,6 +25,14 @@ class UnfeasibleMoveException(Exception):
 class Game(metaclass=ABCMeta):
     # TODO: add simulation capabilities. Careful to the units occupant update !
     def __init__(self, board: Board):
+        """
+        Creates a new Game using the given board
+
+        Args:
+            board:
+                The board, containing the needed Tiles that will be used for the game.
+                The units are added later on the board.
+        """
         self.board = board
         self._teamKill = False
         self._suicide = False
@@ -128,6 +136,21 @@ class Game(metaclass=ABCMeta):
             self._handleCollision(unit, new_tile.occupants)
         self._finished = self._checkIfFinished()
 
+    def copy(self):
+        return deepcopy(self)
+
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "addCustomMoveFunc":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result
+
     def _fromSameTeam(self, unit1, unit2):
         """
         Checks if the two given units are in the same team
@@ -213,21 +236,6 @@ class Game(metaclass=ABCMeta):
             player1.kill()
             if frontal:
                 player2.kill()
-
-    def copy(self):
-        return deepcopy(self)
-
-    def __deepcopy__(self, memo={}):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            if k != "addCustomMoveFunc":
-                value = deepcopy(v, memo)
-            else:
-                value = None
-            setattr(result, k, value)
-        return result
 
     @abstractmethod
     def createMoveForEvent(self, unit: MovingUnit, event, max_moves: int=-1) -> Path:
