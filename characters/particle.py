@@ -95,7 +95,7 @@ class Particle:
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k != "_drawable":
+            if k != "sprite" and k != "_drawable":
                 value = deepcopy(v, memo)
             else:
                 value = None

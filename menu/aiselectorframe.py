@@ -104,7 +104,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
 
     def _setupControllerCombobox(self, combobox, player_number):
         """
-        Setups the combobox so it displays the different controls available
+        Setups the combobox so it displays the different controllers available
         Args:
             combobox: The combobox to setup
             player_number: The player for which the combobox is being set up
@@ -174,7 +174,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
 
     def _lookForAIs(self) -> None:
         """
-        Look into the "AIs" folder for compatibles AIs or Human controls and fill *self.ais*
+        Look into the "AIs" folder for compatibles AIs or Human controllers and fill *self.ais*
         """
         folder = "AIs"
         files = [f for f in listdir(folder) if isfile(join(folder, f))]
@@ -194,7 +194,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             except ImportError:
                 continue
 
-        sys.path[:] = path
+        # sys.path[:] = path
         self.ais.insert(0, self.NONE_STRING)
 
     def _confirmSelection(self) -> None:

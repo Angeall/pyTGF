@@ -7,6 +7,7 @@ from characters.moves.listpath import ListPath
 from characters.moves.move import ShortMove
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
+from controls.events.keyboard import KeyboardEvent
 from examples.sokoban.units.box import Box
 from game.game import Game
 from game.mainloop import MAX_FPS
@@ -25,9 +26,9 @@ class SokobanGame(Game):
         self._endingUnit = MovingUnit(1000)
         self.addUnit(self._endingUnit, 1000, (-1, -1))
 
-    def createMoveForEvent(self, unit: MovingUnit, event, max_moves: int=-1) -> Path:
-        if type(event) == tuple and len(event) == 2:
-            destination_tile = self.board.getTileById(event)
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1) -> Path:
+        if type(move_descriptor) == tuple and len(move_descriptor) == 2:
+            destination_tile = self.board.getTileById(move_descriptor)
             if destination_tile.walkable:
                 source_tile = self.board.getTileById(self.getTileForUnit(unit).identifier)
                 moves = []
@@ -93,3 +94,13 @@ class SokobanGame(Game):
             current = nxt
             i += 1
         return next_tile_ids
+
+    def createKeyboardEvent(self, unit, input_key) -> KeyboardEvent:
+        return SokobanKeyboardEvent(character_keys=(input_key,), player_tile_id=self.units[unit])
+
+
+class SokobanKeyboardEvent(KeyboardEvent):
+    def __init__(self, character_keys: tuple, player_tile_id: tuple):
+        super().__init__(character_keys)
+        self.playerTileID = player_tile_id
+

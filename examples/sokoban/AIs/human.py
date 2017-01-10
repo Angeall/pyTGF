@@ -1,5 +1,7 @@
-from characters.controllers.human import Human
-from examples.sokoban.controls.player import SokobanPlayer
+from controls.controllers.human import Human
+from controls.events.mouse import MouseEvent
+from examples.sokoban.controllers.player import SokobanPlayer
+from examples.sokoban.rules.game import SokobanKeyboardEvent
 
 
 class HumanPlayer(SokobanPlayer, Human):
@@ -10,21 +12,22 @@ class HumanPlayer(SokobanPlayer, Human):
         self.upKey = up_key
         self.downKey = down_key
 
-    def reactToTileClicked(self, tile_id, mouse_state=(True, False, False), click_up=False, **game_info: ...) -> None:
-        if mouse_state[0]:
-            self.goToTile(tile_id)
+    def reactToMouseEvent(self, mouse_event: MouseEvent) -> None:
+        if mouse_event.mouseState[0]:
+            if mouse_event.tileId is not None:
+                self.goToTile(mouse_event.tileId)
 
-    def reactToInput(self, input_key: int, **game_info: ...) -> None:
-        if "player_tile" in game_info:
-            player_tile = game_info["player_tile"]
-            new_tile_id = None
-            if input_key == self.rightKey:
-                new_tile_id = (player_tile[0], player_tile[1] + 1)
-            elif input_key == self.leftKey:
-                new_tile_id = (player_tile[0], player_tile[1] - 1)
-            elif input_key == self.upKey:
-                new_tile_id = (player_tile[0] - 1, player_tile[1])
-            elif input_key == self.downKey:
-                new_tile_id = (player_tile[0] + 1, player_tile[1])
-            if new_tile_id is not None:
-                self.goToTile(new_tile_id)
+    def reactToKeyboardEvent(self, keyboard_event: SokobanKeyboardEvent) -> None:
+        player_tile_id = keyboard_event.playerTileID
+        input_key = keyboard_event.characterKeys[0]
+        new_tile_id = None
+        if input_key == self.rightKey:
+            new_tile_id = (player_tile_id[0], player_tile_id[1] + 1)
+        elif input_key == self.leftKey:
+            new_tile_id = (player_tile_id[0], player_tile_id[1] - 1)
+        elif input_key == self.upKey:
+            new_tile_id = (player_tile_id[0] - 1, player_tile_id[1])
+        elif input_key == self.downKey:
+            new_tile_id = (player_tile_id[0] + 1, player_tile_id[1])
+        if new_tile_id is not None:
+            self.goToTile(new_tile_id)

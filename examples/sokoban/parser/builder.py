@@ -2,7 +2,10 @@ from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o
 
 from board.boards.square_board import SquareBoardBuilder
 from board.tile import Tile
-from characters.controllers.passive import PassiveController
+from controls.controllers.bot import Bot
+from controls.controllers.human import Human
+from controls.controllers.passive import PassiveController
+from examples.sokoban.controllers.linker import SokobanBotLinker, SokobanHumanLinker
 from examples.sokoban.rules.game import SokobanGame
 from examples.sokoban.tiles.winning import Winning
 from examples.sokoban.units.box import Box
@@ -55,7 +58,7 @@ class SokobanBoardBuilder(SquareBoardBuilder):
 
         # PUT BOXES INTO THE GAME
         for (i, j) in self._boxLocations:
-            main_loop.addUnit(Box(self._unitSpeed, box_number), PassiveController(box_number), (i, j), team=1)
+            main_loop.addUnit(Box(self._unitSpeed, box_number), SokobanBotLinker(PassiveController(box_number)), (i, j), team=1)
             box_number -= 1
 
         # CHECK IF THERE IS ENOUGH PLAYERS SELECTED
@@ -68,13 +71,16 @@ class SokobanBoardBuilder(SquareBoardBuilder):
         # PUT THE PLAYERS INTO THE GAME
         for (i, j) in self._playerLocations:
             controller = self._controllers[player_number - 1]
-            try:
-                controller = controller(player_number)
-            except TypeError:  # Human player waiting for input keys
+            if issubclass(controller, Bot):
+                linker = SokobanBotLinker(controller(player_number))
+            elif issubclass(controller, Human):  # Human player waiting for input keys
                 keys = human_controls[self._humanCounter]
                 self._humanCounter += 1
-                controller = controller(player_number, keys[0], keys[1], keys[2], keys[3])
-            main_loop.addUnit(SokobanDrawstick(self._unitSpeed, player_number), controller, (i, j), team=1)
+                linker = SokobanHumanLinker(controller(player_number, keys[0], keys[1], keys[2], keys[3]))
+            else:
+                raise TypeError("The type of the player (\'%s\') must either be a Bot or a Human subclass."
+                                % (str(controller)))
+            main_loop.addUnit(SokobanDrawstick(self._unitSpeed, player_number), linker, (i, j), team=1)
             player_number += 1
         return main_loop
 

@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
-from characters.controller import Controller
+from controls.controller import Controller
+from controls.events.bot import BotEvent
 from game.gamestate import GameState
 
 
@@ -25,16 +26,15 @@ class Bot(Controller, metaclass=ABCMeta):
         if isinstance(value, GameState):
             self._gameStateLocalCopy = value
 
-    def moveGameState(self, player_number: int, move_event):
+    def reactToEvent(self, event: BotEvent):
         """
         Performs a move in the local copy of the game
 
         Args:
-            player_number: The player that performed the given move
-            move_event: The move to perform in the local copy of the game
+            event: The event that contains the move to perform in the local copy of the game
         """
-        self.gameState.performMove(player_number, move_event)
-        if self._isMoveInteresting(player_number, move_event):
+        self.gameState.performMove(event.playerNumber, event.moveDescriptor)
+        if self._isMoveInteresting(event.playerNumber, event.moveDescriptor):
             self._selectNewMove(self.gameState)
 
     @abstractmethod
@@ -54,6 +54,7 @@ class Bot(Controller, metaclass=ABCMeta):
     def _selectNewMove(self, game_state: GameState):
         """
         Decision taking algorithm that, given the new game state, will (or won't if not needed) make a move in the game
+        Returns nothing ! Just add a new move in the moves Queue
 
         Args:
             game_state:

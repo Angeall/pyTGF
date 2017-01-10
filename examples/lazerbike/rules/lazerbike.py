@@ -6,7 +6,7 @@ from board.boards.square_board import SquareBoard
 from board.tile import Tile
 from characters.moves.continous import ContinuousMove
 from characters.moves.path import Path
-from examples.lazerbike.controls.allowed_moves import *
+from examples.lazerbike.control.linker import GO_RIGHT, GO_LEFT, GO_DOWN, GO_UP
 from examples.lazerbike.units.bike import Bike
 from examples.lazerbike.units.trace import Trace
 from game.game import Game, UnfeasibleMoveException
@@ -19,30 +19,30 @@ class LazerBikeGame(Game):
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
 
-    def createMoveForEvent(self, unit: Bike, event, max_moves: int=-1) -> Path:
+    def createMoveForDescriptor(self, unit: Bike, move_descriptor, max_moves: int=-1) -> Path:
         board = self.board  # type: SquareBoard
         fct = None
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys()
-        if event == GO_RIGHT:
+        if move_descriptor == GO_RIGHT:
             if initial_move or (unit.direction != GO_LEFT and unit.direction != GO_RIGHT):
                 pre_action = partial(unit.turn, GO_RIGHT)
                 fct = board.getRightTile
-        elif event == GO_LEFT:
+        elif move_descriptor == GO_LEFT:
             if initial_move or (unit.direction != GO_RIGHT and unit.direction != GO_LEFT):
                 pre_action = partial(unit.turn, GO_LEFT)
                 fct = board.getLeftTile
-        elif event == GO_DOWN:
+        elif move_descriptor == GO_DOWN:
             if initial_move or (unit.direction != GO_UP and unit.direction != GO_DOWN):
                 pre_action = partial(unit.turn, GO_DOWN)
                 fct = board.getBottomTile
-        elif event == GO_UP:
+        elif move_descriptor == GO_UP:
             if initial_move or (unit.direction != GO_DOWN and unit.direction != GO_UP):
                 pre_action = partial(unit.turn, GO_UP)
                 fct = board.getTopTile
         if fct is not None:
             if initial_move:
-                self._unitsPreviousMoves[unit] = event
+                self._unitsPreviousMoves[unit] = move_descriptor
             return ContinuousMove(unit, self.getTileForUnit, fct, MAX_FPS, pre_action=pre_action, max_moves=max_moves,
                                   step_post_action=partial(self._letTraceOnPreviousTile, unit=unit))
         raise UnfeasibleMoveException("The event couldn't create a valid move")

@@ -1,8 +1,10 @@
-from characters.controller import Controller
-from examples.lazerbike.controls.allowed_moves import *
+from abc import ABCMeta
+
+from controls.controller import Controller
+from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
 
 
-class LazerBikePlayer(Controller):
+class LazerBikePlayer(Controller, metaclass=ABCMeta):
     def __init__(self, player_number):
         super().__init__(player_number)
 

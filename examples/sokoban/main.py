@@ -5,7 +5,7 @@ from tkinter.ttk import Frame, Label, Button
 import pygame
 from pygame.locals import *
 
-from examples.sokoban.controls.player import SokobanPlayer
+from examples.sokoban.controllers.player import SokobanPlayer
 from examples.sokoban.parser.builder import SokobanBoardBuilder
 from examples.sokoban.parser.parser import SokobanBoardParser
 from menu.aiselectorframe import AISelectorFrameBuilder

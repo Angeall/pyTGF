@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from board.tile import Tile
 from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
@@ -119,6 +121,26 @@ class Board(metaclass=ABCMeta):
         self._drawTiles(surf)
         self._drawBorders(surf)
         surface.blit(surf, (0, 0))
+
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == "tiles":
+                value = []
+                for line in v:
+                    new_line = []
+                    for tile in line:
+                        tile_copy = tile.__deepcopy__(memo)
+                        new_line.append(tile_copy)
+                    value.append(new_line)
+            elif k != "_kdTree" and k != "_centersToTileIds" and k != "_centers":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result
 
     @abstractmethod
     def getTileById(self, identifier: tuple) -> Tile:

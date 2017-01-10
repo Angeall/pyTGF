@@ -119,9 +119,9 @@ class Tile(object):
             neighbours: The IDs of the neighbours of this tile
         """
         self.identifier = identifier
-        self.neighbours = []
+        self.neighbours = ()
         if neighbours is not None:
-            self.neighbours.extend(neighbours)
+            self.addNeighbours(neighbours)
         self.deadly = deadly
         self.walkable = walkable
         self._occupants = []
@@ -142,6 +142,18 @@ class Tile(object):
     def occupants(self, value):
         self._occupants = value
 
+    def removeNeighbour(self, neighbour_to_remove_identifier: tuple):
+        """
+        Removes a neighbour from this tile
+
+        Args:
+            neighbour_to_remove_identifier: The id of the neighbour to remove
+        """
+        new_neighbours = ()
+        for neighbour in self.neighbours:
+            if neighbour != neighbour_to_remove_identifier:
+                new_neighbours += neighbour
+
     def addNeighbour(self, neighbour_identifier: tuple) -> None:
         """
         Adds a neighbours, accessible from this tile
@@ -149,7 +161,7 @@ class Tile(object):
         Args:
             neighbour_identifier: The identifier of the new neighbour of the tile
         """
-        self.neighbours.append(neighbour_identifier)
+        self.neighbours += (neighbour_identifier,)
 
     def addNeighbours(self, neighbours_identifier: list) -> None:
         """
@@ -158,7 +170,7 @@ class Tile(object):
         Args:
             neighbours_identifier: A list of identifiers of the new accessible tiles to add as neighbours to this tile
         """
-        self.neighbours.extend(neighbours_identifier)
+        self.neighbours += tuple(neighbours_identifier)
 
     def hasDirectAccess(self, other_tile_identifier: tuple) -> bool:
         """
@@ -247,9 +259,15 @@ class Tile(object):
     def __deepcopy__(self, memo={}):
         cls = self.__class__
         result = cls.__new__(cls)
-        memo[id(self)] = result
+        # memo[id(self)] = result  # Useless as the tiles are referenced nowhere else than in the board
+        # print("-----------------")
         for k, v in self.__dict__.items():
-            if k != "graphics":
+            # print(k)
+            if k == "_occupants"and len(v) == 0:
+                value = []
+            elif k != "graphics" and k != "_occupants":  # Constants that can be immediately copied
+                value = v
+            elif k != "graphics" and v is not None:
                 value = deepcopy(v, memo)
             else:
                 value = None

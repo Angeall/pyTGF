@@ -1,7 +1,8 @@
 import random
+import time
 
-from characters.controllers.bot import Bot
-from examples.lazerbike.controls.player import LazerBikePlayer
+from controls.controllers.bot import Bot
+from examples.lazerbike.control.player import LazerBikePlayer
 from game.gamestate import GameState
 
 
@@ -18,6 +19,8 @@ class RandomBot(LazerBikePlayer, Bot):
         self._playersMove = []
 
     def _selectNewMove(self, game_state: GameState) -> None:
+        for i in range(30):
+            b = GameState(game_state.game.copy())
         random_move = random.choice(self.availableMoves)
         random_move()
 

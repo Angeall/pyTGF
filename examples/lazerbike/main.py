@@ -5,8 +5,11 @@ import pygame
 from pygame.locals import *
 
 from board.boards.square_board import SquareBoardBuilder
-from examples.lazerbike.controls.allowed_moves import *
-from examples.lazerbike.controls.player import LazerBikePlayer
+from controls.controllers.bot import Bot
+from controls.controllers.human import Human
+from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, LazerBikeBotLinker, \
+    LazerBikeHumanLinker
+from examples.lazerbike.control.player import LazerBikePlayer
 from examples.lazerbike.rules.lazerbike import LazerBikeGame
 from examples.lazerbike.units.bike import Bike
 from game.mainloop import MainLoop
@@ -62,16 +65,19 @@ def get_player_info(player_number: int):
 
 def add_controller(main_loop: MainLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
     global nb_human
-    try:
-        controller = player_class(player_number)
-    except TypeError:
+    if issubclass(player_class, Bot):
+        linker = LazerBikeBotLinker(player_class(player_number))
+    elif issubclass(player_class, Human):
         controls = human_controls[nb_human % len(human_controls)]
         nb_human += 1
-        controller = player_class(player_number, controls[0], controls[1], controls[2], controls[3])
+        linker = LazerBikeHumanLinker(player_class(player_number, controls[0], controls[1], controls[2], controls[3]))
+    else:
+        raise TypeError("The type of the player (\'%s\') must either be a Bot or a Human subclass."
+                        % (str(player_class)))
     player_info = get_player_info(player_number)
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
-    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace), controller, start_pos, initial_direction,
+    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace), linker, start_pos, initial_direction,
                       team=player_team)
 
 
@@ -98,7 +104,8 @@ def launch_game(gui: GUI, player_info: tuple):
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
     board = builder.create()
-    speed = int(round((min(width, height) / 1080) * 150))
+
+    speed = 3*board.getTileById((0, 0)).graphics.sideLength
     game = LazerBikeGame(board)
     game.setSuicide(True)
     main_loop = MainLoop(game)

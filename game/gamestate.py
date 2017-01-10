@@ -17,7 +17,7 @@ class GameState:
         Returns:
             A copy of this GameState in which the move have been applied (if it is possible)
         """
-        new_game_state = GameState(self.game)
+        new_game_state = GameState(self.game.copy())
         new_game_state.performMove(player_number, wanted_move)
         return new_game_state
 
@@ -31,7 +31,7 @@ class GameState:
         Returns:
             A copy of this GameState in which the moves have been applied (if they are possible)
         """
-        new_game_state = GameState(self.game)
+        new_game_state = GameState(self.game.copy())
         for player_number, wanted_move in player_moves.items():
             new_game_state.performMove(player_number, wanted_move)
         return new_game_state
@@ -46,7 +46,7 @@ class GameState:
         """
         unit = self.game.players[player_number]
         try:
-            move = self.game.createMoveForEvent(unit, wanted_move, max_moves=1)
+            move = self.game.createMoveForDescriptor(unit, wanted_move, max_moves=1)
             move.complete()
         except UnfeasibleMoveException:
             pass
@@ -60,3 +60,6 @@ class GameState:
             if unit.isAlive():
                 alive_units += 1
         return alive_units
+
+    def isFinished(self):
+        return self.game.isFinished()

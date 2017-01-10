@@ -8,6 +8,8 @@ from board.board import Board
 from board.tile import Tile
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
+from controls.events.keyboard import KeyboardEvent
+from controls.events.mouse import MouseEvent
 
 
 class InconsistentGameStateException(Exception):
@@ -140,10 +142,7 @@ class Game(metaclass=ABCMeta):
         self._finished = self._checkIfFinished()
 
     def copy(self):
-        new_game = deepcopy(self)
-        for unit in new_game.units:
-            new_game.players[unit.playerNumber] = unit
-        return new_game
+        return deepcopy(self)
 
     def __deepcopy__(self, memo={}):
         cls = self.__class__
@@ -238,13 +237,13 @@ class Game(metaclass=ABCMeta):
                 player2.kill()
 
     @abstractmethod
-    def createMoveForEvent(self, unit: MovingUnit, event, max_moves: int=-1) -> Path:
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1) -> Path:
         """
         Creates a move following the given event coming from the given unit
 
         Args:
             unit: The unit that triggered the event
-            event: The event triggered by the given unit and that will generate the move
+            move_descriptor: The descriptor of the move triggered by the given unit
             max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
 
         Returns: A Path of move(s) triggered by the given event for the given unit
@@ -253,3 +252,30 @@ class Game(metaclass=ABCMeta):
             UnfeasibleMoveException: If the move is not possible.
         """
         pass
+
+    def createKeyboardEvent(self, unit: MovingUnit, input_key) -> KeyboardEvent:
+        """
+        Creates a keyboard event (override for custom events)
+
+        Args:
+            unit: The unit that triggered te event
+            input_key: The input key pressed on the keyboard
+
+        Returns: The event object to send
+        """
+        return KeyboardEvent((input_key,))
+
+    def createMouseEvent(self, unit, pixel, mouse_state, click_up, tile_id) -> MouseEvent:
+        """
+        Creates a mouse event (override for custom events)
+
+        Args:
+            unit: The unit that triggered the event
+            pixel: The pixel clicked
+            mouse_state: The state of the mouse buttons
+            click_up: True if the click is "up", False if "down"
+            tile_id: The identifier of the tile clicked on (None if no tile was clicked)
+
+        Returns: the event to send
+        """
+        return MouseEvent(pixel, mouse_state, click_up, tile_id)

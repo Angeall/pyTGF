@@ -1,5 +1,5 @@
-from characters.controllers.bot import Bot
-from examples.lazerbike.controls.player import LazerBikePlayer
+from controls.controllers.bot import Bot
+from examples.lazerbike.control.player import LazerBikePlayer
 
 
 class BotTest(LazerBikePlayer, Bot):
