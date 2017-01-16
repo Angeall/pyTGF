@@ -22,6 +22,7 @@ class TestShortMove(unittest.TestCase):
         self.assertFalse(move.isPerformed)
         move.performStep()
         self.assertTrue(move.isPerformed)
+        self.assertTrue(unit in destination_tile)
 
     def test_impossible_move(self):
         """

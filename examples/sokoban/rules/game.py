@@ -26,7 +26,7 @@ class SokobanGame(Game):
         self._endingUnit = MovingUnit(1000)
         self.addUnit(self._endingUnit, 1000, (-1, -1))
 
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1) -> Path:
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1, force: bool=False) -> Path:
         if type(move_descriptor) == tuple and len(move_descriptor) == 2:
             destination_tile = self.board.getTileById(move_descriptor)
             if destination_tile.walkable:

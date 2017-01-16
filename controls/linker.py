@@ -5,6 +5,7 @@ import time
 
 import pygame
 from multiprocess.connection import PipeConnection
+from pathos.pools import ThreadPool
 
 from controls.controller import Controller
 from controls.event import Event
@@ -18,6 +19,7 @@ class Linker(metaclass=ABCMeta):
         self._unitAlive = True
         self.controller = controller
         self._connected = True
+        self.executor = ThreadPool(1)
 
     @property
     @abstractmethod
@@ -74,7 +76,8 @@ class Linker(metaclass=ABCMeta):
                 self.close(pipe_conn)
             except:
                 traceback.print_exc()
-            clock.tick(MAX_FPS)
+            finally:
+                clock.tick(MAX_FPS)
 
     def handleNewGameStateChangeIfNeeded(self, pipe_conn: PipeConnection) -> None:
         """
@@ -90,7 +93,7 @@ class Linker(metaclass=ABCMeta):
                 raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
                                 % (str(type(event)), str(self.typeOfEventFromGame)))
             else:
-                self.controller.reactToEvent(event)
+                self.executor.pipe(self.controller.reactToEvent, event)
 
     def checkGameInfo(self, pipe_conn: PipeConnection):
         if pipe_conn.poll():

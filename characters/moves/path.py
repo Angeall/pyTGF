@@ -62,7 +62,8 @@ class Path(metaclass=ABCMeta):
                         self._getNextStepIfNeeded()
                         self._movesToGo -= 1
                         if self._movesToGo == 0:
-                            self.stopTriggered = True 
+                            self.stopped = True
+                            self._handlePathFinished()
                         return new_tile_id
 
     def _handleFirstMove(self):
@@ -134,9 +135,11 @@ class Path(metaclass=ABCMeta):
             consistent_move = current_move is None or current_move.isConsistent()
         return current_move
 
-    def complete(self):
+    def complete(self) -> tuple:
+        tile_id = None
         while not self.finished():
-            self.performNextMove()
+            tile_id = self.performNextMove()
+        return tile_id
 
     @abstractmethod
     def _getNextShortMove(self) -> ShortMove:

@@ -37,6 +37,29 @@ class TestContinuousMove(unittest.TestCase):
         path.performNextMove()
         self.assertEqual(path._currentMove.destinationTile, source_tile)
 
+    def test_complete(self):
+        """
+        Makes sure the "complete" function is working correctly
+        """
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
+        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
+        third_tile = Tile((75, 15), [(60, 0), (90, 0), (90, 30), (60, 30)], (0, 2))
+        source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
+        destination_tile.addNeighbour(source_tile.identifier)
+        destination_tile.addNeighbour(third_tile.identifier)
+        third_tile.addNeighbour(destination_tile.identifier)
+        my_tiles = [third_tile, destination_tile]
+        # Distance separating the two tiles is 30 pixels
+        unit_tiles = [destination_tile, source_tile]
+        path = ContinuousMove(unit, lambda x: unit_tiles.pop(), lambda tile: my_tiles.pop(), fps=60, max_moves=1)
+        new_tile_id = path.complete()
+        path.performNextMove()
+        self.assertFalse(new_tile_id == source_tile.identifier)
+        self.assertTrue(new_tile_id == destination_tile.identifier)
+        self.assertTrue(unit in destination_tile)
+
     def test_cancel(self):
         """
         Makes sure the cancel method is working correctly

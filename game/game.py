@@ -237,7 +237,7 @@ class Game(metaclass=ABCMeta):
                 player2.kill()
 
     @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1) -> Path:
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1, force: bool=False) -> Path:
         """
         Creates a move following the given event coming from the given unit
 
@@ -245,6 +245,7 @@ class Game(metaclass=ABCMeta):
             unit: The unit that triggered the event
             move_descriptor: The descriptor of the move triggered by the given unit
             max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
+            force: Optional, a bot controller will force the move as it does not need to check if the move is possible
 
         Returns: A Path of move(s) triggered by the given event for the given unit
 

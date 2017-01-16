@@ -19,25 +19,26 @@ class LazerBikeGame(Game):
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
 
-    def createMoveForDescriptor(self, unit: Bike, move_descriptor, max_moves: int=-1) -> Path:
+    def createMoveForDescriptor(self, unit: Bike, move_descriptor, max_moves: int=-1, force=False) -> Path:
         board = self.board  # type: SquareBoard
         fct = None
         pre_action = None
-        initial_move = unit not in self._unitsPreviousMoves.keys()
+        initial_move = unit not in self._unitsPreviousMoves.keys() or force
         if move_descriptor == GO_RIGHT:
-            if initial_move or (unit.direction != GO_LEFT and unit.direction != GO_RIGHT):
+            if initial_move or (unit.direction != GO_LEFT):
                 pre_action = partial(unit.turn, GO_RIGHT)
                 fct = board.getRightTile
         elif move_descriptor == GO_LEFT:
-            if initial_move or (unit.direction != GO_RIGHT and unit.direction != GO_LEFT):
+            print(unit.direction)
+            if initial_move or (unit.direction != GO_RIGHT):
                 pre_action = partial(unit.turn, GO_LEFT)
                 fct = board.getLeftTile
         elif move_descriptor == GO_DOWN:
-            if initial_move or (unit.direction != GO_UP and unit.direction != GO_DOWN):
+            if initial_move or (unit.direction != GO_UP):
                 pre_action = partial(unit.turn, GO_DOWN)
                 fct = board.getBottomTile
         elif move_descriptor == GO_UP:
-            if initial_move or (unit.direction != GO_DOWN and unit.direction != GO_UP):
+            if initial_move or (unit.direction != GO_DOWN):
                 pre_action = partial(unit.turn, GO_UP)
                 fct = board.getTopTile
         if fct is not None:

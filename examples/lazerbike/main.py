@@ -97,7 +97,7 @@ def launch_game(gui: GUI, player_info: tuple):
     pygame.init()
     width = 1024
     height = 768
-    lines = 50
+    lines = 75
     columns = 75
     builder = SquareBoardBuilder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
@@ -105,7 +105,7 @@ def launch_game(gui: GUI, player_info: tuple):
     builder.setTilesVisible(False)
     board = builder.create()
 
-    speed = 3*board.getTileById((0, 0)).graphics.sideLength
+    speed = 0.5*board.getTileById((0, 0)).graphics.sideLength
     game = LazerBikeGame(board)
     game.setSuicide(True)
     main_loop = MainLoop(game)

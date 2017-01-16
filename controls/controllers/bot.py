@@ -33,7 +33,10 @@ class Bot(Controller, metaclass=ABCMeta):
         Args:
             event: The event that contains the move to perform in the local copy of the game
         """
-        self.gameState.performMove(event.playerNumber, event.moveDescriptor)
+        succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor, force=True)
+        if not succeeded:
+            print("error in move... for player %s and descriptor %s" %
+                  (str(event.playerNumber), str(event.moveDescriptor)))
         if self._isMoveInteresting(event.playerNumber, event.moveDescriptor):
             self._selectNewMove(self.gameState)
 

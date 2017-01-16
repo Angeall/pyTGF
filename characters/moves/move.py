@@ -65,7 +65,7 @@ class ShortMove(object):
         if self.destinationTile.identifier not in self.sourceTile.neighbours:
             self.cancelMove()
             raise IllegalMove("The move from the source tile -- " + str(self.sourceTile.identifier) + " -- " +
-                              "to the destination tile -- + " + str(self.destinationTile.identifier) + " -- " +
+                              "to the destination tile -- " + str(self.destinationTile.identifier) + " -- " +
                               "cannot be performed")
         if not self.isConsistent():
             self.cancelMove()
@@ -94,9 +94,8 @@ class ShortMove(object):
             self.performStep()
 
     def _handleLastStep(self):
-        if self.unit in self.sourceTile:
-            self.sourceTile.removeOccupant(self.unit)
-            self.destinationTile.addOccupant(self.unit)
+        self.sourceTile.removeOccupant(self.unit)
+        self.destinationTile.addOccupant(self.unit)
 
     def cancelMove(self):
         frames_already_done = self._totalFrameNeeded - self._frameNeeded
