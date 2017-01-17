@@ -2,7 +2,10 @@ from typing import Union, Any
 
 from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.moves.path import Path
+from characters.units.moving_unit import MovingUnit
 from game.game import Game, UnfeasibleMoveException
+
+direction_str = ["RIGHT", "UP", "LEFT", "DOWN"]
 
 
 class GameState:
@@ -51,27 +54,26 @@ class GameState:
             new_game_state.performMove(player_number, wanted_move)
         return True, new_game_state
 
-    def performMove(self, player_number: int, move, force: bool=False) -> bool:
+    def performMove(self, player_number: int, move_descriptor, force: bool=False) -> bool:
         """
         Performs the move inside this GameState
 
         Args:
             player_number: The number of the player moving
-            move: The move to perform (either a Path or a move descriptor)
+            move_descriptor: The move to perform (either a Path or a move descriptor)
+            force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
         """
         try:
-            unit = self.game.players[player_number]
-            init_move = move
-            if not isinstance(move, Path):
-                move = self.game.createMoveForDescriptor(unit, move, max_moves=1, force=force)
+            unit = self.game.players[player_number]  # type: MovingUnit
+            move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
             new_tile_id = move.complete()
+            unit.currentAction = move_descriptor
             self.game.updateGameState(unit, new_tile_id)
+
             return True
         except UnfeasibleMoveException:
-            print("GameState:performMove: unfeasible move")
             return False
         except IllegalMove:
-            print("GameState:performMove: illegal move")
             self.game.players[player_number].kill()
             return True
 
@@ -115,7 +117,6 @@ class GameState:
         for move in possible_moves:
             if self._generateMove(player_number, move)[0]:
                 feasible_moves.append(move)
-        print(feasible_moves)
         return feasible_moves
 
     def isFinished(self) -> bool:

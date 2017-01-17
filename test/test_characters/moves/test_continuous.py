@@ -30,12 +30,15 @@ class TestContinuousMove(unittest.TestCase):
         unit_tile = source_tile
         next_tile = destination_tile
         path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60)
-        for _ in range(59):
+        just_started, _, _ = path.performNextMove()
+        self.assertTrue(just_started)
+        for _ in range(58):
             path.performNextMove()
         unit_tile = destination_tile
         next_tile = source_tile
-        path.performNextMove()
-        self.assertEqual(path._currentMove.destinationTile, source_tile)
+        just_started, move_completed, new_tile_id = path.performNextMove()
+        self.assertTrue(move_completed)
+        self.assertEqual(new_tile_id, destination_tile.identifier)
 
     def test_complete(self):
         """
@@ -55,7 +58,6 @@ class TestContinuousMove(unittest.TestCase):
         unit_tiles = [destination_tile, source_tile]
         path = ContinuousMove(unit, lambda x: unit_tiles.pop(), lambda tile: my_tiles.pop(), fps=60, max_moves=1)
         new_tile_id = path.complete()
-        path.performNextMove()
         self.assertFalse(new_tile_id == source_tile.identifier)
         self.assertTrue(new_tile_id == destination_tile.identifier)
         self.assertTrue(unit in destination_tile)
@@ -78,7 +80,7 @@ class TestContinuousMove(unittest.TestCase):
             path.performNextMove()
         path.stop()
         path.performNextMove()
-        self.assertTrue(path.stopped)
+        self.assertTrue(path.finished())
 
     def test_actions(self):
         """

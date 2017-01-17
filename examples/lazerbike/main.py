@@ -54,13 +54,13 @@ def buildSelectionFrame(window: Tk, gui: GUI) -> Frame:
 
 def get_player_info(player_number: int):
     if player_number == 1:
-        return 17, 25, GO_RIGHT
+        return 2, 2, GO_RIGHT
     elif player_number == 2:
-        return 37, 50, GO_LEFT
+        return 17, 17, GO_LEFT
     elif player_number == 3:
-        return 4, 37, GO_DOWN
+        return 17, 2, GO_DOWN
     else:
-        return 45, 37, GO_UP
+        return 2, 17, GO_UP
 
 
 def add_controller(main_loop: MainLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
@@ -97,15 +97,15 @@ def launch_game(gui: GUI, player_info: tuple):
     pygame.init()
     width = 1024
     height = 768
-    lines = 75
-    columns = 75
+    lines = 20
+    columns = 20
     builder = SquareBoardBuilder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
     board = builder.create()
 
-    speed = 0.5*board.getTileById((0, 0)).graphics.sideLength
+    speed = 0.33*board.getTileById((0, 0)).graphics.sideLength
     game = LazerBikeGame(board)
     game.setSuicide(True)
     main_loop = MainLoop(game)

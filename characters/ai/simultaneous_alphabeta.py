@@ -8,6 +8,8 @@ from game.gamestate import GameState
 
 __author__ = 'Anthony Rouneau'
 
+direction_str = ["RIGHT", "UP", "LEFT", "DOWN"]
+
 
 class SimultaneousAlphaBeta:
     # TODO: generate combinations of moves... Tried itertools.product with functools.reduce
@@ -48,8 +50,11 @@ class SimultaneousAlphaBeta:
             value, actions = self.actions[state]
         else:
             value, actions, _ = self.depthSearch(state, (-float('inf'), float('inf')), 0)
-        self.playerNumber = -1
-        return actions[player_number]
+        self.playerNumber = None
+        if actions is not None:
+            return actions[player_number]
+        else:
+            return random.choice(self.possibleActions)
 
     def depthSearch(self, state: GameState, bounds: tuple, depth: int):
         """
@@ -66,7 +71,8 @@ class SimultaneousAlphaBeta:
         alpha, beta = bounds
         # Check if we reached the end of the tree
         if depth > self.max_depth:
-            return self._getTeamScore(state, self.eval(state)), None, False
+            score = self._getTeamScore(state, self.eval(state))
+            return score, None, False
         # Check if the game state is final
         elif state.isFinished():
             return self._getTeamScore(state, self.eval(state)), None, True
@@ -83,7 +89,8 @@ class SimultaneousAlphaBeta:
         #     return self.actions.get(state), True
 
         # Explore every possible actions from this point
-        for actions in self._generateMovesCombinations(state):
+        combinations = self._generateMovesCombinations(state)
+        for actions in combinations:
             feasible_moves, new_game_state = state.simulateMoves(actions)
             if feasible_moves and new_game_state is not None:
                 (pessimistic_value, optimistic_value), _, reached_end = self.depthSearch(new_game_state,
@@ -105,7 +112,9 @@ class SimultaneousAlphaBeta:
                     return (best_pessimistic_value, best_optimistic_value), choices, best_reached_end
                 alpha = max(alpha, pessimistic_value)
                 beta = min(beta, optimistic_value)
-        choices = self.random.choices(equally_good_choices)
+        if len(equally_good_choices) == 0:
+            return (-1000, 1000), None, True
+        choices = self.random.choice(equally_good_choices)
         # if best_reached_end:  # If the reached state was final, we can stock the best action for this state
         #     self.actions[state] = best_pessimistic_value, best_optimistic_value, best_action
         return (best_pessimistic_value, best_optimistic_value), choices, best_reached_end
@@ -148,12 +157,14 @@ class SimultaneousAlphaBeta:
         players = state.getPlayerNumbers()
         moves = []
         for player_number in players:
+            possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
             moves.append(tuple(itertools.product([player_number],
-                                                 state.checkFeasibleMoves(player_number, self.possibleActions))))
+                                                 possible_moves_for_player)))
         temp = tuple(itertools.product(*moves))
         dicts = []
         for choices in temp:
-            dicts.append(dict(choices))
+            temp_dict = dict(choices)
+            dicts.append(temp_dict)
         return dicts
 
 

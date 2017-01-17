@@ -127,6 +127,7 @@ class MainLoop:
         resize_unit(unit, tile)
         unit.moveTo(tile.graphics.center)
         if initial_action is not None:
+            unit.currentAction = initial_action
             self._handleEvent(unit, initial_action)
 
     def _refreshScreen(self) -> None:
@@ -228,7 +229,7 @@ class MainLoop:
             tile = self.game.board.getTileByPixel(pixel)
         self._previouslyClickedTile = tile
         mouse_state = pygame.mouse.get_pressed()
-        for linker in self.linkers:  # type: Human
+        for linker in self.linkers:  # type: Linker
             if issubclass(type(linker), HumanLinker):
                 tile_id = None
                 if tile is not None:
@@ -285,10 +286,11 @@ class MainLoop:
         if unit.isAlive():
             if current_move is not None:
                 try:
-                    tile_id = current_move.performNextMove()
-                    if tile_id is not None:  # A new tile has been reached by the movement
+                    just_started, move_completed, tile_id = current_move.performNextMove()
+                    if move_completed:  # A new tile has been reached by the movement
                         self.game.updateGameState(unit, tile_id)
-                        self._informBotOnPerformedMove(linker.controller.playerNumber, current_move)
+                    elif just_started:
+                        self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
                 except IllegalMove:
                     self._killUnit(unit, linker)

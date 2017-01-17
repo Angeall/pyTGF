@@ -15,5 +15,5 @@ class Controller(metaclass=ABCMeta):
         self.playerNumber = player_number
 
     @abstractmethod
-    def reactToEvent(self, event: Event):
+    def reactToEvents(self, events: list):
         pass

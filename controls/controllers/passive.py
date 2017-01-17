@@ -9,5 +9,5 @@ class PassiveController(Bot):
     def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:
         pass
 
-    def reactToEvent(self, event: Event):
+    def reactToEvents(self, events: Event):
         pass

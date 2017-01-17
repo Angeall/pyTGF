@@ -25,20 +25,19 @@ class LazerBikeGame(Game):
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys() or force
         if move_descriptor == GO_RIGHT:
-            if initial_move or (unit.direction != GO_LEFT):
+            if initial_move or (unit.currentAction != GO_LEFT):
                 pre_action = partial(unit.turn, GO_RIGHT)
                 fct = board.getRightTile
         elif move_descriptor == GO_LEFT:
-            print(unit.direction)
-            if initial_move or (unit.direction != GO_RIGHT):
+            if initial_move or (unit.currentAction != GO_RIGHT):
                 pre_action = partial(unit.turn, GO_LEFT)
                 fct = board.getLeftTile
         elif move_descriptor == GO_DOWN:
-            if initial_move or (unit.direction != GO_UP):
+            if initial_move or (unit.currentAction != GO_UP):
                 pre_action = partial(unit.turn, GO_DOWN)
                 fct = board.getBottomTile
         elif move_descriptor == GO_UP:
-            if initial_move or (unit.direction != GO_DOWN):
+            if initial_move or (unit.currentAction != GO_DOWN):
                 pre_action = partial(unit.turn, GO_UP)
                 fct = board.getTopTile
         if fct is not None:

@@ -8,17 +8,18 @@ from controls.events.mouse import MouseEvent
 
 class Human(Controller, metaclass=ABCMeta):
 
-    def reactToEvent(self, event: HumanEvent):
+    def reactToEvents(self, events: list):
         """
         The human controller reacts to human input => keyboard or mouse (joypad controller could be added)
 
         Args:
-            event: The input event
+            events: The list of input event
         """
-        if isinstance(event, MouseEvent):
-            self.reactToMouseEvent(event)
-        elif isinstance(event, KeyboardEvent):
-            self.reactToKeyboardEvent(event)
+        for event in events:  # type: HumanEvent
+            if isinstance(event, MouseEvent):
+                self.reactToMouseEvent(event)
+            elif isinstance(event, KeyboardEvent):
+                self.reactToKeyboardEvent(event)
 
     @abstractmethod
     def reactToKeyboardEvent(self, keyboard_event: KeyboardEvent) -> None:

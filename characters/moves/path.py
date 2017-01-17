@@ -32,6 +32,10 @@ class Path(metaclass=ABCMeta):
         self._stepPostAction = step_post_action  # type: function
         self._isFirstMove = True
         self._movesToGo = max_moves
+        self._first = True
+        self._needNextMove = False
+        self._newMoveStarted = False
+        self._newMoveTileId = None
 
     def stop(self, cancel_post_action: bool=True) -> None:
         """
@@ -44,27 +48,42 @@ class Path(metaclass=ABCMeta):
     def performNextMove(self):
         """
         Performs the next step in the path
-        Returns: The id of the new tile of the unit, or None if the current move is not performed yet.
+
+        Returns: A tuple containing:
+                - True if the step just begon, along with
+                -
+                - The id of the new tile of the unit, or None if the current move is not performed yet.
         """
         self._handleFirstMove()
         if not self.finished():
             if self._currentMove is None and self._isFirstMoveEmpty():
                 self.completed = True
-                return
             else:
                 if not self._currentMove.unit.isAlive():
                     self.stopped = True
                 else:
+                    move_just_started = self._newMoveStarted
+                    self._newMoveStarted = False
+                    new_tile_id = None
+                    self._needNextMove = False
                     self._currentMove.performStep()
-                    if self._currentMove.isPerformed:
-
+                    move_performed = self._currentMove.isPerformed
+                    if move_just_started:
+                        new_tile_id = self._newMoveTileId
+                    if move_performed:
                         new_tile_id = self._handleStepFinished()
-                        self._getNextStepIfNeeded()
-                        self._movesToGo -= 1
-                        if self._movesToGo == 0:
-                            self.stopped = True
-                            self._handlePathFinished()
-                        return new_tile_id
+                        next_step_got, next_destination_tile_id = self._getNextStepIfNeeded()
+                        self._newMoveStarted = next_step_got
+                        self._newMoveTileId = next_destination_tile_id
+                        self._decrementMovesToGo()
+                    return move_just_started, move_performed, new_tile_id
+        return False, False, None
+
+    def _decrementMovesToGo(self):
+        self._movesToGo -= 1
+        if self._movesToGo == 0:
+            self.stopped = True
+            self._handlePathFinished()
 
     def _handleFirstMove(self):
         if self._isFirstMove:
@@ -79,6 +98,8 @@ class Path(metaclass=ABCMeta):
             return True
         else:
             self._performAction(self._stepPreAction)
+            self._newMoveTileId = self._currentMove.destinationTile
+            self._newMoveStarted = True
         return False
 
     def finished(self):
@@ -98,6 +119,7 @@ class Path(metaclass=ABCMeta):
         Returns:
 
         """
+        self._first = False
         if self.stopTriggered:
             self.stopped = True
             self._handlePathFinished()
@@ -105,9 +127,11 @@ class Path(metaclass=ABCMeta):
             self._currentMove = self._getNextConsistentMove()
             if self._currentMove is not None:
                 self._performAction(self._stepPreAction)
+                return True, self._currentMove.destinationTile
             else:
                 self.completed = True
                 self._handlePathFinished()
+        return False, None
 
     def _performAction(self, action):
         if action is not None:
@@ -138,7 +162,9 @@ class Path(metaclass=ABCMeta):
     def complete(self) -> tuple:
         tile_id = None
         while not self.finished():
-            tile_id = self.performNextMove()
+            _, _, new_tile_id = self.performNextMove()
+            if new_tile_id is not None:
+                tile_id = new_tile_id
         return tile_id
 
     @abstractmethod

@@ -26,18 +26,22 @@ class Bot(Controller, metaclass=ABCMeta):
         if isinstance(value, GameState):
             self._gameStateLocalCopy = value
 
-    def reactToEvent(self, event: BotEvent):
+    def reactToEvents(self, events: list):
         """
         Performs a move in the local copy of the game
 
         Args:
-            event: The event that contains the move to perform in the local copy of the game
+            events: list of events, each member contains the move to perform in the local copy of the game
         """
-        succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor, force=True)
-        if not succeeded:
-            print("error in move... for player %s and descriptor %s" %
-                  (str(event.playerNumber), str(event.moveDescriptor)))
-        if self._isMoveInteresting(event.playerNumber, event.moveDescriptor):
+        move_interesting = False
+        for event in events:  # type: BotEvent
+            succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor)
+            if not succeeded:
+                print("error in move... for player %s and descriptor %s" %
+                      (str(event.playerNumber), str(event.moveDescriptor)))
+
+            move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
+        if move_interesting:
             self._selectNewMove(self.gameState)
 
     @abstractmethod

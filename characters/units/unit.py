@@ -60,10 +60,10 @@ class Unit(Particle):
         Removes the oldest particle belonging to this unit-
         """
         try:
-            oldest_particle = self._particlesQueue.get_nowait()  # type: Particle
-            assert oldest_particle is self._particlesList[0]
-            self._particlesList = self._particlesList[1:]
-            oldest_particle.kill()
+            oldest_particle = self._particlesList.pop(0)
+            if self._particlesQueue is not None:
+                queue_first = self._particlesQueue.get_nowait()  # type: Particle
+                assert queue_first is oldest_particle
             if oldest_particle.sprite is not None:
                 self._particlesSpriteGroup.remove(oldest_particle.sprite)
         except Empty:
@@ -85,6 +85,7 @@ class Unit(Particle):
             pass
         finally:
             self._particlesList.remove(particle)
+
             self._particlesQueue = temp_queue
             particle.kill()
             if particle.sprite is not None:

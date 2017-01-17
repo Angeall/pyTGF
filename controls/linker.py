@@ -87,26 +87,28 @@ class Linker(metaclass=ABCMeta):
         Args:
             pipe_conn: The pipe connection to the game
         """
-        if pipe_conn.poll():
-            event = pipe_conn.recv()  # type: Event
-            if event is None or not isinstance(event, self.typeOfEventFromGame):
-                raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
-                                % (str(type(event)), str(self.typeOfEventFromGame)))
-            else:
-                self.executor.pipe(self.controller.reactToEvent, event)
+        events = []
+        while pipe_conn.poll():
+            events.append(pipe_conn.recv())
+        if len(events) is not None:
+            for event in events:
+                if not isinstance(event, self.typeOfEventFromGame):
+                    raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
+                                    % (str(type(event)), str(self.typeOfEventFromGame)))
+            # self.executor.pipe(self.controller.reactToEvent, event)
+            self.controller.reactToEvents(events)
 
     def checkGameInfo(self, pipe_conn: PipeConnection):
-        if pipe_conn.poll():
+        event = None
+        while pipe_conn.poll():
             event = pipe_conn.recv()  # type: Event
-            if isinstance(event, SpecialEvent):
-                print("Special event received")
-                if event.flag == SpecialEvent.END:
-                    self.close(pipe_conn)
-                elif event.flag == SpecialEvent.UNIT_KILLED:
-                    print("Unit killed")
-                    self._unitAlive = False
-                elif event.flag == SpecialEvent.RESURRECT_UNIT:
-                    self._unitAlive = True
+        if isinstance(event, SpecialEvent):
+            if event.flag == SpecialEvent.END:
+                self.close(pipe_conn)
+            elif event.flag == SpecialEvent.UNIT_KILLED:
+                self._unitAlive = False
+            elif event.flag == SpecialEvent.RESURRECT_UNIT:
+                self._unitAlive = True
 
     def sendControllerActionsIfNeeded(self, pipe_conn: PipeConnection) -> None:
         """
