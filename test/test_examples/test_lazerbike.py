@@ -29,6 +29,11 @@ class TestLazerbike(unittest.TestCase):
         if self.loop.executor is not None:
             self.loop.executor.terminate()
 
+    def test_copy(self):
+        a = time.time()
+        self.loop.game.copy()
+        print(time.time() - a)
+
     def test_draw(self):
         self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotLinker(BotTest(1)), (15, 25), GO_DOWN, team=1)
         self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotLinker(BotTest(2)), (30, 25), GO_UP, team=2)

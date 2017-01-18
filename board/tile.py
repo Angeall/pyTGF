@@ -1,6 +1,7 @@
 import pygame
 from copy import deepcopy
 from pygame import gfxdraw
+import time
 
 import utils.geom
 from characters.particle import Particle
@@ -262,14 +263,32 @@ class Tile(object):
         # memo[id(self)] = result  # Useless as the tiles are referenced nowhere else than in the board
         # print("-----------------")
         for k, v in self.__dict__.items():
-            # print(k)
+            # a = time.time()
             if k == "_occupants"and len(v) == 0:
                 value = []
             elif k != "graphics" and k != "_occupants":  # Constants that can be immediately copied
                 value = v
             elif k != "graphics" and v is not None:
-                value = deepcopy(v, memo)
+                value = self.deepish_copy(v)
             else:
                 value = None
             setattr(result, k, value)
+            # print("Tile:", k, time.time() - a, "sec")
         return result
+
+    @staticmethod
+    def deepish_copy(org):
+        """
+        much, much faster than deepcopy, for a dict of the simple python types.
+        """
+        out = dict().fromkeys(org)
+        for k, v in org.iteritems():
+            try:
+                out[k] = v.copy()  # dicts, sets
+            except AttributeError:
+                try:
+                    out[k] = v[:]  # lists, tuples, strings, unicode
+                except TypeError:
+                    out[k] = v  # ints
+
+        return out
