@@ -58,9 +58,9 @@ def get_player_info(player_number: int):
     elif player_number == 2:
         return 17, 17, GO_LEFT
     elif player_number == 3:
-        return 17, 2, GO_DOWN
+        return 17, 2, GO_UP
     else:
-        return 2, 17, GO_UP
+        return 2, 17, GO_DOWN
 
 
 def add_controller(main_loop: MainLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
@@ -77,8 +77,8 @@ def add_controller(main_loop: MainLoop, player_class, player_number: int, player
     player_info = get_player_info(player_number)
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
-    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace), linker, start_pos, initial_direction,
-                      team=player_team)
+    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace, initial_direction=initial_direction),
+                      linker, start_pos, initial_direction, team=player_team)
 
 
 def end_popup(string_result):
@@ -105,7 +105,7 @@ def launch_game(gui: GUI, player_info: tuple):
     builder.setTilesVisible(False)
     board = builder.create()
 
-    speed = 1.5*board.getTileById((0, 0)).graphics.sideLength
+    speed = 0.5*board.getTileById((0, 0)).graphics.sideLength
     game = LazerBikeGame(board)
     game.setSuicide(True)
     main_loop = MainLoop(game)
