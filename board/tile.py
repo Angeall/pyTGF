@@ -269,26 +269,9 @@ class Tile(object):
             elif k != "graphics" and k != "_occupants":  # Constants that can be immediately copied
                 value = v
             elif k != "graphics" and v is not None:
-                value = self.deepish_copy(v)
+                value = deepcopy(v, memo)
             else:
                 value = None
             setattr(result, k, value)
             # print("Tile:", k, time.time() - a, "sec")
         return result
-
-    @staticmethod
-    def deepish_copy(org):
-        """
-        much, much faster than deepcopy, for a dict of the simple python types.
-        """
-        out = dict().fromkeys(org)
-        for k, v in org.iteritems():
-            try:
-                out[k] = v.copy()  # dicts, sets
-            except AttributeError:
-                try:
-                    out[k] = v[:]  # lists, tuples, strings, unicode
-                except TypeError:
-                    out[k] = v  # ints
-
-        return out
