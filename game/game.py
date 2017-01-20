@@ -36,8 +36,6 @@ class Game(metaclass=ABCMeta):
                 The units are added later on the board.
         """
         self.board = board
-        self._teamKill = False
-        self._suicide = False
         self._finished = False
         self.winningPlayers = None
         # self.teams -> keys: int; values: list of unit
@@ -49,6 +47,16 @@ class Game(metaclass=ABCMeta):
         # self.units -> keys: Unit; values: tile_id
         self.units = {}
         self.addCustomMoveFunc = None  # type: function
+
+    @property
+    @abstractmethod
+    def _teamKillAllowed(self) -> bool:
+        return False
+
+    @property
+    @abstractmethod
+    def _suicideAllowed(self) -> bool:
+        return False
 
     def _addCustomMove(self, unit: MovingUnit, move: Path) -> None:
         """
@@ -218,6 +226,7 @@ class Game(metaclass=ABCMeta):
             self.winningPlayers = tuple(team_units)
             return True
 
+    @abstractmethod
     def _collidePlayers(self, player1, player2, frontal: bool = False):
         """
         Makes what it has to be done when the first given player collides with a particle of the second given player
@@ -231,7 +240,7 @@ class Game(metaclass=ABCMeta):
         """
         same_team = self.belongsToSameTeam(player1, player2)
         suicide = player1 is player2
-        if (not same_team or self._teamKill) or (suicide and self._suicide):
+        if (not same_team or self._teamKillAllowed) or (suicide and self._suicideAllowed):
             player1.kill()
             if frontal:
                 player2.kill()

@@ -36,6 +36,7 @@ class TestSokoban(unittest.TestCase):
 
     def test_push_box_in_hole(self):
         self.loop.game._winningTiles.append((3, 0))
+        self.loop.game.board.getTileById((3, 0)).addOccupant(self.loop.game._endingUnit)
         self.loop._prepareLoop()
         self.loop._getProcessPipeConnection(self.linker).send((1, 0))
         self.loop._getProcessPipeConnection(self.linker).send((2, 0))

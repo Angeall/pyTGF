@@ -1,7 +1,7 @@
 from controls.controllers.human import Human
 from controls.events.mouse import MouseEvent
 from examples.sokoban.controllers.player import SokobanPlayer
-from examples.sokoban.rules.game import SokobanKeyboardEvent
+from examples.sokoban.rules.sokoban import SokobanKeyboardEvent
 
 
 class HumanPlayer(SokobanPlayer, Human):

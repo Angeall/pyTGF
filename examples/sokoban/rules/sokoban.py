@@ -13,18 +13,19 @@ from game.game import Game
 from game.mainloop import MAX_FPS
 
 
-class NeverEndingGame(Exception):
-    pass
-
-
 class SokobanGame(Game):
-    def __init__(self, board: Board, winning_tiles: list):
-        if winning_tiles is None or len(winning_tiles) == 0:
-            raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
+    @property
+    def _suicideAllowed(self) -> bool:
+        return False
+
+    @property
+    def _teamKillAllowed(self) -> bool:
+        return False
+
+    def __init__(self, board: Board, ending_unit: MovingUnit, winning_tiles: list):
         super().__init__(board)
+        self._endingUnit = ending_unit  # type: MovingUnit
         self._winningTiles = winning_tiles
-        self._endingUnit = MovingUnit(1000)
-        self.addUnit(self._endingUnit, 1000, (-1, -1))
 
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1, force: bool=False) -> Path:
         if type(move_descriptor) == tuple and len(move_descriptor) == 2:
@@ -50,19 +51,6 @@ class SokobanGame(Game):
                 except UnreachableDestination:
                     pass
         raise game.UnfeasibleMoveException()
-
-    def updateGameState(self, unit, tile_id):
-        if tile_id in self._winningTiles:
-            players_units = [u for u in self.units if not isinstance(u, Box) and u is not self._endingUnit]
-            nb_player = len(players_units) - 1
-            for u in players_units:
-                if self.units[u] in self._winningTiles:
-                    nb_player -= 1
-            self._endingUnit.setNbLives(nb_player)
-        super().updateGameState(unit, tile_id)
-        if self.isFinished():
-            self.winningPlayers = [player for player in self.winningPlayers
-                                   if not isinstance(player, Box) and player is not self._endingUnit]
 
     def _pushBoxIfNeeded(self, previous_tile: Tile, current_tile: Tile):
         box = None
@@ -94,6 +82,27 @@ class SokobanGame(Game):
             current = nxt
             i += 1
         return next_tile_ids
+
+    def _collidePlayers(self, player1, player2, frontal: bool = False):
+        """
+        Checks if the player1 is colliding with the invisible player
+
+        Args:
+            player1: The first given player
+            player2: The second given player
+            frontal: If true, the collision is frontal and kills the two players
+        """
+        other_unit = None
+        if player1 is self._endingUnit:
+            other_unit = player2
+        elif player2 is self._endingUnit:
+            other_unit = player1
+        if other_unit is not None:
+            players_in_winning_tiles = 0
+            for tile in self._winningTiles:
+                players_in_winning_tiles += len(tile.occupants) - 1  # -1 because the end unit is in each winning tile
+            total_nb_players = len([u for u in self.units if not isinstance(u, Box) and u is not self._endingUnit])
+            self._endingUnit.setNbLives(total_nb_players - players_in_winning_tiles)  # if it is dead, the game ends
 
     def createKeyboardEvent(self, unit, input_key) -> KeyboardEvent:
         return SokobanKeyboardEvent(character_keys=(input_key,), player_tile_id=self.units[unit])

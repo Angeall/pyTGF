@@ -14,6 +14,14 @@ from game.mainloop import MAX_FPS
 
 
 class LazerBikeGame(Game):
+    @property
+    def _suicideAllowed(self) -> bool:
+        return True
+
+    @property
+    def _teamKillAllowed(self) -> bool:
+        return True
+
     def __init__(self, board: SquareBoard):
         super().__init__(board)
         self._unitsPreviousMoves = {}
@@ -58,6 +66,19 @@ class LazerBikeGame(Game):
         tile_to_place_trace.addOccupant(trace)
         unit.addParticle(trace)
 
+    def _collidePlayers(self, player1, player2, frontal: bool = False):
+        """
+        Makes what it has to be done when the first given player collides with a particle of the second given player
+        (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
+        units)
+
+        Args:
+            player1: The first given player
+            player2: The second given player
+            frontal: If true, the collision is frontal and kills the two players
+        """
+        return super()._collidePlayers(player1, player2, frontal)
+
     @staticmethod
     def _resizeTrace(trace, current_tile: Tile):
         if current_tile.graphics is not None:
@@ -81,8 +102,3 @@ class LazerBikeGame(Game):
     @staticmethod
     def _isMovementVertical(previous_tile: Tile, current_tile: Tile) -> bool:
         return previous_tile.identifier[1] - current_tile.identifier[1] == 0
-
-    # def _copyGame(self, game):
-    #     super()._copyGame(game)
-    #     self._unitsPreviousMoves = deepcopy(game._unitsPreviousMoves)
-    #     self._previousTraces = deepcopy(game._previousTraces)
