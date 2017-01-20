@@ -5,7 +5,7 @@ from tkinter.ttk import Frame, Label, Button
 import pygame
 from pygame.locals import *
 
-from examples.sokoban.controls.player import SokobanPlayer
+from examples.sokoban.controllers.player import SokobanPlayer
 from examples.sokoban.parser.builder import SokobanBoardBuilder
 from examples.sokoban.parser.parser import SokobanBoardParser
 from menu.aiselectorframe import AISelectorFrameBuilder
@@ -69,7 +69,7 @@ def launch_game(gui: GUI, player_info: tuple):
     elif len(result) == 0:
         string_result = "DRAW"
     else:
-        winning_players_strings = ["Player " + str(number) for number in result]
+        winning_players_strings = ["Player " + str(player.playerNumber) for player in result]
         string_result = "WON: " + str(winning_players_strings)
     end_popup(string_result)
 

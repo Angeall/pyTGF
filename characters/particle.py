@@ -1,4 +1,5 @@
 import pygame
+from copy import deepcopy
 
 import utils.geom
 from characters.sprite import UnitSprite
@@ -23,13 +24,33 @@ class Particle:
         """
         return self._isAlive
 
-    def kill(self) -> bool:
+    def setNbLives(self, nb_lives: int) -> None:
         """
-        Kills the particle
+        Sets the given number of lives of the particle
+        Args:
+            nb_lives: The number of lives to set to the particle
+        """
+        self._nbLives = nb_lives
+        if self._nbLives <= 0:
+            self._isAlive = False
+        else:
+            self._isAlive = True
+
+    def kill(self) -> None:
+        """
+        Remove a life from the particle
         """
         self._nbLives -= 1
         if self._nbLives <= 0:
             self._isAlive = False
+
+    def oneUp(self) -> None:
+        """
+        Adds a life to the particle
+        """
+        self._nbLives += 1
+        if self._nbLives > 0:
+            self._isAlive = True
 
     def draw(self, surface: pygame.Surface) -> None:
         """
@@ -68,3 +89,15 @@ class Particle:
         Returns: The group consisting in the unit sprite
         """
         return self._drawable
+
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "sprite" and k != "_drawable":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result

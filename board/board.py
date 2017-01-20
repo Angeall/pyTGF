@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 from board.tile import Tile
 from abc import ABCMeta, abstractmethod
 from scipy.spatial import KDTree
@@ -120,8 +122,28 @@ class Board(metaclass=ABCMeta):
         self._drawBorders(surf)
         surface.blit(surf, (0, 0))
 
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k == "tiles":
+                value = []
+                for line in v:
+                    new_line = []
+                    for tile in line:
+                        tile_copy = tile.__deepcopy__(memo)
+                        new_line.append(tile_copy)
+                    value.append(new_line)
+            elif k != "_kdTree" and k != "_centersToTileIds" and k != "_centers":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result
+
     @abstractmethod
-    def getTileById(self, identifier) -> Tile:
+    def getTileById(self, identifier: tuple) -> Tile:
         """
         Gets the tile with the corresponding identifier in the board
         Args:
@@ -192,7 +214,7 @@ class Builder(metaclass=ABCMeta):
             for j in range(self._columns):
                 current_center = round(current_center[0], 1), round(current_center[1], 1)
                 tile = self._generateTile(current_center, (i, j))
-                centers.append(tile.center)
+                centers.append(tile.graphics.center)
                 line.append(tile)
                 centers_to_tile_ids[(round(current_center[0], 1), round(current_center[1], 1))] = tile.identifier
                 current_center = self._getNextCenter(current_center, j)
@@ -278,7 +300,7 @@ class Builder(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _generateTile(self, center: tuple, identifier) -> Tile:
+    def _generateTile(self, center: tuple, identifier: tuple) -> Tile:
         """
         Generates a tile for the grid
         Args:

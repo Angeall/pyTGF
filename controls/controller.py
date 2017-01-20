@@ -1,5 +1,7 @@
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from queue import Queue
+
+from controls.event import Event
 
 
 class Controller(metaclass=ABCMeta):
@@ -12,3 +14,6 @@ class Controller(metaclass=ABCMeta):
         self.moves = Queue()  # Will contain constants that will be interpreted by the game
         self.playerNumber = player_number
 
+    @abstractmethod
+    def reactToEvents(self, events: list):
+        pass

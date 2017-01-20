@@ -1,10 +1,11 @@
 import os
+
 import pygame
 import pygame.transform as transform
 
 from characters.particle import Particle
 from characters.sprite import UnitSprite
-from examples.lazerbike.controls.allowed_moves import *
+from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
 
 TOP_RIGHT = 0
 TOP_LEFT = 1

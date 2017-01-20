@@ -1,5 +1,5 @@
-from characters.controllers.bot import Bot
-from examples.lazerbike.controls.player import LazerBikePlayer
+from controls.controllers.bot import Bot
+from examples.lazerbike.control.player import LazerBikePlayer
 
 
 class BotTest(LazerBikePlayer, Bot):
@@ -11,8 +11,8 @@ class BotTest(LazerBikePlayer, Bot):
         """
         super().__init__(player_number)
 
-    def _reactToNewGameState(self, game_state) -> None:
+    def _selectNewMove(self, game_state) -> None:
         pass
 
-    def _isGameStateHandled(self, game_state) -> bool:
-        pass
+    def _isMoveInteresting(self, player_number, new_move_event) -> bool:
+        return False

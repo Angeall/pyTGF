@@ -6,7 +6,7 @@ from pygame.locals import *
 
 class SquareBoard(Board):
 
-    OUT_OF_BOARD_TILE = Tile((0, 0), [(0, 0), (0, 1), (1, 1), (1, 0)], None, deadly=True, walkable=False)
+    OUT_OF_BOARD_TILE = Tile((0, 0), [(0, 0), (0, 1), (1, 1), (1, 0)], None, deadly=True, walkable=True)
 
     def getTileById(self, identifier: tuple) -> Tile:
         """
@@ -159,16 +159,16 @@ class SquareBoardBuilder(Builder):
         top_right = None
         bottom_left = None
         bottom_right = None
-        for x, y in top_left_tile.points:
+        for x, y in top_left_tile.graphics.points:
             if top_left is None or (x <= top_left[0] and y <= top_left[1]):
                 top_left = (x, y)
-        for x, y in bottom_left_tile.points:
+        for x, y in bottom_left_tile.graphics.points:
             if bottom_left is None or (x <= bottom_left[0] and y >= bottom_left[1]):
                 bottom_left = (x, y)
-        for x, y in top_right_tile.points:
+        for x, y in top_right_tile.graphics.points:
             if top_right is None or (x >= top_right[0] and y <= top_right[1]):
                 top_right = (x, y)
-        for x, y in bottom_right_tile.points:
+        for x, y in bottom_right_tile.graphics.points:
             if bottom_right is None or (x >= bottom_right[0] and y >= bottom_right[1]):
                 bottom_right = (x, y)
 
@@ -209,12 +209,12 @@ if __name__ == "__main__":
                 if pygame.mouse.get_pressed()[0]:
                     tile = board.getTileByPixel(event.pos)
                     if tile is not None:
-                        tile.setInternalColor((255, 0, 0))
+                        tile.graphics.setInternalColor((255, 0, 0))
                 else:
                     tile = None
             elif event.type == MOUSEBUTTONUP:
                 if tile is not None:
-                    tile.setInternalColor(passed_int_color)
+                    tile.graphics.setInternalColor(passed_int_color)
             board.draw(screen)
             pygame.display.flip()
 

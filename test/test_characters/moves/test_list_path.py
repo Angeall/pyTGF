@@ -24,6 +24,7 @@ class TestListPath(unittest.TestCase):
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
         destination_tile.addNeighbour(source_tile.identifier)
         # Distance separating the two tiles is 30 pixels
         move = ShortMove(unit, source_tile, destination_tile, fps=60)
@@ -35,6 +36,25 @@ class TestListPath(unittest.TestCase):
         self.assertFalse(path.completed)
         path.performNextMove()
         self.assertTrue(path.completed)
+        self.assertTrue(unit in source_tile)
+
+    def test_complete(self):
+        """
+        Makes sure the "complete" is working correctly
+        """
+        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
+        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
+        source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
+        destination_tile.addNeighbour(source_tile.identifier)
+        # Distance separating the two tiles is 30 pixels
+        move = ShortMove(unit, source_tile, destination_tile, fps=60)
+
+        path = ListPath([move])
+        path.complete()
+        self.assertTrue(path.completed)
+        self.assertTrue(unit in destination_tile)
 
     def test_cancel(self):
         """
@@ -44,6 +64,7 @@ class TestListPath(unittest.TestCase):
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
         destination_tile.addNeighbour(source_tile.identifier)
         # Distance separating the two tiles is 30 pixels
         move = ShortMove(unit, source_tile, destination_tile, fps=60)
@@ -52,10 +73,10 @@ class TestListPath(unittest.TestCase):
         path = ListPath([move, move2])
         for _ in range(59):
             path.performNextMove()
-        path.cancel()
-        self.assertFalse(path.cancelled)
+        path.stop()
+        self.assertFalse(path.stopped)
         path.performNextMove()
-        self.assertTrue(path.cancelled)
+        self.assertTrue(path.stopped)
 
     def test_actions(self):
         """
@@ -65,6 +86,7 @@ class TestListPath(unittest.TestCase):
         source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
         destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
         source_tile.addNeighbour(destination_tile.identifier)
+        source_tile.addOccupant(unit)
         destination_tile.addNeighbour(source_tile.identifier)
         # Distance separating the two tiles is 30 pixels
         move = ShortMove(unit, source_tile, destination_tile, fps=60)

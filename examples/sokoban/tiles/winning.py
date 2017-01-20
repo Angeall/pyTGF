@@ -6,6 +6,6 @@ COLOR = (0, 255, 0)
 
 
 class Winning(Tile):
-    def __init__(self, center: tuple, points: list, identifier, neighbours=None):
+    def __init__(self, center: tuple, points: list, identifier: tuple, neighbours=None):
         super().__init__(center, points, identifier, True, False, neighbours)
-        self.setInternalColor(COLOR)
+        self.graphics.setInternalColor(COLOR)

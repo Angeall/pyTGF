@@ -1,6 +1,8 @@
 import pygame
 from queue import Queue, Empty
 
+from copy import deepcopy
+
 from characters.particle import Particle
 from characters.sprite import UnitSprite
 
@@ -34,9 +36,10 @@ class Unit(Particle):
 
     def kill(self):
         super().kill()
-        if not self.survivingParticles:
-            while len(self._particlesSpriteGroup) != 0:
-                self.removeOldestParticle()
+        if not self.isAlive():
+            if not self.survivingParticles:
+                while len(self._particlesSpriteGroup) != 0:
+                    self.removeOldestParticle()
 
     def addParticle(self, particle: Particle) -> None:
         """
@@ -46,7 +49,8 @@ class Unit(Particle):
         """
         if 0 <= self._maxParticles <= len(self._particlesList):
             self.removeOldestParticle()
-        self._particlesQueue.put(particle)
+        if self._particlesQueue is not None:
+            self._particlesQueue.put(particle)
         self._particlesList.append(particle)
         if particle.sprite is not None:
             self._particlesSpriteGroup.add(particle.sprite)
@@ -56,10 +60,10 @@ class Unit(Particle):
         Removes the oldest particle belonging to this unit-
         """
         try:
-            oldest_particle = self._particlesQueue.get_nowait()  # type: Particle
-            assert oldest_particle is self._particlesList[0]
-            self._particlesList = self._particlesList[1:]
-            oldest_particle.kill()
+            oldest_particle = self._particlesList.pop(0)
+            if self._particlesQueue is not None:
+                queue_first = self._particlesQueue.get_nowait()  # type: Particle
+                assert queue_first is oldest_particle
             if oldest_particle.sprite is not None:
                 self._particlesSpriteGroup.remove(oldest_particle.sprite)
         except Empty:
@@ -81,6 +85,7 @@ class Unit(Particle):
             pass
         finally:
             self._particlesList.remove(particle)
+
             self._particlesQueue = temp_queue
             particle.kill()
             if particle.sprite is not None:
@@ -104,3 +109,15 @@ class Unit(Particle):
             if pygame.sprite.collide_rect(self.sprite, sprite):
                 return True
         return False
+
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "_drawable" and k != "_particlesQueue":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result

@@ -1,3 +1,4 @@
+import traceback
 from os import listdir, curdir
 from os.path import isfile, join, splitext
 import inspect, pickle
@@ -104,7 +105,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
 
     def _setupControllerCombobox(self, combobox, player_number):
         """
-        Setups the combobox so it displays the different controls available
+        Setups the combobox so it displays the different controllers available
         Args:
             combobox: The combobox to setup
             player_number: The player for which the combobox is being set up
@@ -174,7 +175,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
 
     def _lookForAIs(self) -> None:
         """
-        Look into the "AIs" folder for compatibles AIs or Human controls and fill *self.ais*
+        Look into the "AIs" folder for compatibles AIs or Human controllers and fill *self.ais*
         """
         folder = "AIs"
         files = [f for f in listdir(folder) if isfile(join(folder, f))]
@@ -182,20 +183,20 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         self.aiClasses = {}
         path = list(sys.path)
         sys.path.insert(0, folder)
-
         for file in files:
             file_name = splitext(file)[0]
             try:
                 module = __import__(file_name)
                 for name, cls in inspect.getmembers(module):  # Explore the classes inside the file
-                    if cls is not self._aiType:  # The basic type cannot be instantiated as it is
+                    if cls is not self._aiType:  # The abstract basic type cannot be instantiated as it is
                         if inspect.isclass(cls) and issubclass(cls, self._aiType):
                             self.aiClasses[name] = cls
                             self.ais.append(name)
             except ImportError:
+                print("Error while listings AIs:")
+                traceback.print_exc()
                 continue
 
-        sys.path[:] = path
         self.ais.insert(0, self.NONE_STRING)
 
     def _confirmSelection(self) -> None:

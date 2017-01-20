@@ -41,7 +41,7 @@ class TestSquareBoard(unittest.TestCase):
         builder = SquareBoardBuilder(width, height, nb_lines, nb_column)
         builder.setMargins(x_margin, y_margin)
         board = builder.create()
-        center = board.tiles[0][0].center
+        center = board.tiles[0][0].graphics.center
         square_border_length = min((width - 2 * x_margin) / nb_column, (height - 2 * y_margin) / nb_lines)
         self.assertAlmostEqual(center[0],
                                ((width - square_border_length * nb_column) / 2) + square_border_length / 2,
@@ -49,7 +49,7 @@ class TestSquareBoard(unittest.TestCase):
         self.assertAlmostEqual(center[1],
                                ((height - square_border_length * nb_lines) / 2) + square_border_length / 2,
                                delta=0.01)
-        center = board.tiles[1][2].center
+        center = board.tiles[1][2].graphics.center
         self.assertAlmostEqual(center[0],
                                ((width - square_border_length * nb_column) / 2) + square_border_length * 2.5,
                                delta=0.01)

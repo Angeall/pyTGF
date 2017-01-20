@@ -1,5 +1,7 @@
-from characters.controllers.human import Human
-from examples.lazerbike.controls.player import LazerBikePlayer
+from controls.controllers.human import Human
+from controls.events.keyboard import KeyboardEvent
+from controls.events.mouse import MouseEvent
+from examples.lazerbike.control.player import LazerBikePlayer
 
 
 class HumanPlayer(LazerBikePlayer, Human):
@@ -10,7 +12,8 @@ class HumanPlayer(LazerBikePlayer, Human):
         self.upKey = up_key
         self.downKey = down_key
 
-    def reactToInput(self, input_key, **game_info: ...) -> None:
+    def reactToKeyboardEvent(self, keyboard_event: KeyboardEvent) -> None:
+        for input_key in keyboard_event.characterKeys:
             if input_key == self.rightKey:
                 self.goRight()
             elif input_key == self.leftKey:
@@ -20,7 +23,7 @@ class HumanPlayer(LazerBikePlayer, Human):
             elif input_key == self.downKey:
                 self.goDown()
 
-    def reactToTileClicked(self, tile_id=None, mouse_state=(False, False, False), click_up=False, **game_info) -> None:
+    def reactToMouseEvent(self, mouse_event: MouseEvent) -> None:
         pass
 
 
