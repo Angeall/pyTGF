@@ -4,7 +4,7 @@ from tkinter.ttk import Frame, Label, Button
 import pygame
 from pygame.locals import *
 
-from board.boards.square_board import SquareBoardBuilder
+from gameboard.boards.square_board import SquareBoardBuilder
 from controls.controllers.bot import Bot
 from controls.controllers.human import Human
 from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, LazerBikeBotLinker, \

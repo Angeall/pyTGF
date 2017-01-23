@@ -1,6 +1,6 @@
 from queue import PriorityQueue
 
-from board.board import Board
+from gameboard.board import Board
 from types import FunctionType as function
 
 

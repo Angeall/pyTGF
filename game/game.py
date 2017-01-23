@@ -4,8 +4,8 @@ from types import FunctionType as function
 
 from copy import deepcopy
 
-from board.board import Board
-from board.tile import Tile
+from gameboard.board import Board
+from gameboard.tile import Tile
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
 from controls.events.keyboard import KeyboardEvent

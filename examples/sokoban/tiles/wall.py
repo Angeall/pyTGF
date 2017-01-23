@@ -1,4 +1,4 @@
-from board.tile import Tile
+from gameboard.tile import Tile
 
 
 WALL_COLOR = (125, 85, 7)

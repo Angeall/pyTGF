@@ -1,6 +1,6 @@
 import unittest
 
-from board.boards.square_board import SquareBoardBuilder
+from gameboard.board import Builder
 
 
 class TestSquareBoard(unittest.TestCase):
@@ -8,16 +8,16 @@ class TestSquareBoard(unittest.TestCase):
         """
         Makes sure that the number of tiles created is right
         """
-        board = SquareBoardBuilder(10, 10, 7, 6).create()
-        self.assertEqual(len(board.tiles), 7)
-        for line in board.tiles:
+        board = Builder(10, 10, 7, 6).create()
+        self.assertEqual(len(board.tilesCenters), 7)
+        for line in board.tilesCenters:
             self.assertEqual(len(line), 6)
 
     def test_board_borders(self):
         """
         Makes sure that the borders are well defined on the border
         """
-        builder = SquareBoardBuilder(100, 100, 6, 6)
+        builder = Builder(100, 100, 6, 6)
         builder.setMargins(20, 20)
         board = builder.create()
         borders = board.borders
@@ -38,10 +38,10 @@ class TestSquareBoard(unittest.TestCase):
         y_margin = 10
         nb_lines = 2
         nb_column = 5
-        builder = SquareBoardBuilder(width, height, nb_lines, nb_column)
+        builder = Builder(width, height, nb_lines, nb_column)
         builder.setMargins(x_margin, y_margin)
         board = builder.create()
-        center = board.tiles[0][0].graphics.center
+        center = board.tilesCenters[0][0]
         square_border_length = min((width - 2 * x_margin) / nb_column, (height - 2 * y_margin) / nb_lines)
         self.assertAlmostEqual(center[0],
                                ((width - square_border_length * nb_column) / 2) + square_border_length / 2,
@@ -49,7 +49,7 @@ class TestSquareBoard(unittest.TestCase):
         self.assertAlmostEqual(center[1],
                                ((height - square_border_length * nb_lines) / 2) + square_border_length / 2,
                                delta=0.01)
-        center = board.tiles[1][2].graphics.center
+        center = board.tilesCenters[1][2]
         self.assertAlmostEqual(center[0],
                                ((width - square_border_length * nb_column) / 2) + square_border_length * 2.5,
                                delta=0.01)
@@ -61,7 +61,7 @@ class TestSquareBoard(unittest.TestCase):
         """
         Assures that the neighbours of some tiles are well defined
         """
-        board = SquareBoardBuilder(10, 10, 7, 6).create()
+        board = Builder(10, 10, 7, 6).create()
         self.assertTrue(board.getTileById((0, 0)).hasDirectAccess((0, 1)))
         self.assertTrue(board.getTileById((0, 3)).hasDirectAccess((1, 3)))
         self.assertTrue(board.getTileById((1, 3)).hasDirectAccess((0, 3)))
@@ -71,7 +71,7 @@ class TestSquareBoard(unittest.TestCase):
         """
         Assures that the neighbours of border tiles are well defined
         """
-        board = SquareBoardBuilder(10, 10, 7, 6).create()
+        board = Builder(10, 10, 7, 6).create()
         self.assertTrue(len(board.getTileById((0, 0)).neighbours), 2)
         self.assertTrue(len(board.getTileById((6, 0)).neighbours), 2)
         self.assertTrue(len(board.getTileById((0, 5)).neighbours), 2)
@@ -81,7 +81,7 @@ class TestSquareBoard(unittest.TestCase):
         """
         Assures that the neighbours of sidelines tiles are well defined
         """
-        board = SquareBoardBuilder(10, 10, 7, 6).create()
+        board = Builder(10, 10, 7, 6).create()
         self.assertTrue(len(board.getTileById((0, 2)).neighbours), 3)
         self.assertTrue(len(board.getTileById((6, 1)).neighbours), 3)
         self.assertTrue(len(board.getTileById((1, 5)).neighbours), 3)

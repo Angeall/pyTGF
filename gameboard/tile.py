@@ -36,8 +36,8 @@ class TileGraphics(object):
         self.points = points
         self.sideLength = int(utils.geom.dist(self.points[-1], self.points[0]))
         assert self._isEquilateral()
-        self._convexHull = None  # Is initialized when needed, at the call of self.containsPoint
-        self._hullPath = None  # Is initialized when needed, at the call of self.containsPoint
+        self.__convexHull = None  # Is initialized when needed, at the call of self.containsPoint
+        self.__hullPath = None  # Is initialized when needed, at the call of self.containsPoint
         self.externalColor = (0, 0, 0)
         self.internalColor = None
 
@@ -68,13 +68,13 @@ class TileGraphics(object):
 
         Returns: True if the point is inside and False otherwise
         """
-        if self._convexHull is None:
-            self._convexHull = utils.geom.get_convex_hull(self.points)
-        assert self._convexHull is not None
-        if self._hullPath is None:
-            self._hullPath = utils.geom.get_path(self.points, self._convexHull)
-        assert self._hullPath is not None
-        return self._hullPath.contains_point(point)
+        if self.__convexHull is None:
+            self.__convexHull = utils.geom.get_convex_hull(self.points)
+        assert self.__convexHull is not None
+        if self.__hullPath is None:
+            self.__hullPath = utils.geom.get_path(self.points, self.__convexHull)
+        assert self.__hullPath is not None
+        return self.__hullPath.contains_point(point)
 
     def draw(self, surface: pygame.Surface) -> None:
         """
@@ -260,18 +260,19 @@ class Tile(object):
     def __deepcopy__(self, memo={}):
         cls = self.__class__
         result = cls.__new__(cls)
-        # memo[id(self)] = result  # Useless as the tiles are referenced nowhere else than in the board
-        # print("-----------------")
         for k, v in self.__dict__.items():
-            # a = time.time()
-            if k == "_occupants"and len(v) == 0:
-                value = []
-            elif k != "graphics" and k != "_occupants":  # Constants that can be immediately copied
-                value = v
-            elif k != "graphics" and v is not None:
-                value = deepcopy(v, memo)
-            else:
-                value = None
+
+            value = None
+            if k != "graphics":
+                if k == "_occupants":
+                    if len(v) == 0:
+                        value = []
+                    else:
+                        v = []
+                        for occupant in v:
+                            new_occupant = deepcopy(occupant, memo)
+                            v.append(new_occupant)
+                else:  # Constants that can be immediately copied
+                    value = v
             setattr(result, k, value)
-            # print("Tile:", k, time.time() - a, "sec")
         return result

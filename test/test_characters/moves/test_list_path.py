@@ -2,7 +2,7 @@ import unittest
 from characters.moves.listpath import ListPath
 from characters.moves.move import ShortMove
 from characters.units.moving_unit import MovingUnit
-from board.tile import Tile
+from gameboard.tile import Tile
 
 
 class Touchable:

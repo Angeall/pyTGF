@@ -1,4 +1,4 @@
-from board.tile import Tile
+from gameboard.tile import Tile
 from examples.sokoban.units.box import Box
 
 

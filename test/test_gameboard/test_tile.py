@@ -1,5 +1,5 @@
 import unittest
-from board.tile import Tile
+from gameboard.tile import Tile
 from characters.units.unit import Unit
 
 

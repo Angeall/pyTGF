@@ -1,7 +1,7 @@
 from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o, K_COMMA, K_k, K_l, K_g, K_t, K_f, K_h
 
-from board.boards.square_board import SquareBoardBuilder
-from board.tile import Tile
+from gameboard.boards.square_board import SquareBoardBuilder
+from gameboard.tile import Tile
 from characters.units.moving_unit import MovingUnit
 from controls.controllers.bot import Bot
 from controls.controllers.human import Human

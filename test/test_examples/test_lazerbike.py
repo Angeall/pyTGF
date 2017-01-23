@@ -3,7 +3,7 @@ import time
 
 import pygame
 
-from board.boards.square_board import SquareBoardBuilder, SquareBoard
+from gameboard.boards.square_board import SquareBoardBuilder, SquareBoard
 from examples.lazerbike.AIs.bottest import BotTest
 from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_DOWN, LazerBikeBotLinker
 from examples.lazerbike.rules.lazerbike import LazerBikeGame

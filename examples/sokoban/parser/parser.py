@@ -1,5 +1,5 @@
-from board.parsers.board_parser import BoardParser
-from board.tile import Tile
+from gameboard.parsers.board_parser import BoardParser
+from gameboard.tile import Tile
 from examples.sokoban.tiles.hole import Hole
 from examples.sokoban.tiles.wall import Wall
 from examples.sokoban.tiles.winning import Winning

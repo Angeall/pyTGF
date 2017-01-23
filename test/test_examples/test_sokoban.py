@@ -2,7 +2,7 @@ import unittest
 
 import pygame
 
-from board.tile import Tile
+from gameboard.tile import Tile
 from controls.controllers.passive import PassiveController
 from examples.sokoban.parser.builder import SokobanBoardBuilder
 from examples.sokoban.tiles.hole import Hole

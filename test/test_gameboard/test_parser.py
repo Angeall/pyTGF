@@ -1,8 +1,8 @@
 import unittest
 
-from board.boards.square_board import SquareBoardBuilder
-from board.parsers.board_parser import BoardParser, IncorrectShapeError
-from board.tile import Tile
+from gameboard.boards.square_board import SquareBoardBuilder
+from gameboard.parsers.board_parser import BoardParser, IncorrectShapeError
+from gameboard.tile import Tile
 
 
 class DeadlyTile(Tile):

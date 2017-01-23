@@ -1,5 +1,5 @@
-from board.boards.square_board import SquareBoardBuilder
-from board.pathfinder import get_shortest_path, get_shortest_paths, reconstruct_path
+from gameboard.boards.square_board import SquareBoardBuilder
+from gameboard.pathfinder import get_shortest_path, get_shortest_paths, reconstruct_path
 
 import unittest
 

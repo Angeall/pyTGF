@@ -2,8 +2,8 @@ from functools import partial
 
 from copy import deepcopy
 
-from board.boards.square_board import SquareBoard
-from board.tile import Tile
+from gameboard.boards.square_board import SquareBoard
+from gameboard.tile import Tile
 from characters.moves.continous import ContinuousMove
 from characters.moves.path import Path
 from examples.lazerbike.control.linker import GO_RIGHT, GO_LEFT, GO_DOWN, GO_UP
