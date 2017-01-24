@@ -8,7 +8,7 @@ from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
 
 
 class SokobanBoardParser(BoardParser):
-    def characterToTileType(self, character: str):
+    def characterToTileProperties(self, character: str):
         character = character.lower()
         if character == "h":
             return Hole

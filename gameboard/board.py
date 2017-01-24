@@ -1,47 +1,44 @@
+from collections import namedtuple
 from copy import deepcopy
+from typing import Union, Dict
 
 from gameboard.graphics import BoardGraphics
-from gameboard.tile import Tile
 from scipy.spatial import KDTree
 import numpy as np
 import pygame
 
+Tile = namedtuple("Tile", "center deadly walkable neighbours")
+
 
 class Board:
-    """
-    TODO:
-      - Make a transition between tiles, with a speed
-      - Make a principle of inertia for the _units
-    """
-
-    def __init__(self, size: tuple, borders: list, points: list, centers: list):
+    def __init__(self, size: tuple, lines: int, columns: int, tiles: dict, centers: list, borders: list, points: list):
         """
         Instantiates a game board using the given parameters
+
         Args:
             size: The size in pixels of the board : (width, height)
+            lines: The number of lines in the board
+            columns: The number of columns in the board
+            tiles:
+                A dict containing all the Tile structs, representing the tiles in the board,
+                accessible through their identifier (i, j), i being the row index and j being the column index.
+            centers: The list containing the matrix of centers for the tiles. Used to associate a pixel to a tile.
             borders: A list of lines, represented by two points each, representing the borders of the board.
                         (e.g. [((1, 2), (3, 4)), ((0,1), (0,2)), ...])
             points: The points that will serve to draw the tiles
-            centers: A matrix containing the center of each tile that will be on the board
-            centers_to_tile_ids: The dict that links the centers to the tile object (so the tiles can be center-indexed)
         """
         self.size = size
-        self.graphics = BoardGraphics(tiles_borders=points, background_color=(255, 255, 255), border_line_color=(0, 0, 0),
-                                      borders=borders, tiles_visible=False)
-        self.tilesCenters = centers
-        self.lines = len(centers)
-        self.columns = len(centers[0])
-        self.borders = borders
-        self.backgroundColor = (255, 255, 255)
-        self._bordersColor = (0, 0, 0)
-        self._centers = centers
-        np_centers = np.array(self._centers)
+        self.graphics = BoardGraphics(tiles_borders=points, background_color=(255, 255, 255),
+                                      border_line_color=(0, 0, 0), borders=borders, tiles_visible=False)
+        self.lines = lines
+        self.columns = columns
+        self._tiles = tiles  # type: Dict[tuple, Tile]
+        self._kdTree = KDTree(np.array(centers).reshape(1, len(centers) * len(centers[0]), 2)[0])
 
-        self._kdTree = KDTree(np_centers.reshape(1, len(centers) * len(centers[0]), 2)[0])
-
-    def getTileIdentifier(self, pixel: tuple):
+    def getTileByPixel(self, pixel: tuple) -> Union[Tile, None]:
         """
         Get the tile located on the given pixel
+
         Args:
             pixel: The _screen coordinates on which we want to get the tile
 
@@ -52,14 +49,73 @@ class Board:
             center_index = self._kdTree.query(pixel, 1)[1]
             i = center_index // self.columns
             j = center_index - (self.columns * i)
-            print(i, j)
             if self.graphics.containsPoint(pixel, i, j):
-                return i, j
+                return self._tiles[(i, j)]
         return None
+
+    def getTileById(self, identifier: tuple) -> Tile:
+        """
+
+        Args:
+            identifier: A tuple containing the row and the column index of the wanted tile
+
+        Returns: The Tile struct located at the given identifier
+        """
+        return self._tiles[identifier]
+
+    def isAccessible(self, source_identifier: tuple, destination_identifier: tuple) -> bool:
+        """
+
+        Args:
+            source_identifier:
+                The identifier (i, j) that identifies the tile from which we want to access the destination tile
+            destination_identifier:
+                The identifier (i, j) that identifies the tile that we want to access from the source tile.
+
+        Returns: True if the identifier is in the neighbourhood of the given source tile.
+        """
+        tile = self._tiles[source_identifier]
+        return (tile.neighbours is not None and self.getTileById(destination_identifier).walkable) and (
+               destination_identifier in tile.neighbours)
+
+    def getNeighboursIdentifier(self, tile_identifier: tuple) -> tuple:
+        """
+
+        Args:
+            tile_identifier: The identifier of the tile from which we want the neighbours
+
+        Returns: A tuple containing the identifiers of the neighbours of the tile for which the identifier was given.
+        """
+        return self._tiles[tile_identifier].neighbours
+
+    def setTileDeadly(self, tile_identifier: tuple, deadly: bool=True) -> None:
+        """
+        Modifies the "deadly" property of a tile
+
+        Args:
+            tile_identifier: The identifier of the tile from which we want the neighbours
+            deadly: If True, the tile will be set as "deadly", else, set the tile as "non-deadly"
+        """
+        tile = self._tiles[tile_identifier]
+        self._tiles[tile_identifier] = Tile(center=tile.center, neighbours=tile.neighbours,
+                                            deadly=deadly, walkable=tile.walkable)
+
+    def setTileNonWalkable(self, tile_identifier: tuple, walkable: bool=False) -> None:
+        """
+        Modifies the "deadly" property of a tile
+
+        Args:
+            tile_identifier: The identifier of the tile from which we want the neighbours
+            walkable: If False, the tile will be set as "non-walkable", else, sets the the tile as "walkable"
+        """
+        tile = self._tiles[tile_identifier]
+        self._tiles[tile_identifier] = Tile(center=tile.center, neighbours=tile.neighbours,
+                                            deadly=tile.deadly, walkable=walkable)
 
     def draw(self, surface: pygame.Surface) -> None:
         """
         Draw the board on the given surface
+
         Args:
             surface: The surface on which draw the board
         """
@@ -108,6 +164,7 @@ class Builder:
     def setTilesVisible(self, visible: bool) -> None:
         """
         If true, the tiles will be visible when the board is drawn
+
         Args:
             visible: True if the tiles must be visible. False otherwise.
         """
@@ -116,6 +173,7 @@ class Builder:
     def setBordersColor(self, borders_color: tuple) -> None:
         """
         Change the color of the board's borders color
+
         Args:
             borders_color: RGB (or RGBA) tuple for the borders color
         """
@@ -124,6 +182,7 @@ class Builder:
     def setBackgroundColor(self, background_color: tuple) -> None:
         """
         Change the background color of the board
+
         Args:
             background_color: RGB (or RGBA) tuple for the background color
         """
@@ -132,14 +191,15 @@ class Builder:
     def _buildGrid(self) -> tuple:
         """
         Build and paint (if necessary) the grid on the surface
+
         Returns: A 3-uple containing:
             - A list of the created tiles, in a matrix [[column, columns, ...], [column, column, ...], more lines, ...]
             - A list of the centers of the tiles in the same format than the other list.
             - A dictionary linking a center to its tile
         """
         current_center = self._getFirstCenter()
-        centers_to_tile_ids = {}
         centers = []
+        tiles = {}
         tiles_borders = []
         for i in range(self._lines):
             centers_line = []
@@ -147,16 +207,37 @@ class Builder:
             for j in range(self._columns):
                 current_center = round(current_center[0], 1), round(current_center[1], 1)
                 centers_line.append(current_center)
+                neighbours = self._getTileNeighbours(i, j)
+                tiles[(i, j)] = Tile(center=current_center, neighbours=neighbours, deadly=False, walkable=True)
                 tiles_borders_line.append(self._getTileBorders(current_center))
-                centers_to_tile_ids[(round(current_center[0], 1), round(current_center[1], 1))] = (i, j)
                 current_center = self._getNextCenter(current_center, j)
             centers.append(centers_line)
             tiles_borders.append(tiles_borders_line)
-        return tiles_borders, centers, centers_to_tile_ids
+        return tiles_borders, centers, tiles
+
+    def _getTileNeighbours(self, i, j):
+        """
+        Args:
+            i: the row index of the tile for which this method will give the neighbours
+            j: the column index of the tile for which this method will give the neighbours
+
+        Returns: The identifiers (x, y) of the neighbours that can be directly accessed through the given (i, j) tile.
+        """
+        neighbours = []
+        if i - 1 >= 0:
+            neighbours.append((i - 1, j))
+        if j - 1 >= 0:
+            neighbours.append((i, j - 1))
+        if i + 1 < self._lines:
+            neighbours.append((i + 1, j))
+        if j + 1 < self._columns:
+            neighbours.append((i, j + 1))
+        return tuple(neighbours)
 
     def setMargins(self, x_margin: float, y_margin: float) -> None:
         """
         Changes the margins of the grid.
+
         Args:
             x_margin: The new x margin in pixels (if None, keeps the current x margin)
             y_margin: The new y margin in pixels (if None, keeps the current y margin)
@@ -171,11 +252,13 @@ class Builder:
     def create(self) -> Board:
         """
         Creates the Board
+
         Returns: The created board
         """
-        tiles_borders, centers, centers_to_tile_ids = self._buildGrid()
+        tiles_borders, centers, tiles = self._buildGrid()
         borders = self._getBoardBorders(tiles_borders)
-        board = Board((self._width, self._height), borders, tiles_borders, centers, centers_to_tile_ids)
+        board = Board((self._width, self._height), len(centers), len(centers[0]),
+                      tiles, centers, borders, tiles_borders)
         board.graphics.setBordersColor(self._bordersColor)
         board.graphics.setBackgroundColor(self._backgroundColor)
         board.graphics.setTilesVisible(self._tilesVisible)
@@ -193,6 +276,7 @@ class Builder:
     def _generateTile(self, center: tuple, identifier: tuple) -> Tile:
         """
         Generates a black-outlined square tile with transparent body.
+
         Args:
             center: The center of the tile to generate
             identifier: A couple containing:
@@ -217,6 +301,7 @@ class Builder:
     def _getTileBorders(self, center: tuple) -> list:
         """
         Generates 4 points around the center to make a square
+
         Args:
             center: The center of the future square
 
@@ -234,6 +319,7 @@ class Builder:
     def _getFirstCenter(self) -> tuple:
         """
         Computes the top-left-most tile center and centers the grid
+
         Returns: The position (x, y) of the first tile center
         """
         return ((self._width - (self._borderLength * self._columns)) / 2) + self._borderLength / 2, \
@@ -242,6 +328,7 @@ class Builder:
     def _getNextCenter(self, current_center: tuple, column: int) -> tuple:
         """
         Computes the next center from the current one
+
         Args:
             current_center: The center previously handled
             column: The column of the previously handled center
@@ -259,6 +346,7 @@ class Builder:
     def _getBoardBorders(tiles_borders: list) -> list:
         """
         Computes and returns the borders of the board from the tiles of the board
+
         Args:
             tiles_borders: The points used to draw the polygon of each tile
 
@@ -283,6 +371,7 @@ class Builder:
                 bottom_right = (x, y)
 
         return [(top_left, top_right), (top_right, bottom_right), (bottom_right, bottom_left), (bottom_left, top_left)]
+
 
 if __name__ == "__main__":
     default = 700
@@ -323,4 +412,3 @@ if __name__ == "__main__":
             pygame.display.flip()
 
             clock.tick(60)
-

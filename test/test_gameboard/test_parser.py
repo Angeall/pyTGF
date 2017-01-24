@@ -1,28 +1,16 @@
 import unittest
 
-from gameboard.boards.square_board import SquareBoardBuilder
 from gameboard.parsers.board_parser import BoardParser, IncorrectShapeError
-from gameboard.tile import Tile
-
-
-class DeadlyTile(Tile):
-    def __init__(self, center: tuple, points: list, identifier):
-        super().__init__(center, points, identifier, deadly=True)
-
-
-class NonWalkableTile(Tile):
-    def __init__(self, center: tuple, points: list, identifier):
-        super().__init__(center, points, identifier, walkable=False)
 
 
 class ExampleParser(BoardParser):
-    def characterToTileType(self, character: str):
+    def characterToTileProperties(self, character: str):
         if character == "W":
-            return NonWalkableTile
+            return False, False
         elif character == "x":
-            return DeadlyTile
+            return True, True
         else:
-            return Tile
+            return True, False
 
 
 class TestParser(unittest.TestCase):
@@ -31,9 +19,9 @@ class TestParser(unittest.TestCase):
         board = ExampleParser().parse(txt)
         self.assertEqual(len(board), 2)
         self.assertEqual(len(board[0]), 15)
-        self.assertEqual(board[0][0], NonWalkableTile)
-        self.assertEqual(board[1][10], DeadlyTile)
-        self.assertEqual(board[1][8], Tile)
+        self.assertEqual(board[0][0], (False, False))
+        self.assertEqual(board[1][10], (True, True))
+        self.assertEqual(board[1][8], (True, False))
 
     def test_non_rectangular_board(self):
         txt = "WWWxxxWWW   WWW\n   \n   WWW   xxx   "
