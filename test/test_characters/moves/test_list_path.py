@@ -2,7 +2,7 @@ import unittest
 from characters.moves.listpath import ListPath
 from characters.moves.move import ShortMove
 from characters.units.moving_unit import MovingUnit
-from gameboard.tile import Tile
+from gameboard.board import Tile
 
 
 class Touchable:
@@ -21,54 +21,51 @@ class TestListPath(unittest.TestCase):
         Makes sure each step is working correctly
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
-        move = ShortMove(unit, source_tile, destination_tile, fps=60)
-        move2 = ShortMove(unit, destination_tile, source_tile, fps=60)
+        unit_loc = {unit: source_tile.identifier}
+        move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location=unit_loc)
+        move2 = ShortMove(unit, destination_tile, source_tile, fps=60, units_location=unit_loc)
 
         path = ListPath([move, move2])
-        for _ in range(119):
+        for _ in range(60):
+            path.performNextMove()
+        self.assertTrue(unit_loc[unit] is destination_tile.identifier)
+        self.assertTrue(move._unitsLocation[unit] is destination_tile.identifier)
+        self.assertTrue(move2._unitsLocation[unit] is destination_tile.identifier)
+        self.assertFalse(path.completed)
+        for _ in range(59):
             path.performNextMove()
         self.assertFalse(path.completed)
         path.performNextMove()
         self.assertTrue(path.completed)
-        self.assertTrue(unit in source_tile)
 
     def test_complete(self):
         """
         Makes sure the "complete" is working correctly
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
-        move = ShortMove(unit, source_tile, destination_tile, fps=60)
+        move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location={unit: source_tile.identifier})
 
         path = ListPath([move])
         path.complete()
         self.assertTrue(path.completed)
-        self.assertTrue(unit in destination_tile)
 
-    def test_cancel(self):
+    def test_stop(self):
         """
-        Makes sure the cancel method is working correctly
+        Makes sure the stop method is working correctly
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
+        unit_loc = {unit: source_tile.identifier}
         # Distance separating the two tiles is 30 pixels
-        move = ShortMove(unit, source_tile, destination_tile, fps=60)
-        move2 = ShortMove(unit, destination_tile, source_tile, fps=60)
+        move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location=unit_loc)
+        move2 = ShortMove(unit, destination_tile, source_tile, fps=60, units_location=unit_loc)
 
         path = ListPath([move, move2])
         for _ in range(59):
@@ -77,20 +74,20 @@ class TestListPath(unittest.TestCase):
         self.assertFalse(path.stopped)
         path.performNextMove()
         self.assertTrue(path.stopped)
+        self.assertTrue(unit_loc[unit] is destination_tile.identifier)
 
     def test_actions(self):
         """
         Makes sure the actions are done right on time
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
+        unit_loc = {unit: source_tile.identifier}
+
         # Distance separating the two tiles is 30 pixels
-        move = ShortMove(unit, source_tile, destination_tile, fps=60)
-        move2 = ShortMove(unit, destination_tile, source_tile, fps=60)
+        move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location=unit_loc)
+        move2 = ShortMove(unit, destination_tile, source_tile, fps=60, units_location=unit_loc)
 
         pre_action_touchable = Touchable()
         post_action_touchable = Touchable()

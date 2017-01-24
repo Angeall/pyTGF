@@ -7,7 +7,7 @@ from characters.units.moving_unit import MovingUnit
 
 class ContinuousMove(Path):
     def __init__(self, unit: MovingUnit, source_tile_func: function, next_tile_func: function,
-                 fps: int, pre_action: function=None, post_action: function=None,
+                 fps: int, units_location_dict: dict, pre_action: function=None, post_action: function=None,
                  step_pre_action: function=None, step_post_action: function=None, max_moves: int=-1):
         """
         Args:
@@ -15,6 +15,7 @@ class ContinuousMove(Path):
             source_tile_func: function that, given a unit, gives its current tile
             next_tile_func: function that, given a tile, gives another tile (e.g. SquareBoard.getLeftTile(tile))
             fps: The screen refresh speed
+            units_location_dict: The dictionary linking units to tile identifiers.
             pre_action: The action to perform before the first move is performed
             post_action: The action to perform after the last move was performed
             step_pre_action: The action to perform each time a step (ShortMove) has been started.
@@ -30,6 +31,7 @@ class ContinuousMove(Path):
         self.sourceTile = None
         self.nextTileFunc = next_tile_func
         self.sourceTileFunc = source_tile_func
+        self._unitsLocationDict = units_location_dict
         self.fps = fps
 
     def _getNextShortMove(self) -> ShortMove:
@@ -38,6 +40,7 @@ class ContinuousMove(Path):
         if self.sourceTile is not None and self.sourceTile.identifier is not None:
             destination_tile = self.nextTileFunc(self.sourceTile)
             if destination_tile is not None and self.sourceTile is not destination_tile:
-                move = ShortMove(self.unit, self.sourceTile, destination_tile, self.fps)
+                move = ShortMove(self.unit, self.sourceTile, destination_tile, self.fps,
+                                 units_location=self._unitsLocationDict)
                 self.sourceTile = destination_tile
                 return move

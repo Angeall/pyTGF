@@ -1,8 +1,7 @@
 import unittest
 from characters.moves.continous import ContinuousMove
-from characters.moves.move import ShortMove
 from characters.units.moving_unit import MovingUnit
-from gameboard.tile import Tile
+from gameboard.board import Tile
 
 
 class Touchable:
@@ -21,15 +20,13 @@ class TestContinuousMove(unittest.TestCase):
         Makes sure each step is working correctly
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
         unit_tile = source_tile
         next_tile = destination_tile
-        path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60)
+        unit_loc = {unit: source_tile.identifier}
+        path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60, units_location_dict=unit_loc)
         just_started, _, _ = path.performNextMove()
         self.assertTrue(just_started)
         for _ in range(58):
@@ -45,37 +42,33 @@ class TestContinuousMove(unittest.TestCase):
         Makes sure the "complete" function is working correctly
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        third_tile = Tile((75, 15), [(60, 0), (90, 0), (90, 30), (60, 30)], (0, 2))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
-        destination_tile.addNeighbour(third_tile.identifier)
-        third_tile.addNeighbour(destination_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0), (0, 2)), walkable=True,
+                                deadly=False)
+        third_tile = Tile(identifier=(0, 2), center=(75, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        unit_loc = {unit: source_tile.identifier}
         my_tiles = [third_tile, destination_tile]
         # Distance separating the two tiles is 30 pixels
         unit_tiles = [destination_tile, source_tile]
-        path = ContinuousMove(unit, lambda x: unit_tiles.pop(), lambda tile: my_tiles.pop(), fps=60, max_moves=1)
+        path = ContinuousMove(unit, lambda x: unit_tiles.pop(), lambda tile: my_tiles.pop(), fps=60, max_moves=1,
+                              units_location_dict=unit_loc)
         new_tile_id = path.complete()
         self.assertFalse(new_tile_id == source_tile.identifier)
         self.assertTrue(new_tile_id == destination_tile.identifier)
-        self.assertTrue(unit in destination_tile)
+        self.assertTrue(unit_loc[unit] is destination_tile.identifier)
 
-    def test_cancel(self):
+    def test_stop(self):
         """
-        Makes sure the cancel method is working correctly
+        Makes sure the stop method is working correctly
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
+        unit_loc = {unit: source_tile.identifier}
         # Distance separating the two tiles is 30 pixels
         unit_tile = source_tile
         next_tile = destination_tile
-        path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60)
+        path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60, units_location_dict=unit_loc)
         for _ in range(59):
             path.performNextMove()
         path.stop()
@@ -87,11 +80,9 @@ class TestContinuousMove(unittest.TestCase):
         Makes sure the actions are done right on time
         """
         unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
-        source_tile = Tile((15, 15), [(0, 0), (30, 0), (30, 30), (0, 30)], (0, 0))
-        destination_tile = Tile((45, 15), [(30, 0), (60, 0), (60, 30), (30, 30)], (0, 1))
-        source_tile.addNeighbour(destination_tile.identifier)
-        source_tile.addOccupant(unit)
-        destination_tile.addNeighbour(source_tile.identifier)
+        source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
+        destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
+        unit_loc = {unit: source_tile.identifier}
         # Distance separating the two tiles is 30 pixels
         pre_action_touchable = Touchable()
         post_action_touchable = Touchable()
@@ -103,7 +94,8 @@ class TestContinuousMove(unittest.TestCase):
                               pre_action=lambda: pre_action_touchable.touch(),
                               post_action=lambda: post_action_touchable.touch(),
                               step_pre_action=lambda: pre_step_action_touchable.touch(),
-                              step_post_action=lambda: post_step_action_touchable.touch())
+                              step_post_action=lambda: post_step_action_touchable.touch(),
+                              units_location_dict=unit_loc)
         path.performNextMove()
         self.assertTrue(pre_action_touchable.touched)
         self.assertEqual(pre_step_action_touchable.touchCount, 1)

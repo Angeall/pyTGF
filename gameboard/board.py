@@ -7,7 +7,7 @@ from scipy.spatial import KDTree
 import numpy as np
 import pygame
 
-Tile = namedtuple("Tile", "center deadly walkable neighbours")
+Tile = namedtuple("Tile", "identifier center deadly walkable neighbours")
 
 
 class Board:
@@ -97,7 +97,7 @@ class Board:
             deadly: If True, the tile will be set as "deadly", else, set the tile as "non-deadly"
         """
         tile = self._tiles[tile_identifier]
-        self._tiles[tile_identifier] = Tile(center=tile.center, neighbours=tile.neighbours,
+        self._tiles[tile_identifier] = Tile(identifier=tile.identifier, center=tile.center, neighbours=tile.neighbours,
                                             deadly=deadly, walkable=tile.walkable)
 
     def setTileNonWalkable(self, tile_identifier: tuple, walkable: bool=False) -> None:
@@ -109,7 +109,7 @@ class Board:
             walkable: If False, the tile will be set as "non-walkable", else, sets the the tile as "walkable"
         """
         tile = self._tiles[tile_identifier]
-        self._tiles[tile_identifier] = Tile(center=tile.center, neighbours=tile.neighbours,
+        self._tiles[tile_identifier] = Tile(identifier=tile.identifier, center=tile.center, neighbours=tile.neighbours,
                                             deadly=tile.deadly, walkable=walkable)
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -208,7 +208,8 @@ class Builder:
                 current_center = round(current_center[0], 1), round(current_center[1], 1)
                 centers_line.append(current_center)
                 neighbours = self._getTileNeighbours(i, j)
-                tiles[(i, j)] = Tile(center=current_center, neighbours=neighbours, deadly=False, walkable=True)
+                tiles[(i, j)] = Tile(identifier=(i, j), center=current_center, neighbours=neighbours, deadly=False,
+                                     walkable=True)
                 tiles_borders_line.append(self._getTileBorders(current_center))
                 current_center = self._getNextCenter(current_center, j)
             centers.append(centers_line)
@@ -272,31 +273,6 @@ class Builder:
         self._maxPixelsPerLine = (self._height - 2 * self._margins[1]) / self._lines
         self._maxPixelsPerCol = (self._width - 2 * self._margins[0]) / self._columns
         self._borderLength = min(self._maxPixelsPerCol, self._maxPixelsPerLine)
-
-    def _generateTile(self, center: tuple, identifier: tuple) -> Tile:
-        """
-        Generates a black-outlined square tile with transparent body.
-
-        Args:
-            center: The center of the tile to generate
-            identifier: A couple containing:
-                            - The line on which the tile is placed
-                            - The column on which the tile is placed
-
-        Returns: The generated tile
-        """
-        borders = self._getTileBorders(center)
-        tile = Tile(center, borders, identifier)
-        (x, y) = identifier
-        if x - 1 >= 0:
-            tile.addNeighbour((x - 1, y))
-        if y - 1 >= 0:
-            tile.addNeighbour((x, y - 1))
-        if x + 1 < self._lines:
-            tile.addNeighbour((x + 1, y))
-        if y + 1 < self._columns:
-            tile.addNeighbour((x, y + 1))
-        return tile
 
     def _getTileBorders(self, center: tuple) -> list:
         """
@@ -390,7 +366,7 @@ if __name__ == "__main__":
     pygame.display.flip()
     cancelled = False
     passed_int_color = (255, 255, 255)
-    identifier = None
+    clicked_tile = None
     while not cancelled:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -399,15 +375,16 @@ if __name__ == "__main__":
                 cancelled = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if pygame.mouse.get_pressed()[0]:
-                    identifier = board.getTileIdentifier(event.pos)
-                    if identifier is not None:
-                        i, j = identifier
+                    clicked_tile = board.getTileByPixel(event.pos)
+                    i, j = clicked_tile.identifier
+                    if clicked_tile is not None:
                         board.graphics.setInternalColor((255, 0, 0), i, j)
                 else:
-                    identifier = None
+                    clicked_tile = None
             elif event.type == pygame.MOUSEBUTTONUP:
-                if identifier is not None:
-                    board.graphics.setInternalColor(passed_int_color, identifier[0], identifier[1])
+                if clicked_tile is not None:
+                    i, j = clicked_tile.identifier
+                    board.graphics.setInternalColor(passed_int_color, i, j)
             board.draw(screen)
             pygame.display.flip()
 
