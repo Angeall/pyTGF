@@ -1,3 +1,4 @@
+import traceback
 from abc import ABCMeta, abstractmethod
 from types import FunctionType as function
 
@@ -140,6 +141,8 @@ class Path(metaclass=ABCMeta):
                        current_tile=self._currentMove.destinationTile)
             except TypeError:
                 action()
+            except:
+                traceback.print_exc()
 
     def _handlePathFinished(self):
         if self._postAction is not None:

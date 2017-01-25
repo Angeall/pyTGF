@@ -289,19 +289,15 @@ class MainLoop:
         if unit.isAlive():
             if current_move is not None:
                 try:
-                    print("performing move")
                     just_started, move_completed, tile_id = current_move.performNextMove()
-                    print("move performed")
                     if move_completed:  # A new tile has been reached by the movement
-                        print("move completed")
                         self.game.updateGameState(unit, tile_id)
                     elif just_started:
-                        print("informing bots")
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
                 except IllegalMove:
-                    self._killUnit(unit, linker)
                     print("illegal move")
+                    self._killUnit(unit, linker)
                     self._cancelCurrentMoves(unit)
                 except ImpossibleMove:
                     print("impossible move")

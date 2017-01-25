@@ -101,7 +101,8 @@ class ShortMove(object):
         self.isPerformed = True
 
     def isConsistent(self):
-        return self._unitsLocation[self.unit] is self.sourceTile.identifier
+        res = self._unitsLocation[self.unit] == self.sourceTile.identifier
+        return res
 
     def _handleLastStep(self):
         self._unitsLocation[self.unit] = self.destinationTile.identifier

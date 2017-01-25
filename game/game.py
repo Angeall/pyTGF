@@ -1,9 +1,12 @@
+import traceback
 from abc import ABCMeta, abstractmethod
 from functools import reduce
 from types import FunctionType as function
 
 from copy import deepcopy
 from typing import Dict, List
+
+import time
 
 from characters.particle import Particle
 from gameboard.board import Board, Tile
@@ -43,6 +46,7 @@ class Game(metaclass=ABCMeta):
         self.unitsTeam = {}  # type: Dict[MovingUnit, int]
         self.players = {}  # type: Dict[int, MovingUnit]
         self.unitsLocation = {}   # type: Dict[Particle, tuple]
+        self._previousUnitsLocation = {}   # type: Dict[Particle, tuple]
         self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
         self.addCustomMoveFunc = None  # type: function
 
@@ -97,17 +101,21 @@ class Game(metaclass=ABCMeta):
             new_tile_id: The identifier of the tile on which place the given unit
             unit: The unit to place on the given tile.
         """
-        if unit in self.unitsLocation:
-            old_tile_id = self.unitsLocation[unit]
-            self.tilesOccupants[old_tile_id].remove(unit)
-            if len(self.tilesOccupants[old_tile_id]) == 0:
-                del self.tilesOccupants[old_tile_id]
-        self.unitsLocation[unit] = new_tile_id
-        unit.moveTo(self.board.getTileById(self.unitsLocation[unit]).center)
-        if new_tile_id in self.tilesOccupants:
-            self.tilesOccupants[new_tile_id] = unit
-        else:
-            self.tilesOccupants[new_tile_id] = [unit]
+        try:
+            if unit not in self.unitsLocation:
+                self.unitsLocation[unit] = new_tile_id  # FIXME need to continue on this
+            if unit in self._previousUnitsLocation:
+                old_tile_id = self._previousUnitsLocation[unit]
+                self.tilesOccupants[old_tile_id].remove(unit)
+                if len(self.tilesOccupants[old_tile_id]) == 0:
+                    del self.tilesOccupants[old_tile_id]
+            self._previousUnitsLocation[unit] = new_tile_id
+            if new_tile_id in self.tilesOccupants:
+                self.tilesOccupants[new_tile_id].append(unit)
+            else:
+                self.tilesOccupants[new_tile_id] = [unit]
+        except:
+            traceback.print_exc()
 
     def getTileForUnit(self, unit: MovingUnit) -> Tile:
         """
@@ -138,12 +146,12 @@ class Game(metaclass=ABCMeta):
                 the given tile_id).
         """
         print("Game update")
-        if unit not in self.tilesOccupants[tile_id]:
-            if unit not in self.unitsLocation:
-                raise UnknownUnitException("The game is trying to be updated using an unknown unit")
-            elif unit.isAlive():
+        if unit not in self.unitsLocation:
+            raise UnknownUnitException("The game is trying to be updated using an unknown unit")
+        if tile_id != self.unitsLocation[unit]:
+            if unit.isAlive():
                 error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
-                                % (str(self.unitsLocation[unit]), str(tile_id))
+                                % (str(self.unitsLocation[unit]), str(old_tile_id))
                 raise InconsistentGameStateException(error_msg)
             else:
                 return

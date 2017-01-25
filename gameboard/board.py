@@ -1,6 +1,6 @@
 import traceback
 from collections import namedtuple
-from copy import deepcopy
+from copy import deepcopy, copy
 from typing import Union, Dict
 
 from gameboard.graphics import BoardGraphics
@@ -133,18 +133,12 @@ class Board:
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k == "tiles":
-                value = []
-                for line in v:
-                    new_line = []
-                    for tile in line:
-                        tile_copy = tile.__deepcopy__(memo)
-                        new_line.append(tile_copy)
-                    value.append(new_line)
-            elif k != "_kdTree" and k != "_centersToTileIds" and k != "_centers":
-                value = deepcopy(v, memo)
-            else:
+            if k == "_tiles":
+                value = copy(v)
+            elif k == "_kdTree" or k == "graphics":
                 value = None
+            else:
+                value = v
             setattr(result, k, value)
         return result
 
