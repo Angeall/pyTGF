@@ -1,11 +1,9 @@
-import traceback
 from abc import ABCMeta, abstractmethod
 from types import FunctionType as function
 
 from copy import deepcopy
 
-from gameboard.board import Board
-from gameboard.tile import Tile
+from gameboard.board import Board, Tile
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
 from controls.events.keyboard import KeyboardEvent
@@ -45,7 +43,7 @@ class Game(metaclass=ABCMeta):
         # self.players -> keys: int (player number); values: unit
         self.players = {}
         # self.units -> keys: Unit; values: tile_id
-        self.units = {}
+        self.unitsLocation = {}
         self.addCustomMoveFunc = None  # type: function
 
     @property
@@ -82,7 +80,7 @@ class Game(metaclass=ABCMeta):
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
-        self.units[unit] = origin_tile_id
+        self.unitsLocation[unit] = origin_tile_id
         self.players[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
         if team_number in self.teams.keys():
@@ -97,31 +95,13 @@ class Game(metaclass=ABCMeta):
 
         Returns: The tile on which the given unit is located
         """
-        return self.board.getTileById(self.units[unit])
+        return self.board.getTileById(self.unitsLocation[unit])
 
     def isFinished(self) -> bool:
         """
         Returns: True if the game is finished and False otherwise
         """
         return self._finished
-
-    def setTeamKill(self, team_kill_enabled: bool = True):
-        """
-        Sets the team kill of the game. If true, a unit can harm another unit from its own team
-
-        Args:
-            team_kill_enabled: boolean that enables (True) or disables (False) the teamkill in the game
-        """
-        self._teamKill = team_kill_enabled
-
-    def setSuicide(self, suicide_enabled: bool = True):
-        """
-        Sets the suicide handling of the game. If true, a unit can suicide itself on its own particles.
-
-        Args:
-            suicide_enabled: boolean that enables (True) or disables (False) the suicide in the game
-        """
-        self._suicide = suicide_enabled
 
     def updateGameState(self, unit: MovingUnit, tile_id: tuple) -> None:
         """
@@ -137,13 +117,15 @@ class Game(metaclass=ABCMeta):
                 the given tile_id).
         """
         if unit not in self.board.getTileById(tile_id):
-            if unit not in self.units:
+            if unit not in self.unitsLocation:
                 raise UnknownUnitException("The game is trying to be updated using an unknown unit")
             elif unit.isAlive():
                 error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
-                                % (self.units[unit].identifier, tile_id)
+                                % (self.unitsLocation[unit].identifier, tile_id)
                 raise InconsistentGameStateException(error_msg)
-        self.units[unit] = tile_id
+            else:
+                return
+        self.unitsLocation[unit] = tile_id
         new_tile = self.board.getTileById(tile_id)
         if new_tile.hasTwoOrMoreOccupants():
             self._handleCollision(unit, new_tile.occupants)
@@ -189,11 +171,11 @@ class Game(metaclass=ABCMeta):
         """
         for other_unit in other_units:
             if not (unit is other_unit):
-                if other_unit in self.units.keys():  # If the other unit is a controlled unit
+                if other_unit in self.unitsLocation.keys():  # If the other unit is a controlled unit
                     self._collidePlayers(unit, other_unit, frontal=True)
                 else:  # If the other unit is a Particle
                     other_player = None
-                    for player in self.units.keys():  # type: Unit
+                    for player in self.unitsLocation.keys():  # type: MovingUnit
                         if player.hasParticle(other_unit):
                             other_player = player
                             break

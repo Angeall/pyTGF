@@ -123,9 +123,8 @@ class MainLoop:
         self.game.addUnit(unit, team, tile_id)
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
-        tile.addOccupant(unit)
-        resize_unit(unit, tile)
-        unit.moveTo(tile.graphics.center)
+        resize_unit(unit, self.game.board)
+        unit.moveTo(tile.center)
         if initial_action is not None:
             unit.currentAction = initial_action
             self._handleEvent(unit, initial_action)

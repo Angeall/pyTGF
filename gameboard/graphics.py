@@ -17,12 +17,13 @@ class BoardGraphics:
 
     def __init__(self, tiles_borders: list, background_color: tuple, border_line_color: tuple, borders: list,
                  tiles_visible: bool):
+        self.sideLength = int(utils.geom.dist(tiles_borders[0][0][-1], tiles_borders[0][0][0]))
+        self.nbrOfSides = len(tiles_borders[0][0])
         self._tilesVisible = tiles_visible
         self._borders = borders
         self._backgroundColor = background_color
         self._borderLineColor = border_line_color
         self._colorMatrix = self._initColorMatrix(len(tiles_borders), len(tiles_borders[0]))
-        self._sideLength = self.sideLength = int(utils.geom.dist(tiles_borders[0][0][-1], tiles_borders[0][0][0]))
         self._drawMatrix = self._initDrawMatrix(tiles_borders)
 
     # -------------------- PUBLIC METHODS -------------------- #
@@ -272,7 +273,7 @@ class BoardGraphics:
         Returns: True if all the length are equal with a epsilon-accuracy.
         """
         length = utils.geom.dist(points[0], points[1])
-        if abs(length - self._sideLength) > self._TILE_LENGTH_EPSILON:
+        if abs(length - self.sideLength) > self._TILE_LENGTH_EPSILON:
             return False
         i = 1
         while i < len(points) - 1:

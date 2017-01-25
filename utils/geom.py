@@ -63,7 +63,7 @@ def vectorize(p1: tuple, p2: tuple, signed: bool=True) -> tuple:
     (x0, y0) = p1
     (x1, y1) = p2
     if not signed:
-        return np.array([abs(float(x1) - float(x0)), abs(float(y1) - float(y0))])
+        return abs(float(x1) - float(x0)), abs(float(y1) - float(y0))  # FIXME Maybe re-change into a np array([(...)])
     return float(x1) - float(x0), float(y1) - float(y0)
 
 
