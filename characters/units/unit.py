@@ -61,6 +61,7 @@ class Unit(Particle):
         """
         try:
             oldest_particle = self._particlesList.pop(0)
+            oldest_particle.kill()
             if self._particlesQueue is not None:
                 queue_first = self._particlesQueue.get_nowait()  # type: Particle
                 assert queue_first is oldest_particle

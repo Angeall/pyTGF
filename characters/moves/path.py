@@ -141,8 +141,6 @@ class Path(metaclass=ABCMeta):
                        current_tile=self._currentMove.destinationTile)
             except TypeError:
                 action()
-            except:
-                traceback.print_exc()
 
     def _handlePathFinished(self):
         if self._postAction is not None:

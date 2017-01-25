@@ -2,6 +2,9 @@ import random
 
 import itertools
 import functools
+import traceback
+from typing import Iterable, Final, List
+
 import numpy as np
 import time
 
@@ -46,18 +49,23 @@ class SimultaneousAlphaBeta:
         :type state: GameState
         :return: the best action among the possible ones
         """
-        self.playerNumber = player_number
-        if self.actions.get(state) is not None:
-            value, actions = self.actions[state]
-        else:
+        try:
+            self.playerNumber = player_number
             a = time.time()
-            value, actions, _ = self.maxValue(state, -float('inf'), float('inf'), 0)
-            print(time.time() - a)
-        self.playerNumber = None
-        if actions is not None:
-            return actions[player_number]
-        else:
-            return self.possibleActions[random.randint(0, len(self.possibleActions) - 1)]
+
+            if self.actions.get(state) is not None:
+                value, actions = self.actions[state]
+            else:
+
+                value, actions, _ = self.maxValue(state, -float('inf'), float('inf'), 0)
+            self.playerNumber = None
+            if actions is not None:
+                print(player_number, direction_str[actions[player_number]], "score", value, time.time() - a)
+                return actions[player_number]
+            else:
+                return self.possibleActions[random.randint(0, len(self.possibleActions) - 1)]
+        except:
+            traceback.print_exc()
 
     def maxValue(self, state: GameState, alpha: float, beta: float, depth: int):
         """
@@ -88,6 +96,8 @@ class SimultaneousAlphaBeta:
         # Explore every possible actions from this point
         actions_combinations = self._generateMovesCombinations(state)
         actions_combinations_scores = {}
+        if len(actions_combinations) == 0:
+            print(depth * '-', "EMPTY COMBINATIONS")
         for actions in actions_combinations:  # type: tuple
             min_value, min_actions, min_reached_end = self.minValue(state, actions, alpha, beta, depth)
             actions_combinations_scores[min_value] = min_actions, min_reached_end
@@ -164,6 +174,7 @@ class SimultaneousAlphaBeta:
         moves = []
         for player_number in players:
             possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
+            print("possibleMoves", possible_moves_for_player, "player", player_number)
             moves.append(tuple(itertools.product([player_number],
                                                  possible_moves_for_player)))
         temp = tuple(itertools.product(*moves))
@@ -176,6 +187,11 @@ class SimultaneousAlphaBeta:
                 order_dicts[dico[self.playerNumber]] += (dico, )
         res = [order_dicts[key] for key in order_dicts]
         return res
+
+    def _randomChoice(self, choices: List):
+        multiplier = 10
+        selector = self.random.randint(0, multiplier * (len(choices) - 1))
+        return choices[selector//multiplier]
 
 
 

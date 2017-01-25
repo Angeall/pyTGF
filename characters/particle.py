@@ -58,7 +58,7 @@ class Particle:
         Args:
             surface: The surface the particle will be drawn on
         """
-        if self.sprite is not None and self.isAlive():
+        if self.sprite is not None and self.sprite.rect is not None and self.isAlive():
             if self._drawable is None:
                 self._drawable = pygame.sprite.RenderPlain(self.sprite)
             self._drawable.draw(surface)
@@ -69,7 +69,7 @@ class Particle:
         Args:
             destination: The pixel on which the unit will be drawn.
         """
-        if self.sprite is not None:
+        if self.sprite is not None and self.sprite.rect is not None:
             current_position = self.sprite.rect.center
             if current_position != destination:
                 x, y = utils.geom.vectorize(current_position, destination)
@@ -81,7 +81,7 @@ class Particle:
         Args:
             destination_offset: The translation offset to perform
         """
-        if self.sprite is not None:
+        if self.sprite is not None and self.sprite.rect is not None:
             self.sprite.rect.move_ip(destination_offset[0], destination_offset[1])
 
     def getSpriteGroup(self) -> pygame.sprite.Group:

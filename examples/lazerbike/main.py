@@ -105,7 +105,7 @@ def launch_game(gui: GUI, player_info: tuple):
     builder.setTilesVisible(False)
     board = builder.create()
 
-    speed = 5*board.graphics.sideLength
+    speed = 2*board.graphics.sideLength
     game = LazerBikeGame(board)
     main_loop = MainLoop(game)
     player_classes = player_info[0]

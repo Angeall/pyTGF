@@ -56,7 +56,6 @@ class LazerBikeGame(Game):
         raise UnfeasibleMoveException("The event couldn't create a valid move")
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
-        print("Trace left")
         # TODO: continuous line using center-to-center trace but need previous_previous_tile
         tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)

@@ -12,7 +12,7 @@ Tile = namedtuple("Tile", "identifier center deadly walkable neighbours")
 
 
 class Board:
-    OUT_OF_BOARD_TILE = Tile(identifier=None, center=(-500, -500), deadly=True, walkable=False, neighbours=())
+    OUT_OF_BOARD_TILE = Tile(identifier=None, center=(-500, -500), deadly=True, walkable=True, neighbours=())
 
     def __init__(self, size: tuple, lines: int, columns: int, tiles: dict, centers: list, borders: list, points: list):
         """

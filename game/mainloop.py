@@ -72,13 +72,13 @@ class MainLoop:
             self._prepareLoop()
         while self._state != END:
             try:
+                self._state = self._checkGameState()
                 clock.tick(max_fps)
                 self._handleInputs()
                 if self._state == CONTINUE:
                     self._getNextMoveFromLinkerIfAvailable()
                     self._handlePendingMoves()
                     self._refreshScreen()
-                    self._state = self._checkGameState()
                 elif self._state == FINISH:
                     self.executor.terminate()
                     self._prepared = False
@@ -276,6 +276,7 @@ class MainLoop:
                         self._handleMoveForUnit(unit, self._otherMoves[unit], unit_linker)
                         if self._otherMoves[unit].finished():
                             self._otherMoves[unit] = None
+        self.game.checkIfFinished()
 
     def _handleMoveForUnit(self, unit: MovingUnit, current_move: Path, linker: Linker):
         """
@@ -296,11 +297,10 @@ class MainLoop:
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
                 except IllegalMove:
-                    print("illegal move")
                     self._killUnit(unit, linker)
+                    self.game.checkIfFinished()
                     self._cancelCurrentMoves(unit)
                 except ImpossibleMove:
-                    print("impossible move")
                     self._cancelCurrentMoves(unit)
                 except:
                     traceback.print_exc()

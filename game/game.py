@@ -42,6 +42,7 @@ class Game(metaclass=ABCMeta):
         self.board = board
         self._finished = False
         self.winningPlayers = None
+        self.winningTeam = None
         self.teams = {}  # type: Dict[int, List[MovingUnit]]
         self.unitsTeam = {}  # type: Dict[MovingUnit, int]
         self.players = {}  # type: Dict[int, MovingUnit]
@@ -101,21 +102,18 @@ class Game(metaclass=ABCMeta):
             new_tile_id: The identifier of the tile on which place the given unit
             unit: The unit to place on the given tile.
         """
-        try:
-            if unit not in self.unitsLocation:
-                self.unitsLocation[unit] = new_tile_id  # FIXME need to continue on this
-            if unit in self._previousUnitsLocation:
-                old_tile_id = self._previousUnitsLocation[unit]
-                self.tilesOccupants[old_tile_id].remove(unit)
-                if len(self.tilesOccupants[old_tile_id]) == 0:
-                    del self.tilesOccupants[old_tile_id]
-            self._previousUnitsLocation[unit] = new_tile_id
-            if new_tile_id in self.tilesOccupants:
-                self.tilesOccupants[new_tile_id].append(unit)
-            else:
-                self.tilesOccupants[new_tile_id] = [unit]
-        except:
-            traceback.print_exc()
+        if unit not in self.unitsLocation:
+            self.unitsLocation[unit] = new_tile_id  # FIXME need to continue on this
+        if unit in self._previousUnitsLocation:
+            old_tile_id = self._previousUnitsLocation[unit]
+            self.tilesOccupants[old_tile_id].remove(unit)
+            if len(self.tilesOccupants[old_tile_id]) == 0:
+                del self.tilesOccupants[old_tile_id]
+        self._previousUnitsLocation[unit] = new_tile_id
+        if new_tile_id in self.tilesOccupants:
+            self.tilesOccupants[new_tile_id].append(unit)
+        else:
+            self.tilesOccupants[new_tile_id] = [unit]
 
     def getTileForUnit(self, unit: MovingUnit) -> Tile:
         """
@@ -145,26 +143,25 @@ class Game(metaclass=ABCMeta):
                 If this method is used illegally (when the unit is not effectively placed on the tile corresponding to
                 the given tile_id).
         """
-        print("Game update")
         if unit not in self.unitsLocation:
             raise UnknownUnitException("The game is trying to be updated using an unknown unit")
         if tile_id != self.unitsLocation[unit]:
             if unit.isAlive():
                 error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
-                                % (str(self.unitsLocation[unit]), str(old_tile_id))
+                                % (str(self.unitsLocation[unit]), str(tile_id))
                 raise InconsistentGameStateException(error_msg)
             else:
                 return
+        self._addUnitToTile(tile_id, unit)
         if self.board.getTileById(tile_id).deadly:
             unit.kill()
             self._removeUnitFromTile(unit, tile_id)
-        self._addUnitToTile(tile_id, unit)
-        if self._tileHasTwoOrMoreOccupants(tile_id):
-            self._handleCollision(unit, self.tilesOccupants[tile_id])
-        for unit in self.tilesOccupants[tile_id]:
-            if not unit.isAlive():
-                self.tilesOccupants[tile_id].remove(unit)
-        self._finished = self._checkIfFinished()
+        else:
+            if self._tileHasTwoOrMoreOccupants(tile_id):
+                self._handleCollision(unit, self.tilesOccupants[tile_id])
+            for unit in self.tilesOccupants[tile_id]:
+                if not unit.isAlive():
+                    self.tilesOccupants[tile_id].remove(unit)
 
     def copy(self):
         return deepcopy(self)
@@ -217,7 +214,7 @@ class Game(metaclass=ABCMeta):
                     if other_player is not None:  # If we found the player to which belongs the colliding particle
                         self._collidePlayers(unit, other_player)
 
-    def _checkIfFinished(self) -> bool:
+    def checkIfFinished(self) -> bool:
         """
         Checks if there is moe than one team alive.
         If there is, the game is not finished.
@@ -228,19 +225,24 @@ class Game(metaclass=ABCMeta):
             return True
         teams_alive = 0
         team_units = []
-        for team in self.teams.values():
-            for unit in team:
+        winning_team = None
+        for team_number, team_players in self.teams.items():
+            for unit in team_players:
                 if unit.isAlive():
                     teams_alive += 1
-                    team_units = team
+                    team_units = team_players
+                    winning_team = team_number
                     break
         if teams_alive > 1:
             return False
-        elif teams_alive == 0:
-            self.winningPlayers = ()
-            return True
         else:
-            self.winningPlayers = tuple(team_units)
+            self._finished = True
+            if teams_alive == 0:
+                self.winningPlayers = ()
+                self.winningTeam = None
+            else:
+                self.winningPlayers = tuple(team_units)
+                self.winningTeam = winning_team
             return True
 
     @abstractmethod
