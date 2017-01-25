@@ -24,7 +24,9 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
     def size(self, width: int, height: int):
         if self.image is not None and self.rect is not None:
             self.image = transform.scale(self.image, (width, height))
+            (x, y) = self.rect.center
             self.rect = self.image.get_rect()
+            self.rect.move_ip(x, y)
 
     @property
     @abstractmethod

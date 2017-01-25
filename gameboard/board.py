@@ -1,3 +1,4 @@
+import traceback
 from collections import namedtuple
 from copy import deepcopy
 from typing import Union, Dict
@@ -11,6 +12,8 @@ Tile = namedtuple("Tile", "identifier center deadly walkable neighbours")
 
 
 class Board:
+    OUT_OF_BOARD_TILE = Tile(identifier=None, center=(-500, -500), deadly=True, walkable=False, neighbours=())
+
     def __init__(self, size: tuple, lines: int, columns: int, tiles: dict, centers: list, borders: list, points: list):
         """
         Instantiates a game board using the given parameters
@@ -61,7 +64,10 @@ class Board:
 
         Returns: The Tile struct located at the given identifier
         """
-        return self._tiles[identifier]
+        try:
+            return self._tiles[identifier]
+        except KeyError:
+            return self.OUT_OF_BOARD_TILE
 
     def isAccessible(self, source_identifier: tuple, destination_identifier: tuple) -> bool:
         """

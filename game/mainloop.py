@@ -71,17 +71,20 @@ class MainLoop:
         if not self._prepared:
             self._prepareLoop()
         while self._state != END:
-            clock.tick(max_fps)
-            self._handleInputs()
-            if self._state == CONTINUE:
-                self._getNextMoveFromLinkerIfAvailable()
-                self._handlePendingMoves()
-                self._refreshScreen()
-                self._state = self._checkGameState()
-            elif self._state == FINISH:
-                self.executor.terminate()
-                self._prepared = False
-                return None
+            try:
+                clock.tick(max_fps)
+                self._handleInputs()
+                if self._state == CONTINUE:
+                    self._getNextMoveFromLinkerIfAvailable()
+                    self._handlePendingMoves()
+                    self._refreshScreen()
+                    self._state = self._checkGameState()
+                elif self._state == FINISH:
+                    self.executor.terminate()
+                    self._prepared = False
+                    return None
+            except:
+                traceback.print_exc()
         self.executor.terminate()
         self._prepared = False
         return self.game.winningPlayers
@@ -135,7 +138,8 @@ class MainLoop:
         """
         self.game.board.draw(self._screen)
         for unit in self.linkers.values():
-            unit.draw(self._screen)
+            if unit.isAlive():
+                unit.draw(self._screen)
         pygame.display.flip()
 
     def _handleInputs(self) -> None:
@@ -285,17 +289,25 @@ class MainLoop:
         if unit.isAlive():
             if current_move is not None:
                 try:
+                    print("performing move")
                     just_started, move_completed, tile_id = current_move.performNextMove()
+                    print("move performed")
                     if move_completed:  # A new tile has been reached by the movement
+                        print("move completed")
                         self.game.updateGameState(unit, tile_id)
                     elif just_started:
+                        print("informing bots")
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
                 except IllegalMove:
                     self._killUnit(unit, linker)
+                    print("illegal move")
                     self._cancelCurrentMoves(unit)
                 except ImpossibleMove:
+                    print("impossible move")
                     self._cancelCurrentMoves(unit)
+                except:
+                    traceback.print_exc()
                 finally:
                     return False
         else:
@@ -324,6 +336,8 @@ class MainLoop:
             except Empty:
                 self._unitsMoves[unit] = (None, moves[1])
                 current_move = None
+            except:
+                traceback.print_exc()
         return current_move
 
     def _checkGameState(self) -> int:
@@ -363,6 +377,8 @@ class MainLoop:
             self._addMove(unit, move)
         except UnfeasibleMoveException:
             pass
+        except:
+            traceback.print_exc()
 
     def _getPipeConnection(self, linker: Linker) -> PipeConnection:
         return self.linkersConnection[linker]

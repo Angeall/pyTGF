@@ -3,7 +3,7 @@ import time
 
 import pygame
 
-from gameboard.boards.square_board import SquareBoardBuilder, SquareBoard
+from gameboard.board import Builder, Board
 from examples.lazerbike.AIs.bottest import BotTest
 from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_DOWN, LazerBikeBotLinker
 from examples.lazerbike.rules.lazerbike import LazerBikeGame
@@ -18,11 +18,11 @@ class TestLazerbike(unittest.TestCase):
         self.height = 480
         self.lines = 50
         self.columns = 75
-        builder = SquareBoardBuilder(self.width, self.height, self.lines, self.columns)
+        builder = Builder(self.width, self.height, self.lines, self.columns)
         builder.setBordersColor((0, 125, 125))
         builder.setBackgroundColor((25, 25, 25))
         builder.setTilesVisible(False)
-        board = builder.create()  # type: SquareBoard
+        board = builder.create()  # type: Board
         self.loop = MainLoop(LazerBikeGame(board))
 
     def tearDown(self):

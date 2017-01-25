@@ -1,8 +1,11 @@
 from abc import ABCMeta, abstractmethod
+from functools import reduce
 from types import FunctionType as function
 
 from copy import deepcopy
+from typing import Dict, List
 
+from characters.particle import Particle
 from gameboard.board import Board, Tile
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
@@ -36,14 +39,11 @@ class Game(metaclass=ABCMeta):
         self.board = board
         self._finished = False
         self.winningPlayers = None
-        # self.teams -> keys: int; values: list of unit
-        self.teams = {}
-        # self.unitsTeam -> keys: unit; values: number of team
-        self.unitsTeam = {}
-        # self.players -> keys: int (player number); values: unit
-        self.players = {}
-        # self.units -> keys: Unit; values: tile_id
-        self.unitsLocation = {}
+        self.teams = {}  # type: Dict[int, List[MovingUnit]]
+        self.unitsTeam = {}  # type: Dict[MovingUnit, int]
+        self.players = {}  # type: Dict[int, MovingUnit]
+        self.unitsLocation = {}   # type: Dict[Particle, tuple]
+        self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
         self.addCustomMoveFunc = None  # type: function
 
     @property
@@ -80,13 +80,34 @@ class Game(metaclass=ABCMeta):
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
-        self.unitsLocation[unit] = origin_tile_id
+        self._addUnitToTile(origin_tile_id, unit)
         self.players[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
         if team_number in self.teams.keys():
             self.teams[team_number].append(unit)
         else:
             self.teams[team_number] = [unit]
+
+    def _addUnitToTile(self, new_tile_id: tuple, unit: Particle) -> None:
+        """
+        Adds the given unit to the tile for which the id was given.
+        Also removes the tile from its previous tile if needed
+
+        Args:
+            new_tile_id: The identifier of the tile on which place the given unit
+            unit: The unit to place on the given tile.
+        """
+        if unit in self.unitsLocation:
+            old_tile_id = self.unitsLocation[unit]
+            self.tilesOccupants[old_tile_id].remove(unit)
+            if len(self.tilesOccupants[old_tile_id]) == 0:
+                del self.tilesOccupants[old_tile_id]
+        self.unitsLocation[unit] = new_tile_id
+        unit.moveTo(self.board.getTileById(self.unitsLocation[unit]).center)
+        if new_tile_id in self.tilesOccupants:
+            self.tilesOccupants[new_tile_id] = unit
+        else:
+            self.tilesOccupants[new_tile_id] = [unit]
 
     def getTileForUnit(self, unit: MovingUnit) -> Tile:
         """
@@ -116,19 +137,25 @@ class Game(metaclass=ABCMeta):
                 If this method is used illegally (when the unit is not effectively placed on the tile corresponding to
                 the given tile_id).
         """
-        if unit not in self.board.getTileById(tile_id):
+        print("Game update")
+        if unit not in self.tilesOccupants[tile_id]:
             if unit not in self.unitsLocation:
                 raise UnknownUnitException("The game is trying to be updated using an unknown unit")
             elif unit.isAlive():
                 error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
-                                % (self.unitsLocation[unit].identifier, tile_id)
+                                % (str(self.unitsLocation[unit]), str(tile_id))
                 raise InconsistentGameStateException(error_msg)
             else:
                 return
-        self.unitsLocation[unit] = tile_id
-        new_tile = self.board.getTileById(tile_id)
-        if new_tile.hasTwoOrMoreOccupants():
-            self._handleCollision(unit, new_tile.occupants)
+        if self.board.getTileById(tile_id).deadly:
+            unit.kill()
+            self._removeUnitFromTile(unit, tile_id)
+        self._addUnitToTile(tile_id, unit)
+        if self._tileHasTwoOrMoreOccupants(tile_id):
+            self._handleCollision(unit, self.tilesOccupants[tile_id])
+        for unit in self.tilesOccupants[tile_id]:
+            if not unit.isAlive():
+                self.tilesOccupants[tile_id].remove(unit)
         self._finished = self._checkIfFinished()
 
     def copy(self):
@@ -271,3 +298,21 @@ class Game(metaclass=ABCMeta):
         Returns: the event to send
         """
         return MouseEvent(pixel, mouse_state, click_up, tile_id)
+
+    def _tileHasTwoOrMoreOccupants(self, tile_id: tuple) -> bool:
+        """
+
+        Args:
+            tile_id: The identifier of the tile to test
+
+        Returns: True if the tile has two or more alive occupants
+        """
+        return len([unit for unit in self.tilesOccupants[tile_id] if unit.isAlive()]) > 1
+
+    def _removeUnitFromTile(self, unit, tile_id):
+        old_tile_id = self.unitsLocation[unit]
+        del self.unitsLocation[unit]
+        self.tilesOccupants[old_tile_id].remove(unit)
+        if len(self.tilesOccupants) == 0:
+            del self.tilesOccupants[old_tile_id]
+
