@@ -2,8 +2,7 @@ from functools import partial
 
 from copy import deepcopy
 
-from board.boards.square_board import SquareBoard
-from board.tile import Tile
+from gameboard.board import Board, Tile
 from characters.moves.continous import ContinuousMove
 from characters.moves.path import Path
 from examples.lazerbike.control.linker import GO_RIGHT, GO_LEFT, GO_DOWN, GO_UP
@@ -22,48 +21,48 @@ class LazerBikeGame(Game):
     def _teamKillAllowed(self) -> bool:
         return True
 
-    def __init__(self, board: SquareBoard):
+    def __init__(self, board: Board):
         super().__init__(board)
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
 
     def createMoveForDescriptor(self, unit: Bike, move_descriptor, max_moves: int=-1, force=False) -> Path:
-        board = self.board  # type: SquareBoard
         fct = None
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys() or force
         if move_descriptor == GO_RIGHT:
             if initial_move or (unit.currentAction != GO_LEFT):
                 pre_action = partial(unit.turn, GO_RIGHT)
-                fct = board.getRightTile
+                fct = self.getRightTile
         elif move_descriptor == GO_LEFT:
             if initial_move or (unit.currentAction != GO_RIGHT):
                 pre_action = partial(unit.turn, GO_LEFT)
-                fct = board.getLeftTile
+                fct = self.getLeftTile
         elif move_descriptor == GO_DOWN:
             if initial_move or (unit.currentAction != GO_UP):
                 pre_action = partial(unit.turn, GO_DOWN)
-                fct = board.getBottomTile
+                fct = self.getBottomTile
         elif move_descriptor == GO_UP:
             if initial_move or (unit.currentAction != GO_DOWN):
                 pre_action = partial(unit.turn, GO_UP)
-                fct = board.getTopTile
+                fct = self.getTopTile
         if fct is not None:
             if initial_move:
                 self._unitsPreviousMoves[unit] = move_descriptor
             return ContinuousMove(unit, self.getTileForUnit, fct, MAX_FPS, pre_action=pre_action, max_moves=max_moves,
-                                  step_post_action=partial(self._letTraceOnPreviousTile, unit=unit))
+                                  step_post_action=partial(self._letTraceOnPreviousTile, unit=unit),
+                                  units_location_dict=self.unitsLocation)
         raise UnfeasibleMoveException("The event couldn't create a valid move")
 
     def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
         # TODO: continuous line using center-to-center trace but need previous_previous_tile
         tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)
-        if tile_to_place_trace.graphics is not None:
-            self._resizeTrace(trace, tile_to_place_trace)
-            trace.moveTo(tile_to_place_trace.graphics.center)
+        if self.board.graphics is not None:
+            self._resizeTrace(trace, self.board)
+            trace.moveTo(tile_to_place_trace.center)
         self._previousTraces[unit] = trace
-        tile_to_place_trace.addOccupant(trace)
+        self._addUnitToTile(tile_to_place_trace.identifier, trace)
         unit.addParticle(trace)
 
     def _collidePlayers(self, player1, player2, frontal: bool = False):
@@ -79,11 +78,10 @@ class LazerBikeGame(Game):
         """
         return super()._collidePlayers(player1, player2, frontal)
 
-    @staticmethod
-    def _resizeTrace(trace, current_tile: Tile):
+    def _resizeTrace(self, trace, current_tile: Tile):
         if current_tile.graphics is not None:
-            width = int(round(current_tile.graphics.sideLength / 2))
-            height = int(round(current_tile.graphics.sideLength / 2))
+            width = int(round(self.board.graphics.sideLength / 2))
+            height = int(round(self.board.graphics.sideLength / 2))
             trace.sprite.size(width, height)
 
     @staticmethod
@@ -102,3 +100,43 @@ class LazerBikeGame(Game):
     @staticmethod
     def _isMovementVertical(previous_tile: Tile, current_tile: Tile) -> bool:
         return previous_tile.identifier[1] - current_tile.identifier[1] == 0
+
+    def getLeftTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile left to the given tile
+        Args:
+            origin_tile: The tile from which we want its left tile
+
+        Returns: The tile located to the left of the given tile
+        """
+        return self.board.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] - 1))
+
+    def getRightTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile right to the given tile
+        Args:
+            origin_tile: The tile from which we want its right tile
+
+        Returns: The tile located to the right of the given tile
+        """
+        return self.board.getTileById((origin_tile.identifier[0], origin_tile.identifier[1] + 1))
+
+    def getTopTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile top to the given tile
+        Args:
+            origin_tile: The tile from which we want its top tile
+
+        Returns: The tile located to the top of the given tile
+        """
+        return self.board.getTileById((origin_tile.identifier[0] - 1, origin_tile.identifier[1]))
+
+    def getBottomTile(self, origin_tile: Tile) -> Tile:
+        """
+        Get the tile bottom to the given tile
+        Args:
+            origin_tile: The tile from which we want its bottom tile
+
+        Returns: The tile located to the bottom of the given tile
+        """
+        return self.board.getTileById((origin_tile.identifier[0] + 1, origin_tile.identifier[1]))

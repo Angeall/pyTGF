@@ -1,4 +1,5 @@
-from typing import Union, Any
+import traceback
+from typing import Union, Any, Tuple
 
 from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.moves.path import Path
@@ -63,18 +64,17 @@ class GameState:
             move_descriptor: The move to perform (either a Path or a move descriptor)
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
         """
+        unit = self.game.players[player_number]  # type: MovingUnit
+        move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
         try:
-            unit = self.game.players[player_number]  # type: MovingUnit
-            move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
             new_tile_id = move.complete()
             unit.currentAction = move_descriptor
             self.game.updateGameState(unit, new_tile_id)
-
-            return True
         except UnfeasibleMoveException:
             return False
         except IllegalMove:
             self.game.players[player_number].kill()
+        finally:
             return True
 
     def belongsToSameTeam(self, player_1_number: int, player_2_number: int) -> bool:
@@ -119,10 +119,11 @@ class GameState:
                 feasible_moves.append(move)
         return feasible_moves
 
-    def isFinished(self) -> bool:
+    def isFinished(self) ->bool:
         """
         Returns: True if the game is in a final state
         """
+        self.game.checkIfFinished()
         return self.game.isFinished()
 
     def _generateMove(self, player_number: int, wanted_move) -> tuple:

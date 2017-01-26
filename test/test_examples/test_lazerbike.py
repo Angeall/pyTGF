@@ -3,7 +3,7 @@ import time
 
 import pygame
 
-from board.boards.square_board import SquareBoardBuilder, SquareBoard
+from gameboard.board import Builder, Board
 from examples.lazerbike.AIs.bottest import BotTest
 from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_DOWN, LazerBikeBotLinker
 from examples.lazerbike.rules.lazerbike import LazerBikeGame
@@ -18,11 +18,11 @@ class TestLazerbike(unittest.TestCase):
         self.height = 480
         self.lines = 50
         self.columns = 75
-        builder = SquareBoardBuilder(self.width, self.height, self.lines, self.columns)
+        builder = Builder(self.width, self.height, self.lines, self.columns)
         builder.setBordersColor((0, 125, 125))
         builder.setBackgroundColor((25, 25, 25))
         builder.setTilesVisible(False)
-        board = builder.create()  # type: SquareBoard
+        board = builder.create()  # type: Board
         self.loop = MainLoop(LazerBikeGame(board))
 
     def tearDown(self):
@@ -30,9 +30,14 @@ class TestLazerbike(unittest.TestCase):
             self.loop.executor.terminate()
 
     def test_copy(self):
-        a = time.time()
-        self.loop.game.copy()
-        print(time.time() - a)
+        self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotLinker(BotTest(1)), (15, 25), GO_DOWN, team=1)
+        self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotLinker(BotTest(2)), (30, 25), GO_UP, team=2)
+        start = time.time()
+        my_copy = self.loop.game.copy()
+        print(time.time() - start)
+        my_copy.players[1].kill()
+        self.assertFalse(my_copy.players[1].isAlive())
+        self.assertTrue(self.loop.game.players[1].isAlive())
 
     def test_draw(self):
         self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotLinker(BotTest(1)), (15, 25), GO_DOWN, team=1)

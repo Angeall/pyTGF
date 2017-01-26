@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import Tuple
 
 
 class IncorrectShapeError(BaseException):
@@ -16,9 +17,9 @@ class InvalidCharacterConversionError(BaseException):
 class BoardParser(metaclass=ABCMeta):
 
     @abstractmethod
-    def characterToTileType(self, character: str):
+    def characterToTileProperties(self, character: str):
         """
-        Returns: the Tile type, which can be instantiated later, corresponding to the given character
+        Returns: The tile properties (e.g. a tuple of bool (walkable, deadly))
         """
         pass
 
@@ -65,11 +66,7 @@ class BoardParser(metaclass=ABCMeta):
             tiles_line = []
             for char in line:
                 try:
-                    tile_type = self.characterToTileType(char)  # type: class
-                    if type(tile_type) != type:
-                        msg = "The character %s was converted into a %s rather than a instantiable class" \
-                                % (char, str(type(tile_type)))
-                        raise InvalidCharacterConversionError(msg)
+                    tile_type = self.characterToTileProperties(char)  # type: class
                     tiles_line.append(tile_type)
                 except KeyError:
                     raise InvalidCharacterError("The character %s is unknown for this board parser" % char)

@@ -1,20 +1,21 @@
-from board.tile import Tile
+from gameboard.board import Board
 from characters.units.unit import Unit
 from utils.geom import get_hypotenuse_length, get_polygon_radius
 
 
-def resize_unit(unit: Unit, tile: Tile) -> None:
+def resize_unit(unit: Unit, board: Board) -> None:
     """
-    Resize a unit to fit the given tile
+    Resize a unit to fit a tile of the given board
+
     Args:
         unit: The unit to resize
-        tile: The tile to fit in
+        board: The board on which the tile of the unit is located
     """
-    if tile.graphics is not None:
-        multiply_ratio = tile.graphics.sideLength / max(unit.sprite.rect.height, unit.sprite.rect.width)
+    if board.graphics is not None:
+        multiply_ratio = board.graphics.sideLength / max(unit.sprite.rect.height, unit.sprite.rect.width)
         hypotenuse = get_hypotenuse_length(unit.sprite.rect.height * multiply_ratio,
                                            unit.sprite.rect.width * multiply_ratio)
-        tile_diameter = get_polygon_radius(tile.graphics.nbrOfSides, tile.graphics.sideLength) * 2
+        tile_diameter = get_polygon_radius(board.graphics.nbrOfSides, board.graphics.sideLength) * 2
         while hypotenuse > tile_diameter:
             multiply_ratio *= 0.99
             hypotenuse = get_hypotenuse_length(unit.sprite.rect.height * multiply_ratio,

@@ -2,14 +2,10 @@ import unittest
 
 import pygame
 
-from board.tile import Tile
 from controls.controllers.passive import PassiveController
-from examples.sokoban.parser.builder import SokobanBoardBuilder
-from examples.sokoban.tiles.hole import Hole
-from examples.sokoban.tiles.wall import Wall
-from examples.sokoban.tiles.winning import Winning
+from examples.sokoban.parsing.builder import SokobanBoardBuilder
+from examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
 from examples.sokoban.units.box import Box
-from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
 from game.mainloop import MainLoop
 
 
@@ -18,8 +14,8 @@ class TestSokoban(unittest.TestCase):
         pygame.init()
         self.width = 720
         self.height = 480
-        self.parserResult = [[SokobanDrawstick, Wall, Wall], [Box, Wall, Wall],
-                             [Tile, Tile, Wall], [Hole, Tile, Winning]]
+        self.parserResult = [[player_tile, wall, wall], [box, wall, wall],
+                             [classical_tile, classical_tile, wall], [hole, classical_tile, winning]]
         self.controller = PassiveController
         builder = SokobanBoardBuilder(self.width, self.height, self.parserResult, [self.controller], 1000)
         builder.setBordersColor((0, 0, 0))
@@ -35,18 +31,17 @@ class TestSokoban(unittest.TestCase):
             self.loop.executor.terminate()
 
     def test_push_box_in_hole(self):
-        self.loop.game._winningTiles.append((3, 0))
-        self.loop.game.board.getTileById((3, 0)).addOccupant(self.loop.game._endingUnit)
         self.loop._prepareLoop()
         self.loop._getProcessPipeConnection(self.linker).send((1, 0))
         self.loop._getProcessPipeConnection(self.linker).send((2, 0))
         self.loop._getProcessPipeConnection(self.linker).send((3, 1))
-        box = None
+        self.loop._getProcessPipeConnection(self.linker).send((3, 2))
+        pushed_box = None
         for unit in self.loop.linkers.values():
             if isinstance(unit, Box):
-                box = unit
-        self.assertTrue(box is not None)
-        self.assertTrue(box in self.loop.game.board.getTileById((1, 0)))
+                pushed_box = unit
+        self.assertTrue(pushed_box is not None)
+        self.assertTrue(pushed_box is self.loop.game.getTileOccupants((1, 0))[0])
         self.assertTrue(self.loop.game.board.getTileById((3, 0)).deadly)
         self.loop.run(60)
         self.assertFalse(self.loop.game.board.getTileById((3, 0)).deadly)

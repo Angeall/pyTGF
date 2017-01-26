@@ -74,8 +74,6 @@ class Linker(metaclass=ABCMeta):
             except EOFError:
                 traceback.print_exc()
                 self.close(pipe_conn)
-            except:
-                traceback.print_exc()
             finally:
                 clock.tick(MAX_FPS)
 

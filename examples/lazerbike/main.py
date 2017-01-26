@@ -4,7 +4,7 @@ from tkinter.ttk import Frame, Label, Button
 import pygame
 from pygame.locals import *
 
-from board.boards.square_board import SquareBoardBuilder
+from gameboard.board import Builder
 from controls.controllers.bot import Bot
 from controls.controllers.human import Human
 from examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, LazerBikeBotLinker, \
@@ -99,20 +99,19 @@ def launch_game(gui: GUI, player_info: tuple):
     height = 768
     lines = 20
     columns = 20
-    builder = SquareBoardBuilder(width, height, lines, columns)
+    builder = Builder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
     board = builder.create()
 
-    speed = 0.5*board.getTileById((0, 0)).graphics.sideLength
+    speed = 0.5*board.graphics.sideLength
     game = LazerBikeGame(board)
-    game.setSuicide(True)
     main_loop = MainLoop(game)
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
-        add_controller(main_loop, player_class, player_number, player_teams[player_number], speed,
+        add_controller(main_loop, player_class, player_number, player_teams[player_number], int(speed),
                        min(lines, columns) * (2 / 3))
 
     result = main_loop.run()

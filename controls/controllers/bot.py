@@ -1,3 +1,4 @@
+import traceback
 from abc import ABCMeta, abstractmethod
 
 from controls.controller import Controller
@@ -35,12 +36,15 @@ class Bot(Controller, metaclass=ABCMeta):
         """
         move_interesting = False
         for event in events:  # type: BotEvent
-            succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor)
-            if not succeeded:
-                print("error in move... for player %s and descriptor %s" %
-                      (str(event.playerNumber), str(event.moveDescriptor)))
+            try:
+                succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor)
+                if not succeeded:
+                    print("error in move... for player %s and descriptor %s" %
+                          (str(event.playerNumber), str(event.moveDescriptor)))
 
-            move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
+                move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
+            except:
+                traceback.print_exc()
         if move_interesting:
             self._selectNewMove(self.gameState)
 

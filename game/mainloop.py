@@ -1,6 +1,6 @@
 import traceback
 from queue import Queue, Empty
-from typing import Union
+from typing import Union, Any
 import time
 
 import pygame
@@ -71,13 +71,13 @@ class MainLoop:
         if not self._prepared:
             self._prepareLoop()
         while self._state != END:
+            self._state = self._checkGameState()
             clock.tick(max_fps)
             self._handleInputs()
             if self._state == CONTINUE:
                 self._getNextMoveFromLinkerIfAvailable()
                 self._handlePendingMoves()
                 self._refreshScreen()
-                self._state = self._checkGameState()
             elif self._state == FINISH:
                 self.executor.terminate()
                 self._prepared = False
@@ -123,9 +123,8 @@ class MainLoop:
         self.game.addUnit(unit, team, tile_id)
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
-        tile.addOccupant(unit)
-        resize_unit(unit, tile)
-        unit.moveTo(tile.graphics.center)
+        resize_unit(unit, self.game.board)
+        unit.moveTo(tile.center)
         if initial_action is not None:
             unit.currentAction = initial_action
             self._handleEvent(unit, initial_action)
@@ -136,7 +135,8 @@ class MainLoop:
         """
         self.game.board.draw(self._screen)
         for unit in self.linkers.values():
-            unit.draw(self._screen)
+            if unit.isAlive():
+                unit.draw(self._screen)
         pygame.display.flip()
 
     def _handleInputs(self) -> None:
@@ -172,7 +172,7 @@ class MainLoop:
         fifo = self._unitsMoves[unit][1]  # type: Queue
         fifo.put(move)
 
-    def _addCustomMove(self, unit: Unit, move: Path) -> None:
+    def _addCustomMove(self, unit: Unit, move: Path, event: Any) -> None:
         """
         Adds a move that is NOT PERFORMED BY A CONTROLLER
 
@@ -182,6 +182,7 @@ class MainLoop:
         """
         if unit not in self._otherMoves or self._otherMoves[unit] is None:
             self._otherMoves[unit] = move
+        self._movesEvent[move] = event
 
     def _cancelCurrentMoves(self, unit: MovingUnit) -> None:
         """
@@ -273,6 +274,7 @@ class MainLoop:
                         self._handleMoveForUnit(unit, self._otherMoves[unit], unit_linker)
                         if self._otherMoves[unit].finished():
                             self._otherMoves[unit] = None
+        self.game.checkIfFinished()
 
     def _handleMoveForUnit(self, unit: MovingUnit, current_move: Path, linker: Linker):
         """
@@ -294,9 +296,12 @@ class MainLoop:
                     return True
                 except IllegalMove:
                     self._killUnit(unit, linker)
+                    self.game.checkIfFinished()
                     self._cancelCurrentMoves(unit)
                 except ImpossibleMove:
                     self._cancelCurrentMoves(unit)
+                except:
+                    traceback.print_exc()
                 finally:
                     return False
         else:
@@ -325,6 +330,8 @@ class MainLoop:
             except Empty:
                 self._unitsMoves[unit] = (None, moves[1])
                 current_move = None
+            except:
+                traceback.print_exc()
         return current_move
 
     def _checkGameState(self) -> int:
@@ -364,6 +371,8 @@ class MainLoop:
             self._addMove(unit, move)
         except UnfeasibleMoveException:
             pass
+        except:
+            traceback.print_exc()
 
     def _getPipeConnection(self, linker: Linker) -> PipeConnection:
         return self.linkersConnection[linker]

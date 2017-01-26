@@ -2,6 +2,9 @@ import random
 
 import itertools
 import functools
+import traceback
+from typing import Iterable, Final, List
+
 import numpy as np
 import time
 
@@ -38,6 +41,9 @@ class SimultaneousAlphaBeta:
         self.possibleActions = possible_actions
         self.actions = {}  # Will retain the best action for a given state (will speed up the tree search)
         self.playerNumber = -1
+        self.copyTime = 0
+        self.numberOfCopies = 0
+        self.beforeCopyTime = 0
 
     def alphaBetaSearching(self, player_number: int, state: GameState):
         """
@@ -46,18 +52,23 @@ class SimultaneousAlphaBeta:
         :type state: GameState
         :return: the best action among the possible ones
         """
-        self.playerNumber = player_number
-        if self.actions.get(state) is not None:
-            value, actions = self.actions[state]
-        else:
+        try:
+            self.playerNumber = player_number
             a = time.time()
-            value, actions, _ = self.maxValue(state, -float('inf'), float('inf'), 0)
-            print(time.time() - a)
-        self.playerNumber = None
-        if actions is not None:
-            return actions[player_number]
-        else:
-            return self.possibleActions[random.randint(0, len(self.possibleActions) - 1)]
+
+            if self.actions.get(state) is not None:
+                value, actions = self.actions[state]
+            else:
+
+                value, actions, _ = self.maxValue(state, -float('inf'), float('inf'), 0)
+            print("GLOBAL", time.time() - a, "s", "COPIES", self.numberOfCopies, self.copyTime, "s")
+            self.playerNumber = None
+            if actions is not None:
+                return actions[player_number]
+            else:
+                return self._randomChoice(self.possibleActions)
+        except:
+            traceback.print_exc()
 
     def maxValue(self, state: GameState, alpha: float, beta: float, depth: int):
         """
@@ -91,7 +102,7 @@ class SimultaneousAlphaBeta:
         for actions in actions_combinations:  # type: tuple
             min_value, min_actions, min_reached_end = self.minValue(state, actions, alpha, beta, depth)
             actions_combinations_scores[min_value] = min_actions, min_reached_end
-            if min_value > beta:
+            if min_value >= beta:
                 return min_value, min_actions, min_reached_end
             alpha = max(alpha, min_value)  # Confirmed
         for score in actions_combinations_scores:
@@ -102,9 +113,9 @@ class SimultaneousAlphaBeta:
                 best_reached_end = reached_end
             elif score == max_value:
                 equally_good_choices.append(combination)
-        if len(equally_good_choices) == 0:  # Unit is dead for this state
-            return -float('inf'), None, True
-        best_combination = equally_good_choices[random.randint(0, len(equally_good_choices) - 1)]
+        if len(equally_good_choices) == 0:  # No choice is good to take...
+            return self._getTeamScore(state, self.eval(state)), None, True
+        best_combination = self._randomChoice(equally_good_choices)
 
         return max_value, best_combination, best_reached_end
 
@@ -113,7 +124,10 @@ class SimultaneousAlphaBeta:
         min_value = float('inf')
         equal_min_choices = []
         for combination in actions:  # type: dict
+            self.beforeCopyTime = time.time()
             feasible_moves, new_game_state = state.simulateMoves(combination)
+            self.copyTime += time.time() - self.beforeCopyTime
+            self.numberOfCopies += 1
             if feasible_moves and new_game_state is not None:
                 value, _, reached_end = self.maxValue(new_game_state, alpha, beta, depth + 1)
                 if value < min_value:
@@ -122,10 +136,10 @@ class SimultaneousAlphaBeta:
                     min_reached_end = reached_end
                 elif value == min_value:
                     equal_min_choices.append(combination)
-                if value < alpha:  # Cutoff because we are in a min situation
-                    return value, equal_min_choices[random.randint(0, len(equal_min_choices) - 1)], min_reached_end
+                if value <= alpha:  # Cutoff because we are in a min situation
+                    return value, self._randomChoice(equal_min_choices), min_reached_end
                 beta = min(beta, value)
-        min_actions = equal_min_choices[random.randint(0, len(equal_min_choices) - 1)]
+        min_actions = self._randomChoice(equal_min_choices)
         return min_value, min_actions, min_reached_end
 
     def _getTeamScore(self, state: GameState, players_score: tuple) -> float:
@@ -162,7 +176,7 @@ class SimultaneousAlphaBeta:
         """
         players = state.getPlayerNumbers()
         moves = []
-        for player_number in players:
+        for player_number in [player for player in players if state.game.players[player].isAlive()]:
             possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
             moves.append(tuple(itertools.product([player_number],
                                                  possible_moves_for_player)))
@@ -170,12 +184,18 @@ class SimultaneousAlphaBeta:
         dicts = [dict(choices) for choices in temp]
         order_dicts = {}
         for dico in dicts:
-            if dico[self.playerNumber] not in order_dicts:
-                order_dicts[dico[self.playerNumber]] = (dico, )
-            else:
-                order_dicts[dico[self.playerNumber]] += (dico, )
+            if self.playerNumber in dico:
+                if dico[self.playerNumber] not in order_dicts:
+                    order_dicts[dico[self.playerNumber]] = (dico, )
+                else:
+                    order_dicts[dico[self.playerNumber]] += (dico, )
         res = [order_dicts[key] for key in order_dicts]
         return res
+
+    def _randomChoice(self, choices):
+        multiplier = 10
+        selector = self.random.randint(0, multiplier * (len(choices) - 1))
+        return choices[selector//multiplier]
 
 
 
