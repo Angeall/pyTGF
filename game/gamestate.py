@@ -64,16 +64,15 @@ class GameState:
             move_descriptor: The move to perform (either a Path or a move descriptor)
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
         """
+        unit = self.game.players[player_number]  # type: MovingUnit
+        move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
         try:
-            unit = self.game.players[player_number]  # type: MovingUnit
-            move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
             new_tile_id = move.complete()
             unit.currentAction = move_descriptor
             self.game.updateGameState(unit, new_tile_id)
         except UnfeasibleMoveException:
             return False
         except IllegalMove:
-            print("Illegal move for player", player_number, "for gamestate", self)
             self.game.players[player_number].kill()
         finally:
             return True
@@ -113,7 +112,6 @@ class GameState:
         Returns: The list of all the feasible moves among the possible ones
         """
         if not self.game.players[player_number].isAlive():  # If the unit is dead, no move is feasible for it
-            print('player', player_number, "is dead in gamestate", self)
             return []
         feasible_moves = []
         for move in possible_moves:
@@ -125,6 +123,7 @@ class GameState:
         """
         Returns: True if the game is in a final state
         """
+        self.game.checkIfFinished()
         return self.game.isFinished()
 
     def _generateMove(self, player_number: int, wanted_move) -> tuple:

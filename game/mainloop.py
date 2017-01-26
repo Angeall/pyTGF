@@ -71,20 +71,17 @@ class MainLoop:
         if not self._prepared:
             self._prepareLoop()
         while self._state != END:
-            try:
-                self._state = self._checkGameState()
-                clock.tick(max_fps)
-                self._handleInputs()
-                if self._state == CONTINUE:
-                    self._getNextMoveFromLinkerIfAvailable()
-                    self._handlePendingMoves()
-                    self._refreshScreen()
-                elif self._state == FINISH:
-                    self.executor.terminate()
-                    self._prepared = False
-                    return None
-            except:
-                traceback.print_exc()
+            self._state = self._checkGameState()
+            clock.tick(max_fps)
+            self._handleInputs()
+            if self._state == CONTINUE:
+                self._getNextMoveFromLinkerIfAvailable()
+                self._handlePendingMoves()
+                self._refreshScreen()
+            elif self._state == FINISH:
+                self.executor.terminate()
+                self._prepared = False
+                return None
         self.executor.terminate()
         self._prepared = False
         return self.game.winningPlayers

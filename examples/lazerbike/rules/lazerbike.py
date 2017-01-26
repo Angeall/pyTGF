@@ -27,7 +27,6 @@ class LazerBikeGame(Game):
         self._previousTraces = {}
 
     def createMoveForDescriptor(self, unit: Bike, move_descriptor, max_moves: int=-1, force=False) -> Path:
-        board = self.board  # type: Board
         fct = None
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys() or force

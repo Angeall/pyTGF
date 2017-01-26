@@ -30,9 +30,14 @@ class TestLazerbike(unittest.TestCase):
             self.loop.executor.terminate()
 
     def test_copy(self):
-        a = time.time()
-        self.loop.game.copy()
-        print(time.time() - a)
+        self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotLinker(BotTest(1)), (15, 25), GO_DOWN, team=1)
+        self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotLinker(BotTest(2)), (30, 25), GO_UP, team=2)
+        start = time.time()
+        my_copy = self.loop.game.copy()
+        print(time.time() - start)
+        my_copy.players[1].kill()
+        self.assertFalse(my_copy.players[1].isAlive())
+        self.assertTrue(self.loop.game.players[1].isAlive())
 
     def test_draw(self):
         self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotLinker(BotTest(1)), (15, 25), GO_DOWN, team=1)
