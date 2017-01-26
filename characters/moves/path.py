@@ -140,7 +140,6 @@ class Path(metaclass=ABCMeta):
                 action(previous_tile=self._currentMove.sourceTile,
                        current_tile=self._currentMove.destinationTile)
             except TypeError:
-                traceback.print_exc()
                 action()
 
     def _handlePathFinished(self):
