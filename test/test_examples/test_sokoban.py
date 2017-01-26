@@ -4,7 +4,7 @@ import pygame
 
 from gameboard.tile import Tile
 from controls.controllers.passive import PassiveController
-from examples.sokoban.parser.builder import SokobanBoardBuilder
+from examples.sokoban.parsing.builder import SokobanBoardBuilder
 from examples.sokoban.tiles.hole import Hole
 from examples.sokoban.tiles.wall import Wall
 from examples.sokoban.tiles.winning import Winning

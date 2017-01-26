@@ -6,8 +6,8 @@ import pygame
 from pygame.locals import *
 
 from examples.sokoban.controllers.player import SokobanPlayer
-from examples.sokoban.parser.builder import SokobanBoardBuilder
-from examples.sokoban.parser.parser import SokobanBoardParser
+from examples.sokoban.parsing.builder import SokobanBoardBuilder
+from examples.sokoban.parsing.parser import SokobanBoardParser
 from menu.aiselectorframe import AISelectorFrameBuilder
 from menu.buttonframe import ButtonFrameBuilder
 from menu.gui import GUI

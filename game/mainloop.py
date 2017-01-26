@@ -1,6 +1,6 @@
 import traceback
 from queue import Queue, Empty
-from typing import Union
+from typing import Union, Any
 import time
 
 import pygame
@@ -172,7 +172,7 @@ class MainLoop:
         fifo = self._unitsMoves[unit][1]  # type: Queue
         fifo.put(move)
 
-    def _addCustomMove(self, unit: Unit, move: Path) -> None:
+    def _addCustomMove(self, unit: Unit, move: Path, event: Any) -> None:
         """
         Adds a move that is NOT PERFORMED BY A CONTROLLER
 
@@ -182,6 +182,7 @@ class MainLoop:
         """
         if unit not in self._otherMoves or self._otherMoves[unit] is None:
             self._otherMoves[unit] = move
+        self._movesEvent[move] = event
 
     def _cancelCurrentMoves(self, unit: MovingUnit) -> None:
         """

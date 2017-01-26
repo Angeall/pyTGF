@@ -4,7 +4,7 @@ from functools import reduce
 from types import FunctionType as function
 
 from copy import deepcopy
-from typing import Dict, List
+from typing import Dict, List, Union, Any
 
 import time
 
@@ -29,7 +29,6 @@ class UnfeasibleMoveException(Exception):
 
 
 class Game(metaclass=ABCMeta):
-    # TODO: add simulation capabilities. Careful to the units occupant update !
     def __init__(self, board: Board):
         """
         Creates a new Game using the given board
@@ -51,30 +50,7 @@ class Game(metaclass=ABCMeta):
         self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
         self.addCustomMoveFunc = None  # type: function
 
-    @property
-    @abstractmethod
-    def _teamKillAllowed(self) -> bool:
-        return False
-
-    @property
-    @abstractmethod
-    def _suicideAllowed(self) -> bool:
-        return False
-
-    def _addCustomMove(self, unit: MovingUnit, move: Path) -> None:
-        """
-        Uses the "addCustomMoveFunc" that could have been defined by the mainloop to add a move that will be performed
-         step by step each frame.
-
-        Args:
-            unit: The unit to move
-            move: The move for the given unit to perform
-        """
-        if self.addCustomMoveFunc is not None:
-            try:
-                self.addCustomMoveFunc(unit, move)
-            except TypeError:
-                pass
+    # -------------------- PUBLIC METHODS -------------------- #
 
     def addUnit(self, unit: MovingUnit, team_number: int, origin_tile_id: tuple) -> None:
         """
@@ -92,28 +68,6 @@ class Game(metaclass=ABCMeta):
             self.teams[team_number].append(unit)
         else:
             self.teams[team_number] = [unit]
-
-    def _addUnitToTile(self, new_tile_id: tuple, unit: Particle) -> None:
-        """
-        Adds the given unit to the tile for which the id was given.
-        Also removes the tile from its previous tile if needed
-
-        Args:
-            new_tile_id: The identifier of the tile on which place the given unit
-            unit: The unit to place on the given tile.
-        """
-        if unit not in self.unitsLocation:
-            self.unitsLocation[unit] = new_tile_id  # FIXME need to continue on this
-        if unit in self._previousUnitsLocation:
-            old_tile_id = self._previousUnitsLocation[unit]
-            self.tilesOccupants[old_tile_id].remove(unit)
-            if len(self.tilesOccupants[old_tile_id]) == 0:
-                del self.tilesOccupants[old_tile_id]
-        self._previousUnitsLocation[unit] = new_tile_id
-        if new_tile_id in self.tilesOccupants:
-            self.tilesOccupants[new_tile_id].append(unit)
-        else:
-            self.tilesOccupants[new_tile_id] = [unit]
 
     def getTileForUnit(self, unit: MovingUnit) -> Tile:
         """
@@ -166,18 +120,6 @@ class Game(metaclass=ABCMeta):
     def copy(self):
         return deepcopy(self)
 
-    def __deepcopy__(self, memo={}):
-        cls = self.__class__
-        result = cls.__new__(cls)
-        memo[id(self)] = result
-        for k, v in self.__dict__.items():
-            if k != "addCustomMoveFunc":
-                value = deepcopy(v, memo)
-            else:
-                value = None
-            setattr(result, k, value)
-        return result
-
     def belongsToSameTeam(self, unit1: MovingUnit, unit2: MovingUnit):
         """
         Checks if the two given units are in the same team
@@ -192,27 +134,6 @@ class Game(metaclass=ABCMeta):
             return self.unitsTeam[unit1] == self.unitsTeam[unit2]
         else:
             return False  # Never found the team...
-
-    def _handleCollision(self, unit, other_units) -> None:
-        """
-        Handles a collision between a unit and other units
-
-        Args:
-            unit: The moving units
-            other_units: The other units that are on the same tile than the moving unit
-        """
-        for other_unit in other_units:
-            if not (unit is other_unit):
-                if other_unit in self.unitsLocation.keys():  # If the other unit is a controlled unit
-                    self._collidePlayers(unit, other_unit, frontal=True)
-                else:  # If the other unit is a Particle
-                    other_player = None
-                    for player in self.unitsLocation.keys():  # type: MovingUnit
-                        if player.hasParticle(other_unit):
-                            other_player = player
-                            break
-                    if other_player is not None:  # If we found the player to which belongs the colliding particle
-                        self._collidePlayers(unit, other_player)
 
     def checkIfFinished(self) -> bool:
         """
@@ -245,42 +166,6 @@ class Game(metaclass=ABCMeta):
                 self.winningTeam = winning_team
             return True
 
-    @abstractmethod
-    def _collidePlayers(self, player1, player2, frontal: bool = False):
-        """
-        Makes what it has to be done when the first given player collides with a particle of the second given player
-        (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
-        units)
-
-        Args:
-            player1: The first given player
-            player2: The second given player
-            frontal: If true, the collision is frontal and kills the two players
-        """
-        same_team = self.belongsToSameTeam(player1, player2)
-        suicide = player1 is player2
-        if (not same_team or self._teamKillAllowed) or (suicide and self._suicideAllowed):
-            player1.kill()
-            if frontal:
-                player2.kill()
-
-    @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1, force: bool=False) -> Path:
-        """
-        Creates a move following the given event coming from the given unit
-
-        Args:
-            unit: The unit that triggered the event
-            move_descriptor: The descriptor of the move triggered by the given unit
-            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
-            force: Optional, a bot controller will force the move as it does not need to check if the move is possible
-
-        Returns: A Path of move(s) triggered by the given event for the given unit
-
-        Raises:
-            UnfeasibleMoveException: If the move is not possible.
-        """
-        pass
 
     def createKeyboardEvent(self, unit: MovingUnit, input_key) -> KeyboardEvent:
         """
@@ -309,6 +194,71 @@ class Game(metaclass=ABCMeta):
         """
         return MouseEvent(pixel, mouse_state, click_up, tile_id)
 
+    @abstractmethod
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int = -1,
+                                force: bool = False) -> Path:
+        """
+        Creates a move following the given event coming from the given unit
+
+        Args:
+            unit: The unit that triggered the event
+            move_descriptor: The descriptor of the move triggered by the given unit
+            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
+            force: Optional, a bot controller will force the move as it does not need to check if the move is possible
+
+        Returns: A Path of move(s) triggered by the given event for the given unit
+
+        Raises:
+            UnfeasibleMoveException: If the move is not possible.
+        """
+        pass
+
+    def getTileIdForUnit(self, unit: Particle) -> Union[tuple, None]:
+        """
+
+        Args:
+            unit: The unit for which we want the tile ID
+
+        Returns: The identifier of the tile on which the unit is placed on, None if it's dead or not located on any tile
+        """
+        if unit in self.unitsLocation:
+            return self.unitsLocation[unit]
+
+    def getTileOccupants(self, tile_id: tuple) -> tuple:
+        """
+
+        Args:
+            tile_id: The identifier of the tile, of which we want the occupants
+
+        Returns: A tuple containing all the occupants of this tile, or None if there is none
+        """
+        if tile_id in self.tilesOccupants:
+            return tuple(self.tilesOccupants[tile_id])
+        return ()
+
+    # -------------------- PRIVATE METHODS -------------------- #
+
+    def _handleCollision(self, unit, other_units) -> None:
+        """
+        Handles a collision between a unit and other units
+
+        Args:
+            unit: The moving units
+            other_units: The other units that are on the same tile than the moving unit
+        """
+        for other_unit in other_units:
+            if not (unit is other_unit):
+                if other_unit in self.unitsLocation.keys():  # If the other unit is a controlled unit
+                    self._collidePlayers(unit, other_unit, frontal=True)
+                else:  # If the other unit is a Particle
+                    other_player = None
+                    for player in self.unitsLocation.keys():  # type: MovingUnit
+                        if player.hasParticle(other_unit):
+                            other_player = player
+                            break
+                    if other_player is not None:  # If we found the player to which belongs the colliding particle
+                        self._collidePlayers(unit, other_player)
+
     def _tileHasTwoOrMoreOccupants(self, tile_id: tuple) -> bool:
         """
 
@@ -326,3 +276,80 @@ class Game(metaclass=ABCMeta):
         if len(self.tilesOccupants) == 0:
             del self.tilesOccupants[old_tile_id]
 
+    def _addCustomMove(self, unit: MovingUnit, move: Path, event: Any) -> None:
+        """
+        Uses the "addCustomMoveFunc" that could have been defined by the mainloop to add a move that will be performed
+         step by step each frame.
+
+        Args:
+            unit: The unit to move
+            move: The move for the given unit to perform
+        """
+        if self.addCustomMoveFunc is not None:
+            try:
+                self.addCustomMoveFunc(unit, move, event)
+            except TypeError:
+                pass
+
+    def _addUnitToTile(self, new_tile_id: tuple, unit: Particle) -> None:
+        """
+        Adds the given unit to the tile for which the id was given.
+        Also removes the tile from its previous tile if needed
+
+        Args:
+            new_tile_id: The identifier of the tile on which place the given unit
+            unit: The unit to place on the given tile.
+        """
+        if unit not in self.unitsLocation:
+            self.unitsLocation[unit] = new_tile_id  # FIXME need to continue on this
+        if unit in self._previousUnitsLocation:
+            old_tile_id = self._previousUnitsLocation[unit]
+            self.tilesOccupants[old_tile_id].remove(unit)
+            if len(self.tilesOccupants[old_tile_id]) == 0:
+                del self.tilesOccupants[old_tile_id]
+        self._previousUnitsLocation[unit] = new_tile_id
+        if new_tile_id in self.tilesOccupants:
+            self.tilesOccupants[new_tile_id].append(unit)
+        else:
+            self.tilesOccupants[new_tile_id] = [unit]
+
+    @property
+    @abstractmethod
+    def _teamKillAllowed(self) -> bool:
+        return False
+
+    @property
+    @abstractmethod
+    def _suicideAllowed(self) -> bool:
+        return False
+
+    @abstractmethod
+    def _collidePlayers(self, player1, player2, frontal: bool = False):
+        """
+        Makes what it has to be done when the first given player collides with a particle of the second given player
+        (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
+        units)
+
+        Args:
+            player1: The first given player
+            player2: The second given player
+            frontal: If true, the collision is frontal and kills the two players
+        """
+        same_team = self.belongsToSameTeam(player1, player2)
+        suicide = player1 is player2
+        if (not same_team or self._teamKillAllowed) or (suicide and self._suicideAllowed):
+            player1.kill()
+            if frontal:
+                player2.kill()
+
+    def __deepcopy__(self, memo={}):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            if k != "addCustomMoveFunc":
+                value = deepcopy(v, memo)
+            else:
+                value = None
+            setattr(result, k, value)
+        return result
