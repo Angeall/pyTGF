@@ -126,6 +126,38 @@ class GameState:
         self.game.checkIfFinished()
         return self.game.isFinished()
 
+    def isPlayerAlive(self, player_number: int) -> bool:
+        """
+
+        Args:
+            player_number: The number of the player for which we want to know its state.
+
+        Returns: True if the player is alive, False otherwise
+        """
+        return self.game.players[player_number].isAlive()
+
+    def getPlayerLocation(self, player_number: int) -> tuple:
+        """
+
+        Args:
+            player_number: The number of the player for which we want to know its state.
+
+        Returns: The (i, j) coordinates of the player, i being the row index and j being the column index.
+        """
+        return self.game.unitsLocation[self.game.players[player_number]]
+
+    def getAdjacent(self, tile_id: tuple) -> Tuple[tuple]:
+        """
+
+        Args:
+            tile_id:
+                The (i, j) coordinates of the tile for which we want the adjacent tiles,
+                i being the row index and j being the column index.
+
+        Returns: A tuple containing each identifier of the tiles adjacent to the tile for which the id was given
+        """
+        return self.game.board.getNeighboursIdentifier(tile_id)
+
     def _generateMove(self, player_number: int, wanted_move) -> tuple:
         """
         Generates a move for a given event

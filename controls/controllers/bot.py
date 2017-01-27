@@ -3,6 +3,7 @@ from abc import ABCMeta, abstractmethod
 
 from controls.controller import Controller
 from controls.events.bot import BotEvent
+from game.game import Game
 from game.gamestate import GameState
 
 
@@ -23,9 +24,9 @@ class Bot(Controller, metaclass=ABCMeta):
         return self._gameStateLocalCopy
 
     @gameState.setter
-    def gameState(self, value):
-        if isinstance(value, GameState):
-            self._gameStateLocalCopy = value
+    def gameState(self, game: Game):
+        if isinstance(game, Game):
+            self._gameStateLocalCopy = self._getGameStateAPI(game)
 
     def reactToEvents(self, events: list):
         """
@@ -46,7 +47,9 @@ class Bot(Controller, metaclass=ABCMeta):
             except:
                 traceback.print_exc()
         if move_interesting:
-            self._selectNewMove(self.gameState)
+            selected_move = self._selectNewMove(self.gameState)
+            if self._isMoveAllowed(selected_move):
+                self.moves.put(selected_move)
 
     @abstractmethod
     def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:
@@ -65,7 +68,7 @@ class Bot(Controller, metaclass=ABCMeta):
     def _selectNewMove(self, game_state: GameState):
         """
         Decision taking algorithm that, given the new game state, will (or won't if not needed) make a move in the game
-        Returns nothing ! Just add a new move in the moves Queue
+        Returns the move. The move returned must return a correct move for the game (see self._isMoveAllowed)
 
         Args:
             game_state:
@@ -73,3 +76,27 @@ class Bot(Controller, metaclass=ABCMeta):
                 maintain a stable local copy of the game state.
         """
         pass
+
+    @abstractmethod
+    def _getGameStateAPI(self, game: Game):
+        """
+        Generate the API of the game state, which will be used by this controller to make decisions.
+
+        Args:
+            game: The game that will be used by the API to get information
+
+        Returns: A new API to interact with
+        """
+        return GameState(game)
+
+    @abstractmethod
+    def _isMoveAllowed(self, move) -> bool:
+        """
+
+        Args:
+            move: The move to determine if allowed or not
+
+        Returns: True if the move is allowed. False otherwise
+        """
+        pass
+

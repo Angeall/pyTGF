@@ -1,4 +1,5 @@
 import traceback
+from abc import ABCMeta
 from os import listdir, curdir
 from os.path import isfile, join, splitext
 import inspect, pickle
@@ -188,7 +189,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             try:
                 module = __import__(file_name)
                 for name, cls in inspect.getmembers(module):  # Explore the classes inside the file
-                    if cls is not self._aiType:  # The abstract basic type cannot be instantiated as it is
+                    if not isinstance(cls, ABCMeta):  # The abstract type cannot be instantiated as it is
                         if inspect.isclass(cls) and issubclass(cls, self._aiType):
                             self.aiClasses[name] = cls
                             self.ais.append(name)

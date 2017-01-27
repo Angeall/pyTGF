@@ -1,8 +1,7 @@
-from controls.controllers.bot import Bot
-from examples.lazerbike.control.player import LazerBikePlayer
+from examples.lazerbike.control.player import LazerBikeBotPlayer
 
 
-class BotTest(LazerBikePlayer, Bot):
+class BotTest(LazerBikeBotPlayer):
     def __init__(self, player_number):
         """
         Instantiates a bot controller (that does nothing) for a unit.

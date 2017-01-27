@@ -1,3 +1,5 @@
+from typing import List
+
 import pygame
 from queue import Queue, Empty
 
@@ -94,13 +96,20 @@ class Unit(Particle):
 
     def hasParticle(self, particle: Particle):
         """
-        Checks if the given particle beloings to this unit
+        Checks if the given particle belongs to this unit
         Args:
             particle: The particle to check
 
         Returns: True if the given particle belongs to this unit
         """
-        return self._particlesSpriteGroup.has(particle.sprite) or particle in self._particlesList
+        return particle in self._particlesList or (self._particlesSpriteGroup is not None and
+                                                   self._particlesSpriteGroup.has(particle.sprite))
+
+    def getParticles(self) -> List[Particle]:
+        """
+        Returns: A list containing all the particles of this unit
+        """
+        return self._particlesList
 
     def getParticlesSpriteGroup(self):
         return self._particlesSpriteGroup

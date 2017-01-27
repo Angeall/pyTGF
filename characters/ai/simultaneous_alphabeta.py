@@ -42,8 +42,6 @@ class SimultaneousAlphaBeta:
         self.actions = {}  # Will retain the best action for a given state (will speed up the tree search)
         self.playerNumber = -1
         self.copyTime = 0
-        self.numberOfCopies = 0
-        self.beforeCopyTime = 0
 
     def alphaBetaSearching(self, player_number: int, state: GameState):
         """
@@ -61,7 +59,7 @@ class SimultaneousAlphaBeta:
             else:
 
                 value, actions, _ = self.maxValue(state, -float('inf'), float('inf'), 0)
-            print("GLOBAL", time.time() - a, "s", "COPIES", self.numberOfCopies, self.copyTime, "s")
+            print("GLOBAL", time.time() - a, "s")
             self.playerNumber = None
             if actions is not None:
                 return actions[player_number]
@@ -124,10 +122,7 @@ class SimultaneousAlphaBeta:
         min_value = float('inf')
         equal_min_choices = []
         for combination in actions:  # type: dict
-            self.beforeCopyTime = time.time()
             feasible_moves, new_game_state = state.simulateMoves(combination)
-            self.copyTime += time.time() - self.beforeCopyTime
-            self.numberOfCopies += 1
             if feasible_moves and new_game_state is not None:
                 value, _, reached_end = self.maxValue(new_game_state, alpha, beta, depth + 1)
                 if value < min_value:
@@ -178,17 +173,17 @@ class SimultaneousAlphaBeta:
         moves = []
         for player_number in [player for player in players if state.game.players[player].isAlive()]:
             possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
-            moves.append(tuple(itertools.product([player_number],
-                                                 possible_moves_for_player)))
-        temp = tuple(itertools.product(*moves))
+            moves.append(itertools.product([player_number],
+                                           possible_moves_for_player))
+        temp = itertools.product(*moves)
         dicts = [dict(choices) for choices in temp]
         order_dicts = {}
         for dico in dicts:
             if self.playerNumber in dico:
                 if dico[self.playerNumber] not in order_dicts:
-                    order_dicts[dico[self.playerNumber]] = (dico, )
+                    order_dicts[dico[self.playerNumber]] = [dico]
                 else:
-                    order_dicts[dico[self.playerNumber]] += (dico, )
+                    order_dicts[dico[self.playerNumber]].append(dico)
         res = [order_dicts[key] for key in order_dicts]
         return res
 

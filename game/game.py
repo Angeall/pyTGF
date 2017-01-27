@@ -38,7 +38,7 @@ class Game(metaclass=ABCMeta):
                 The board, containing the needed Tiles that will be used for the game.
                 The units are added later on the board.
         """
-        self.board = board
+        self.board = board  # type: Board
         self._finished = False
         self.winningPlayers = None
         self.winningTeam = None
@@ -194,25 +194,6 @@ class Game(metaclass=ABCMeta):
         """
         return MouseEvent(pixel, mouse_state, click_up, tile_id)
 
-    @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
-        """
-        Creates a move following the given event coming from the given unit
-
-        Args:
-            unit: The unit that triggered the event
-            move_descriptor: The descriptor of the move triggered by the given unit
-            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
-            force: Optional, a bot controller will force the move as it does not need to check if the move is possible
-
-        Returns: A Path of move(s) triggered by the given event for the given unit
-
-        Raises:
-            UnfeasibleMoveException: If the move is not possible.
-        """
-        pass
-
     def getTileIdForUnit(self, unit: Particle) -> Union[tuple, None]:
         """
 
@@ -235,6 +216,25 @@ class Game(metaclass=ABCMeta):
         if tile_id in self.tilesOccupants:
             return tuple(self.tilesOccupants[tile_id])
         return ()
+
+    @abstractmethod
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int = -1,
+                                force: bool = False) -> Path:
+        """
+        Creates a move following the given event coming from the given unit
+
+        Args:
+            unit: The unit that triggered the event
+            move_descriptor: The descriptor of the move triggered by the given unit
+            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
+            force: Optional, a bot controller will force the move as it does not need to check if the move is possible
+
+        Returns: A Path of move(s) triggered by the given event for the given unit
+
+        Raises:
+            UnfeasibleMoveException: If the move is not possible.
+        """
+        pass
 
     # -------------------- PRIVATE METHODS -------------------- #
 

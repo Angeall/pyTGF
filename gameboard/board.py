@@ -1,7 +1,7 @@
 import traceback
 from collections import namedtuple
 from copy import deepcopy, copy
-from typing import Union, Dict
+from typing import Union, Dict, Tuple
 
 from gameboard.graphics import BoardGraphics
 from scipy.spatial import KDTree
@@ -84,7 +84,7 @@ class Board:
         return (tile.neighbours is not None and self.getTileById(destination_identifier).walkable) and (
                destination_identifier in tile.neighbours)
 
-    def getNeighboursIdentifier(self, tile_identifier: tuple) -> tuple:
+    def getNeighboursIdentifier(self, tile_identifier: tuple) -> Tuple[tuple]:
         """
 
         Args:
@@ -134,7 +134,7 @@ class Board:
         memo[id(self)] = result
         for k, v in self.__dict__.items():
             if k == "_tiles":
-                value = copy(v)
+                value = {a: b for a, b in v.items()}
             elif k == "_kdTree" or k == "graphics":
                 value = None
             else:

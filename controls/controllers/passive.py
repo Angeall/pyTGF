@@ -3,6 +3,9 @@ from controls.event import Event
 
 
 class PassiveController(Bot):
+    def _getGameStateAPI(self, game):
+        return None
+
     def _selectNewMove(self, game_state):
         pass
 

@@ -94,7 +94,7 @@ class MainLoop:
             self.executor.restart()
         for linker in self.linkers:
             if issubclass(type(linker.controller), Bot):
-                linker.controller.gameState = GameState(self.game.copy())
+                linker.controller.gameState = self.game.copy()
             parent_conn, child_conn = Pipe()
             parent_info_conn, child_info_conn = Pipe()
             self.linkersConnection[linker] = parent_conn
