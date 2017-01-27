@@ -31,7 +31,7 @@ class LazerBikeGameState(GameState):
                 deadly_tiles.append(self.game.unitsLocation[player_particle])
         return deadly_tiles
 
-    def getSafeAdjacentTiles(self, tile_id: tuple) -> List(tuple):
+    def getSafeAdjacentTiles(self, tile_id: tuple) -> List[tuple]:
         """
 
         Args:

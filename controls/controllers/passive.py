@@ -3,6 +3,9 @@ from controls.event import Event
 
 
 class PassiveController(Bot):
+    def _isMoveAllowed(self, move) -> bool:
+        return False
+
     def _getGameStateAPI(self, game):
         return None
 
