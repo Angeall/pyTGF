@@ -1,11 +1,8 @@
-import traceback
 from abc import ABCMeta, abstractmethod
-from queue import Empty, Queue
-import time
+from queue import Empty
 
 import pygame
 from multiprocess.connection import PipeConnection
-from pathos.pools import ThreadPool
 
 from controls.controller import Controller
 from controls.event import Event
@@ -19,7 +16,26 @@ class Linker(metaclass=ABCMeta):
         self._unitAlive = True
         self.controller = controller
         self._connected = True
-        self.executor = ThreadPool(1)
+        self.mainPipe = None
+        self.gameInfoPipe = None
+
+    def setMainPipe(self, main_pipe: PipeConnection):
+        """
+        Sets the main pipe of this linker
+
+        Args:
+            main_pipe: The pipe connection to the game
+        """
+        self.mainPipe = main_pipe
+
+    def setGameInfoPipe(self, game_info_pipe: PipeConnection):
+        """
+        Sets the game info pipe of this linker
+
+        Args:
+            game_info_pipe: The pipe connection to the game information
+        """
+        self.gameInfoPipe = game_info_pipe
 
     @property
     @abstractmethod
@@ -39,7 +55,7 @@ class Linker(metaclass=ABCMeta):
         """
         pass
 
-    def close(self, pipe_conn: PipeConnection):
+    def close(self):
         """
         Closes this linker so that the run loop ends.
 
@@ -50,9 +66,10 @@ class Linker(metaclass=ABCMeta):
 
         """
         self._connected = False
-        pipe_conn.close()
+        self.mainPipe.close()
+        self.gameInfoPipe.close()
 
-    def run(self, pipe_conn: PipeConnection, game_info_pipe_conn: PipeConnection):
+    def run(self):
         """
         Runs the logical loop of this linker, looking for actions coming from the controller and updating
         the controller's local copy of the game state. The loop runs with a maximum of MAX_FPS iteration/s
@@ -64,62 +81,53 @@ class Linker(metaclass=ABCMeta):
         clock = pygame.time.Clock()
         while self._connected:
             try:
-                if self._unitAlive:
-                    self.sendControllerActionsIfNeeded(pipe_conn)
-                self.checkGameInfo(game_info_pipe_conn)
-                self.handleNewGameStateChangeIfNeeded(pipe_conn)
-            except BrokenPipeError:
-                traceback.print_exc()
-                self.close(pipe_conn)
-            except EOFError:
-                traceback.print_exc()
-                self.close(pipe_conn)
+                self._routine()
+            except (BrokenPipeError, EOFError, OSError):
+                self.close()
             finally:
                 clock.tick(MAX_FPS)
 
-    def handleNewGameStateChangeIfNeeded(self, pipe_conn: PipeConnection) -> None:
+    def handleNewGameStateChangeIfNeeded(self) -> None:
         """
         Polls into the given pipe connection if there is a new change in the game state that must be replicated into the
         controller's local copy. If there is, sends it to the controller.
-
-        Args:
-            pipe_conn: The pipe connection to the game
         """
         events = []
-        while pipe_conn.poll():
-            events.append(pipe_conn.recv())
+        while self.mainPipe.poll():
+            events.append(self.mainPipe.recv())
         if len(events) is not None:
             for event in events:
                 if not isinstance(event, self.typeOfEventFromGame):
                     raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
                                     % (str(type(event)), str(self.typeOfEventFromGame)))
-            # self.executor.pipe(self.controller.reactToEvent, event)
             self.controller.reactToEvents(events)
 
-    def checkGameInfo(self, pipe_conn: PipeConnection):
+    def checkGameInfo(self):
+        """
+        Check if there is an update on the game information.
+
+        Args:
+            pipe_conn: The connection through which the game pass the information
+        """
         event = None
-        while pipe_conn.poll():
-            event = pipe_conn.recv()  # type: Event
+        while self.gameInfoPipe.poll():
+            event = self.gameInfoPipe.recv()  # type: Event
         if isinstance(event, SpecialEvent):
             if event.flag == SpecialEvent.END:
-                self.close(pipe_conn)
+                self.close()
             elif event.flag == SpecialEvent.UNIT_KILLED:
                 self._unitAlive = False
             elif event.flag == SpecialEvent.RESURRECT_UNIT:
                 self._unitAlive = True
 
-    def sendControllerActionsIfNeeded(self, pipe_conn: PipeConnection) -> None:
+    def sendControllerActionsIfNeeded(self) -> None:
         """
-        Look in the controller if a move is waiting to be handled. If there is, checks if the move is correct for the
+        Looks in the controller if a move is waiting to be handled. If there is, checks if the move is correct for the
         game using the "isMoveDescriptorAllowed" method and sends it to the game using the pipe connection if
         it is allowed.
-
-        Args:
-            pipe_conn: The pipe connection to the game
         """
         move_descriptor = self.fetchControllerMoveDescriptor()
-        if move_descriptor is not None and self.isMoveDescriptorAllowed(move_descriptor):
-            pipe_conn.send(move_descriptor)
+        self._sendActionToGame(move_descriptor)
 
     def fetchControllerMoveDescriptor(self):
         """
@@ -132,4 +140,24 @@ class Linker(metaclass=ABCMeta):
         except Empty:
             pass
         return action
+
+    def _routine(self):
+        """
+        Defines what happens in the loop of the linker.
+        Can optionally be overridden.
+        """
+        if self._unitAlive:
+            self.sendControllerActionsIfNeeded()
+        self.checkGameInfo()
+        self.handleNewGameStateChangeIfNeeded()
+
+    def _sendActionToGame(self, move_descriptor):
+        """
+        Sends the given move descriptor to the game through the given pipe
+        Args:
+            move_descriptor: The action to send to the game
+        """
+        if move_descriptor is not None and self.isMoveDescriptorAllowed(move_descriptor):
+            self.mainPipe.send(move_descriptor)
+
 

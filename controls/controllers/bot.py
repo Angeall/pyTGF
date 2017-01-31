@@ -1,10 +1,18 @@
 import traceback
 from abc import ABCMeta, abstractmethod
+from queue import Queue
+from typing import List
 
 from controls.controller import Controller
 from controls.events.bot import BotEvent
 from game.game import Game
 from game.gamestate import GameState
+
+
+class TeammatePayload:
+    def __init__(self, teammate_number: int, message):
+        self.teammateNumber = teammate_number
+        self.message = message
 
 
 class Bot(Controller, metaclass=ABCMeta):
@@ -18,6 +26,7 @@ class Bot(Controller, metaclass=ABCMeta):
         super().__init__(player_number)
         self._gameStateLocalCopy = None
         self.previousGameState = None
+        self.messagesToTeammates = Queue()
 
     @property
     def gameState(self):
@@ -28,7 +37,7 @@ class Bot(Controller, metaclass=ABCMeta):
         if isinstance(game, Game):
             self._gameStateLocalCopy = self._getGameStateAPI(game)
 
-    def reactToEvents(self, events: list):
+    def reactToEvents(self, events: List[BotEvent]):
         """
         Performs a move in the local copy of the game
 
@@ -50,6 +59,31 @@ class Bot(Controller, metaclass=ABCMeta):
             selected_move = self._selectNewMove(self.gameState)
             if self._isMoveAllowed(selected_move):
                 self.moves.put(selected_move)
+
+    def sendMessageToTeammate(self, teammate_number: int, message):
+        """
+        Adds the message to the message queue, that will be later used by the linker.
+
+        Args:
+            teammate_number: The number representing the player to which we want to sen the message
+            message: The message to send
+        """
+        self.messagesToTeammates.put(TeammatePayload(teammate_number, message))
+
+    @abstractmethod
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
+        """
+        Main function for collaboration between teammates.
+        Reacts when a collaboration message is received from the teammate represented by the given number
+
+        Args:
+            teammate_number: The number representing the teammate sending the message
+            message: The message sent by the teammate
+
+        Returns:
+            The new move descriptor (if any) that results from the teammate's message
+        """
+        pass
 
     @abstractmethod
     def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:

@@ -2,6 +2,9 @@ from examples.lazerbike.control.player import LazerBikeBotPlayer
 
 
 class BotTest(LazerBikeBotPlayer):
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
+        pass
+
     def __init__(self, player_number):
         """
         Instantiates a bot controller (that does nothing) for a unit.

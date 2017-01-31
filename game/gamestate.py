@@ -1,8 +1,6 @@
-import traceback
-from typing import Union, Any, Tuple
+from typing import Tuple
 
-from characters.moves.move import IllegalMove, ImpossibleMove
-from characters.moves.path import Path
+from characters.moves.move import IllegalMove
 from characters.units.moving_unit import MovingUnit
 from game.game import Game, UnfeasibleMoveException
 
@@ -65,15 +63,15 @@ class GameState:
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
         """
         unit = self.game.players[player_number]  # type: MovingUnit
-        move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
         try:
+            move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
             new_tile_id = move.complete()
             unit.currentAction = move_descriptor
             self.game.updateGameState(unit, new_tile_id)
         except UnfeasibleMoveException:
             return False
         except IllegalMove:
-            self.game.players[player_number].kill()
+            unit.kill()
         finally:
             return True
 

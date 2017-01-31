@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 from controls.controller import Controller
 from controls.events.human import HumanEvent
@@ -8,14 +9,14 @@ from controls.events.mouse import MouseEvent
 
 class Human(Controller, metaclass=ABCMeta):
 
-    def reactToEvents(self, events: list):
+    def reactToEvents(self, events: List[HumanEvent]):
         """
         The human controller reacts to human input => keyboard or mouse (joypad controller could be added)
 
         Args:
             events: The list of input event
         """
-        for event in events:  # type: HumanEvent
+        for event in events:
             if isinstance(event, MouseEvent):
                 self.reactToMouseEvent(event)
             elif isinstance(event, KeyboardEvent):

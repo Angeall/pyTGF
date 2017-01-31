@@ -5,6 +5,9 @@ from game.gamestate import GameState
 
 
 class RandomBot(LazerBikeBotPlayer):
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
+        pass
+
     def __init__(self, player_number):
         """
         Instantiates a bot controller that choose its new move randomly for its unit.

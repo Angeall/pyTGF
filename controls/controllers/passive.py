@@ -3,6 +3,9 @@ from controls.event import Event
 
 
 class PassiveController(Bot):
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
+        pass
+
     def _isMoveAllowed(self, move) -> bool:
         return False
 

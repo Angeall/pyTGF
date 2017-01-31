@@ -1,19 +1,14 @@
-import traceback
 from abc import ABCMeta, abstractmethod
-from functools import reduce
-from types import FunctionType as function
-
 from copy import deepcopy
+from types import FunctionType as function
 from typing import Dict, List, Union, Any
 
-import time
-
-from characters.particle import Particle
-from gameboard.board import Board, Tile
 from characters.moves.path import Path
+from characters.particle import Particle
 from characters.units.moving_unit import MovingUnit
 from controls.events.keyboard import KeyboardEvent
 from controls.events.mouse import MouseEvent
+from gameboard.board import Board, Tile
 
 
 class InconsistentGameStateException(Exception):
@@ -165,7 +160,6 @@ class Game(metaclass=ABCMeta):
                 self.winningPlayers = tuple(team_units)
                 self.winningTeam = winning_team
             return True
-
 
     def createKeyboardEvent(self, unit: MovingUnit, input_key) -> KeyboardEvent:
         """

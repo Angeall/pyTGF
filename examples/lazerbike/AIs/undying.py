@@ -1,12 +1,15 @@
 import time
 
 from characters.ai.simultaneous_alphabeta import SimultaneousAlphaBeta
-from examples.lazerbike.control.player import LazerBikeBotPlayer
 from examples.lazerbike.control.api import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT
+from examples.lazerbike.control.player import LazerBikeBotPlayer
 from game.gamestate import GameState
 
 
 class UndyingAI(LazerBikeBotPlayer):
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
+        pass
+
     def __init__(self, player_number):
         """
         Instantiates a bot controller that choose its new move randomly for its unit.

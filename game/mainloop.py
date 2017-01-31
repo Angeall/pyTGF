@@ -1,7 +1,9 @@
+import time
 import traceback
 from queue import Queue, Empty
+from typing import Dict
+from typing import Tuple
 from typing import Union, Any
-import time
 
 import pygame
 from multiprocess.connection import Pipe, PipeConnection
@@ -12,17 +14,12 @@ from characters.moves.move import IllegalMove, ImpossibleMove
 from characters.moves.path import Path
 from characters.units.moving_unit import MovingUnit
 from characters.units.unit import Unit
-from controls.controllers.bot import Bot
-from controls.controllers.human import Human
 from controls.events.bot import BotEvent
-from controls.events.keyboard import KeyboardEvent
-from controls.events.mouse import MouseEvent
 from controls.events.special import SpecialEvent
 from controls.linker import Linker
 from controls.linkers.bot import BotLinker
 from controls.linkers.human import HumanLinker
 from game.game import Game, UnfeasibleMoveException
-from game.gamestate import GameState
 from utils.unit import resize_unit
 
 CONTINUE = 0
@@ -33,23 +30,20 @@ MAX_FPS = 30
 
 
 class MainLoop:
+    # TODO: Add the collaborating pipes
     def __init__(self, game: Game):
         self.game = game
         self.game.addCustomMoveFunc = self._addCustomMove
         self._screen = None
         self._state = CONTINUE  # The game must go on at start
-        # self.linkersConnection -> keys: Linkers; values: PipeConnections
-        self.linkersConnection = {}
-        self.linkersInfoConnection = {}
-        self.linkersProcessConnection = {}
-        # self.linkers -> keys: controllers; values: Units
-        self.linkers = {}
-        # self._controllersMoves -> keys: controllers; values: tuples (current_move, pending_moves)
-        self._unitsMoves = {}
-        # self._movesEvent -> keys: moves; values: events (that triggered its key move)
-        self._movesEvent = {}
-        # self._otherMoves -> keys: units; values: queue
-        self._otherMoves = {}
+
+        self.linkersConnection = {}  # type: Dict[Linker, PipeConnection]
+        self.linkersInfoConnection = {}  # type: Dict[Linker, PipeConnection]
+
+        self.linkers = {}  # type: Dict[Linker, MovingUnit]
+        self._unitsMoves = {}  # type: Dict[MovingUnit, Tuple[Path, Queue]]
+        self._movesEvent = {}  # type: Dict[Path, Any]
+        self._otherMoves = {}  # type: Dict[Unit, Path]
         self._killSent = {}  # Used to maintain the fact that the kill event has been sent
         self.executor = None
         self._prepared = False
@@ -86,27 +80,6 @@ class MainLoop:
         self._prepared = False
         return self.game.winningPlayers
 
-    def _prepareLoop(self):
-        self.executor = Pool(len(self.linkers))
-        try:
-            self.executor.apipe(lambda: None)
-        except ValueError:
-            self.executor.restart()
-        for linker in self.linkers:
-            if issubclass(type(linker.controller), Bot):
-                linker.controller.gameState = self.game.copy()
-            parent_conn, child_conn = Pipe()
-            parent_info_conn, child_info_conn = Pipe()
-            self.linkersConnection[linker] = parent_conn
-            self.linkersInfoConnection[linker] = parent_info_conn
-            self.linkersProcessConnection[linker] = child_conn
-            try:
-                self.executor.apipe(linker.run, child_conn, child_info_conn)
-            except:
-                traceback.print_exc()
-        time.sleep(2)
-        self._prepared = True
-
     def addUnit(self, unit: MovingUnit, linker: Linker, tile_id, initial_action: Path = None, team: int = -1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
@@ -119,8 +92,8 @@ class MainLoop:
             initial_action: The initial action of the unit
             team: The number of the team this player is in (-1 = no team)
         """
-        self.linkers[linker] = unit
         self.game.addUnit(unit, team, tile_id)
+        self._addLinker(linker, unit)
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
         resize_unit(unit, self.game.board)
@@ -128,6 +101,18 @@ class MainLoop:
         if initial_action is not None:
             unit.currentAction = initial_action
             self._handleEvent(unit, initial_action)
+
+    def pause(self) -> None:
+        """
+        Change the state of the game to "PAUSE"
+        """
+        self._state = PAUSE
+
+    def resume(self) -> None:
+        """
+        Resume the game
+        """
+        self._state = CONTINUE
 
     def _refreshScreen(self) -> None:
         """
@@ -191,7 +176,7 @@ class MainLoop:
         Args:
             unit: The unit for which cancel the movements
         """
-        move_tuple = self._unitsMoves[unit]  # type: tuple
+        move_tuple = self._unitsMoves[unit]
         fifo = move_tuple[1]  # type: Queue
         last_move = move_tuple[0]  # type: Path
         new_fifo = Queue()
@@ -253,27 +238,28 @@ class MainLoop:
         Get the next move to be performed and perform its next step
         """
         moved_units = []
-        for linker in self.linkers:  # type: Linker
-            unit = self._getUnitFromLinker(linker)
-            if not unit.isAlive() and (unit not in self._killSent or not self._killSent[unit]):
-                self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
-                self._killSent[unit] = True
-            current_move = self._getNextMoveForUnitIfAvailable(unit)
-            moved = self._handleMoveForUnit(unit, current_move, linker)
-            if moved:
-                moved_units.append(unit)
 
         for unit in self._otherMoves:  # type: MovingUnit
+            unit_linker = None
+            for linker in self.linkers:
+                if self._getUnitFromLinker(linker) is unit:
+                    unit_linker = linker
+            if unit_linker is not None:
+                if self._otherMoves[unit] is not None:
+                    moved = self._handleMoveForUnit(unit, self._otherMoves[unit], unit_linker)
+                    if moved:
+                        moved_units.append(unit)
+                    if self._otherMoves[unit].finished():
+                        self._otherMoves[unit] = None
+
+        for linker in self.linkers:  # type: Linker
+            unit = self._getUnitFromLinker(linker)
             if unit not in moved_units:  # Two moves on the same unit cannot be performed at the same time...
-                unit_linker = None
-                for linker in self.linkers:
-                    if self._getUnitFromLinker(linker) is unit:
-                        unit_linker = linker
-                if unit_linker is not None:
-                    if self._otherMoves[unit] is not None:
-                        self._handleMoveForUnit(unit, self._otherMoves[unit], unit_linker)
-                        if self._otherMoves[unit].finished():
-                            self._otherMoves[unit] = None
+                if not unit.isAlive() and (unit not in self._killSent or not self._killSent[unit]):
+                    self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
+                    self._killSent[unit] = True
+                current_move = self._getNextMoveForUnitIfAvailable(unit)
+                self._handleMoveForUnit(unit, current_move, linker)
         self.game.checkIfFinished()
 
     def _handleMoveForUnit(self, unit: MovingUnit, current_move: Path, linker: Linker):
@@ -345,18 +331,6 @@ class MainLoop:
             return END
         return CONTINUE
 
-    def pause(self) -> None:
-        """
-        Change the state of the game to "PAUSE"
-        """
-        self._state = PAUSE
-
-    def resume(self) -> None:
-        """
-        Resume the game
-        """
-        self._state = CONTINUE
-
     def _handleEvent(self, unit: MovingUnit, event) -> None:
         """
         The goal of this method is to handle the given event for the given unit
@@ -375,12 +349,31 @@ class MainLoop:
             traceback.print_exc()
 
     def _getPipeConnection(self, linker: Linker) -> PipeConnection:
+        """
+        Args:
+            linker: The linker for which we want the pipe connection
+
+        Returns: The pipe connection to send and receive game updates
+        """
         return self.linkersConnection[linker]
 
     def _getUnitFromLinker(self, linker: Linker) -> MovingUnit:
+        """
+        Args:
+            linker: The linker for which we want the unit
+
+        Returns: The unit for the given linker
+        """
         return self.linkers[linker]
 
     def _informBotOnPerformedMove(self, moved_unit_number: int, move: Path):
+        """
+        Update the game state of the bot controllers
+
+        Args:
+            moved_unit_number: The number representing the unit that moved and caused the update
+            move: The move that caused the update
+        """
         for linker in self.linkers:
             if issubclass(type(linker), BotLinker):
                 event = self._movesEvent[move]
@@ -390,10 +383,69 @@ class MainLoop:
                 except:
                     traceback.print_exc()
 
-    def _getProcessPipeConnection(self, linker):
-        return self.linkersProcessConnection[linker]
-
     def _killUnit(self, unit: MovingUnit, linker: Linker):
+        """
+        Kills the given unit and tells its linker
+
+        Args:
+            unit: The unit to kill
+            linker: The linker, to which tell that the unit is dead
+        """
         unit.kill()
         if not unit.isAlive():
             self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
+
+    def _addCollaborationPipes(self, linker: BotLinker):
+        """
+        Adds the collaboration pipes between the given linker and its teammate's
+
+        Args:
+            linker: The linker to connect with its teammate
+        """
+        for teammate in self.game.teams[self.game.unitsTeam[self.linkers[linker]]]:
+            if teammate is not self.linkers[linker]:
+                teammate_linker = None  # type: BotLinker
+                for other_linker in self.linkers:
+                    if self.linkers[other_linker] is teammate:
+                        teammate_linker = other_linker
+                        break
+                pipe1, pipe2 = Pipe()
+                linker.addCollaborationPipe(teammate_linker.controller.playerNumber, pipe1)
+                teammate_linker.addCollaborationPipe(linker.controller.playerNumber, pipe2)
+
+    def _prepareLoop(self):
+        """
+        Launches the processes of the AIs
+        """
+        self.executor = Pool(len(self.linkers))
+        try:
+            self.executor.apipe(lambda: None)
+        except ValueError:
+            self.executor.restart()
+        for linker in self.linkers:
+            if isinstance(linker, BotLinker):
+                linker.controller.gameState = self.game.copy()
+            try:
+                self.executor.apipe(linker.run)
+            except:
+                traceback.print_exc()
+        time.sleep(2)
+        self._prepared = True
+
+    def _addLinker(self, linker: Linker, unit: MovingUnit):
+        """
+        Adds the linker to the loop, creating the pipe connections
+
+        Args:
+            linker: The linker to add
+            unit: The unit, linked by this linker
+        """
+        self.linkers[linker] = unit
+        parent_conn, child_conn = Pipe()
+        parent_info_conn, child_info_conn = Pipe()
+        self.linkersConnection[linker] = parent_conn
+        self.linkersInfoConnection[linker] = parent_info_conn
+        linker.setMainPipe(child_conn)
+        linker.setGameInfoPipe(child_info_conn)
+        if isinstance(linker, BotLinker):
+            self._addCollaborationPipes(linker)

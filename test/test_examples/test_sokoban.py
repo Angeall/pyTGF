@@ -32,10 +32,8 @@ class TestSokoban(unittest.TestCase):
 
     def test_push_box_in_hole(self):
         self.loop._prepareLoop()
-        self.loop._getProcessPipeConnection(self.linker).send((1, 0))
-        self.loop._getProcessPipeConnection(self.linker).send((2, 0))
-        self.loop._getProcessPipeConnection(self.linker).send((3, 1))
-        self.loop._getProcessPipeConnection(self.linker).send((3, 2))
+        self.linker._sendActionToGame((2, 0))
+        self.linker._sendActionToGame((3, 2))
         pushed_box = None
         for unit in self.loop.linkers.values():
             if isinstance(unit, Box):
@@ -48,7 +46,6 @@ class TestSokoban(unittest.TestCase):
 
     def test_win(self):
         self.loop._prepareLoop()
-        self.loop._getProcessPipeConnection(self.linker).send((1, 0))
-        self.loop._getProcessPipeConnection(self.linker).send((2, 0))
-        self.loop._getProcessPipeConnection(self.linker).send((3, 2))
+        self.linker._sendActionToGame((2, 0))
+        self.linker._sendActionToGame((3, 2))
         self.assertEqual(len(self.loop.run(60)), 1)
