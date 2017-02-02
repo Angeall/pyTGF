@@ -1,16 +1,16 @@
-from controls.controllers.bot import Bot
-from controls.controllers.human import Human
-from controls.controllers.passive import PassiveController
-from examples.sokoban.controllers.linker import SokobanBotLinker, SokobanHumanLinker
-from examples.sokoban.parsing.parser import TileProperty, box, winning, player_tile
-from examples.sokoban.rules.sokoban import SokobanGame
-from examples.sokoban.units.box import Box
-from examples.sokoban.units.sokobandrawstick import SokobanDrawstick
-from game.mainloop import MainLoop
-from gameboard.board import Board, Builder
 from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o, K_COMMA, K_k, K_l, K_g, K_t, K_f, K_h
 
+from pytgf.board import Board, Builder
 from pytgf.characters.units import MovingUnit
+from pytgf.controls.controllers import Passive
+from pytgf.controls.controllers.bot import Bot
+from pytgf.controls.controllers.human import Human
+from pytgf.examples.sokoban.controllers.linker import SokobanBotLinker, SokobanHumanLinker
+from pytgf.examples.sokoban.parsing.parser import TileProperty, box, winning, player_tile
+from pytgf.examples.sokoban.rules.sokoban import SokobanGame
+from pytgf.examples.sokoban.units.box import Box
+from pytgf.examples.sokoban.units.sokobandrawstick import SokobanDrawstick
+from pytgf.game.mainloop import MainLoop
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),
@@ -99,7 +99,7 @@ class SokobanBoardBuilder(Builder):
         box_number = -1
         for (i, j) in self._boxLocations:
             self._mainLoop.addUnit(Box(self._unitSpeed, box_number),
-                                   SokobanBotLinker(PassiveController(box_number)), (i, j), team=2)
+                                   SokobanBotLinker(Passive(box_number)), (i, j), team=2)
             box_number -= 1
 
     def _createEndingUnit(self, winning_tiles):

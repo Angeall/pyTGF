@@ -1,13 +1,13 @@
 """
 File containing the abstract definition of a Path. While the path has a next move, it continues.
 """
-
+import traceback
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable, Tuple, Union
 
 from pytgf.board import Tile
 from pytgf.board import TileIdentifier
-from pytgf.characters.moves import ShortMove
+from pytgf.characters.moves.shortmove import ShortMove
 
 __author__ = 'Anthony Rouneau'
 
@@ -174,6 +174,7 @@ class Path(metaclass=ABCMeta):
                 action(previous_tile=self._currentMove.sourceTile,
                        current_tile=self._currentMove.destinationTile)
             except TypeError:
+                traceback.print_exc()
                 action()
 
     def _handlePathFinished(self):

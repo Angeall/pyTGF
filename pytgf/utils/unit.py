@@ -1,10 +1,7 @@
-from gameboard.board import Board
-from utils.geom import get_hypotenuse_length, get_polygon_radius
-
-from pytgf.characters.units import Unit
+from pytgf.utils.geom import get_hypotenuse_length, get_polygon_radius
 
 
-def resize_unit(unit: Unit, board: Board) -> None:
+def resize_unit(unit, board) -> None:
     """
     Resize a unit to fit a tile of the given board
 

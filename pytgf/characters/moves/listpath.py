@@ -5,7 +5,8 @@ File containing the definition of a path made of a list of ShortMoves
 from typing import List, Optional, Callable
 
 from pytgf.board import Tile
-from pytgf.characters.moves import Path, ShortMove
+from pytgf.characters.moves.path import Path
+from pytgf.characters.moves.shortmove import ShortMove
 
 
 __author__ = 'Anthony Rouneau'

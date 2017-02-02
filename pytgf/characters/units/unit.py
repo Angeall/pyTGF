@@ -8,7 +8,7 @@ from typing import List
 
 import pygame
 
-from pytgf.characters.units import Particle
+from pytgf.characters.units.particle import Particle
 from pytgf.characters.units.sprite import UnitSprite
 
 __author__ = 'Anthony Rouneau'

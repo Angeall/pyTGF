@@ -4,8 +4,8 @@ File containing the definition of a Linker that links the game with a human cont
 
 from abc import ABCMeta
 
-from pytgf.controls.events import HumanEvent
-from pytgf.controls.linkers import Linker
+from pytgf.controls.events.human import HumanEvent
+from pytgf.controls.linkers.linker import Linker
 
 __author__ = 'Anthony Rouneau'
 

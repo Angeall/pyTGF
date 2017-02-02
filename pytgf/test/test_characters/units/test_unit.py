@@ -1,8 +1,6 @@
 import unittest
 
-from characters.particle import Particle
-
-from pytgf.characters.units import Unit
+from pytgf.characters.units import Particle, Unit
 
 
 class TestUnit(unittest.TestCase):

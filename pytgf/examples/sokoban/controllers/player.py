@@ -1,7 +1,7 @@
 from abc import ABCMeta
 from queue import Queue
 
-from pytgf.controls import Controller
+from pytgf.controls.controllers import Controller
 
 
 class SokobanPlayer(Controller, metaclass=ABCMeta):

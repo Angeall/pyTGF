@@ -3,13 +3,11 @@ from tkinter import Tk
 from tkinter.ttk import Frame, Label, Button
 
 import pygame
-from examples.sokoban.controllers.player import SokobanPlayer
-from examples.sokoban.parsing.builder import SokobanBoardBuilder
-from examples.sokoban.parsing.parser import SokobanBoardParser
-from menu.aiselectorframe import AISelectorFrameBuilder
-from menu.buttonframe import ButtonFrameBuilder
 
-from pytgf.menu.gui import GUI
+from pytgf.examples.sokoban.controllers.player import SokobanPlayer
+from pytgf.examples.sokoban.parsing.builder import SokobanBoardBuilder
+from pytgf.examples.sokoban.parsing.parser import SokobanBoardParser
+from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
 selection_frame = None
 main_frame = None
@@ -74,8 +72,6 @@ def launch_game(gui: GUI, player_info: tuple):
 
 
 def relaunch_gui(window):
-    global nb_human
-    nb_human = 0
     pygame.quit()
     window.destroy()
     launch_gui()

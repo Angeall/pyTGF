@@ -1,8 +1,7 @@
 import unittest
 
-from characters.moves.continous import ContinuousMove
-from gameboard.board import Tile
-
+from pytgf.board import Tile
+from pytgf.characters.moves import ContinuousPath
 from pytgf.characters.units import MovingUnit
 
 
@@ -16,7 +15,7 @@ class Touchable:
         self.touchCount += 1
 
 
-class TestContinuousMove(unittest.TestCase):
+class TestContinuousPath(unittest.TestCase):
     def test_perform_step(self):
         """
         Makes sure each step is working correctly
@@ -28,7 +27,7 @@ class TestContinuousMove(unittest.TestCase):
         unit_tile = source_tile
         next_tile = destination_tile
         unit_loc = {unit: source_tile.identifier}
-        path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60, units_location_dict=unit_loc)
+        path = ContinuousPath(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60, units_location_dict=unit_loc)
         just_started, _, _ = path.performNextMove()
         self.assertTrue(just_started)
         for _ in range(58):
@@ -52,7 +51,7 @@ class TestContinuousMove(unittest.TestCase):
         my_tiles = [third_tile, destination_tile]
         # Distance separating the two tiles is 30 pixels
         unit_tiles = [destination_tile, source_tile]
-        path = ContinuousMove(unit, lambda x: unit_tiles.pop(), lambda tile: my_tiles.pop(), fps=60, max_moves=1,
+        path = ContinuousPath(unit, lambda x: unit_tiles.pop(), lambda tile: my_tiles.pop(), fps=60, max_moves=1,
                               units_location_dict=unit_loc)
         new_tile_id = path.complete()
         self.assertFalse(new_tile_id == source_tile.identifier)
@@ -70,7 +69,7 @@ class TestContinuousMove(unittest.TestCase):
         # Distance separating the two tiles is 30 pixels
         unit_tile = source_tile
         next_tile = destination_tile
-        path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60, units_location_dict=unit_loc)
+        path = ContinuousPath(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60, units_location_dict=unit_loc)
         for _ in range(59):
             path.performNextMove()
         path.stop()
@@ -92,7 +91,7 @@ class TestContinuousMove(unittest.TestCase):
         post_step_action_touchable = Touchable()
         unit_tile = source_tile
         next_tile = destination_tile
-        path = ContinuousMove(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60,
+        path = ContinuousPath(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60,
                               pre_action=lambda: pre_action_touchable.touch(),
                               post_action=lambda: post_action_touchable.touch(),
                               step_pre_action=lambda: pre_step_action_touchable.touch(),

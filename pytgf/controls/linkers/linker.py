@@ -9,8 +9,9 @@ from typing import Any
 import pygame
 from multiprocess.connection import PipeConnection
 
-from pytgf.controls.controllers import Controller
-from pytgf.controls.events import SpecialEvent, Event
+from pytgf.controls.controllers.controller import Controller
+from pytgf.controls.events.event import Event
+from pytgf.controls.events.special import SpecialEvent
 
 __author__ = 'Anthony Rouneau'
 

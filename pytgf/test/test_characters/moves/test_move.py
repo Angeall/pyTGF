@@ -1,8 +1,7 @@
 import unittest
 
-from characters.moves.move import ShortMove, ImpossibleMove, IllegalMove, InconsistentMove
-from gameboard.board import Tile
-
+from pytgf.board import Tile
+from pytgf.characters.moves import ShortMove, ImpossibleMove, IllegalMove, InconsistentMove
 from pytgf.characters.units import MovingUnit
 
 

@@ -2,10 +2,10 @@ import os
 
 import pygame
 import pygame.transform as transform
-from characters.particle import Particle
-from characters.sprite import UnitSprite
 
-from pytgf.examples import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from pytgf.characters.units import Particle
+from pytgf.characters.units.sprite import UnitSprite
+from pytgf.examples.lazerbike.control import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
 
 TOP_RIGHT = 0
 TOP_LEFT = 1
@@ -48,7 +48,7 @@ class TraceSprite(UnitSprite):
         super().__init__()
 
     @property
-    def imageName(self):
+    def imageRelativePath(self) -> str:
         return os.path.join("sprites", "trace" + self._playerNumber + ".png")
 
     def makeAngle(self, previous_direction: int, current_direction: int, background_color) -> None:

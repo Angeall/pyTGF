@@ -1,14 +1,11 @@
 import unittest
 from queue import Empty
 
-from characters.moves.path import Path
-from characters.units.moving_unit import MovingUnit
-from controls.controllers.bot import Bot
-from controls.controllers.bot import TeammatePayload
-from game.game import Game
-from gameboard.board import Builder
-
-from pytgf.game.gamestate import GameState
+from pytgf.board import Builder
+from pytgf.characters.moves import Path
+from pytgf.characters.units import MovingUnit
+from pytgf.controls.controllers import Bot, TeammatePayload
+from pytgf.game import Game, GameState
 
 
 class ExampleAPI(GameState):

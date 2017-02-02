@@ -1,13 +1,12 @@
 import os
 
-from characters.sprite import UnitSprite
-
 from pytgf.characters.units import MovingUnit
+from pytgf.characters.units.sprite import UnitSprite
 
 
 class BoxSprite(UnitSprite):
     @property
-    def imageName(self):
+    def imageRelativePath(self):
         return os.path.join("sprites", "box.png")
 
 

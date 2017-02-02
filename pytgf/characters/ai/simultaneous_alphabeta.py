@@ -15,7 +15,6 @@ __author__ = 'Anthony Rouneau'
 
 Value = Union[int, float]
 T = TypeVar('T')
-Collection = Union[List[T], Tuple[T]]
 
 
 class SimultaneousAlphaBeta:
@@ -23,7 +22,7 @@ class SimultaneousAlphaBeta:
     Implementation of a cutoff AlphaBeta algorithm that performs the moves of all the players simultaneously
     """
 
-    def __init__(self, eval_fct: Callable[[GameState], Tuple[int, ...]], possible_actions: Tuple[MoveDescriptor, ...],
+    def __init__(self, eval_fct: Callable[[GameState], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
                  max_depth: int=6):
         """
 
@@ -74,7 +73,7 @@ class SimultaneousAlphaBeta:
     # -------------------- PROTECTED METHODS -------------------- #
 
     def _maxValue(self, state: GameState, alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int: MoveDescriptor], None], bool]:
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], bool]:
         """
         Computes the best step possible for the Player asking this alpha beta
 
@@ -128,7 +127,7 @@ class SimultaneousAlphaBeta:
         return max_value, best_combination, best_reached_end
 
     def _minValue(self, state: GameState, actions: List[Dict[int, Any]], alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int: MoveDescriptor], None], bool]:
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], bool]:
         """
         Computes the possibilities of the other players, simulating the action of every players at the same time
 
@@ -211,7 +210,7 @@ class SimultaneousAlphaBeta:
         res = [order_dicts[key] for key in order_dicts]
         return res
 
-    def _randomChoice(self, choices: Collection[T]) -> T:
+    def _randomChoice(self, choices: Union[List[T], Tuple[T]]) -> T:
         """
         Select randomly inside a collection of possibilities
 

@@ -4,8 +4,8 @@ File containing the definition of a unit that is designed to be controlled by a 
 
 from typing import Optional
 
-from pytgf.characters.units import Unit
 from pytgf.characters.units.sprite import UnitSprite
+from pytgf.characters.units.unit import Unit
 
 
 __author__ = 'Anthony Rouneau'

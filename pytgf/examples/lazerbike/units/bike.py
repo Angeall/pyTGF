@@ -1,8 +1,7 @@
 import os
 
-from characters.sprite import UnitSprite
-
 from pytgf.characters.units import MovingUnit
+from pytgf.characters.units.sprite import UnitSprite
 
 default_player_number = 1
 
@@ -19,7 +18,7 @@ class BikeSprite(UnitSprite):
         super().__init__()
 
     @property
-    def imageName(self) -> str:
+    def imageRelativePath(self) -> str:
         return os.path.join("sprites", "bike" + self.playerNumber + ".png")
 
 

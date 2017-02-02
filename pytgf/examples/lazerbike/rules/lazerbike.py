@@ -1,26 +1,45 @@
+"""
+File containing the rules of the Lazerbike game
+"""
+
 from functools import partial
 
+from pytgf.board import Board, Tile
 from pytgf.characters.moves import ContinuousPath
 from pytgf.characters.moves.path import Path
+from pytgf.characters.units import MovingUnit
 from pytgf.examples.lazerbike.control.linker import GO_RIGHT, GO_LEFT, GO_DOWN, GO_UP
 from pytgf.examples.lazerbike.units.bike import Bike
 from pytgf.examples.lazerbike.units.trace import Trace
 from pytgf.game.game import Game, UnfeasibleMoveException
-from pytgf.board import Board, Tile
-
 from pytgf.game.mainloop import MAX_FPS
 
 
 class LazerBikeGame(Game):
+    """
+    Defines the rules for the Lazerbike game
+    """
     @property
     def _suicideAllowed(self) -> bool:
+        """
+        Returns: True because a unit can suicide on its own lazer traces
+        """
         return True
 
     @property
     def _teamKillAllowed(self) -> bool:
+        """
+        Returns: True because a unit can kill itself on another mate or another mate's trace...
+        """
         return True
 
     def __init__(self, board: Board):
+        """
+        Instantiates a new Lazerbike game
+
+        Args:
+            board: The board that the game will use
+        """
         super().__init__(board)
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
@@ -53,8 +72,15 @@ class LazerBikeGame(Game):
                                   units_location_dict=self.unitsLocation)
         raise UnfeasibleMoveException("The event couldn't create a valid move")
 
-    def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile):
-        # TODO: continuous line using center-to-center trace but need previous_previous_tile
+    def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile) -> None:
+        """
+        Let a trace on the previous tile explored by the bike.
+
+        Args:
+            unit: The unit that moved from a tile to another
+            previous_tile: The previous tile on which the unit was placed on
+            current_tile: The current tile on which the unit is placed on
+        """
         tile_to_place_trace = previous_tile
         trace = Trace(unit.playerNumber)
         if self.board.graphics is not None:
@@ -64,7 +90,7 @@ class LazerBikeGame(Game):
         self._addUnitToTile(tile_to_place_trace.identifier, trace)
         unit.addParticle(trace)
 
-    def _collidePlayers(self, player1, player2, frontal: bool = False):
+    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, frontal: bool=False) -> None:
         """
         Makes what it has to be done when the first given player collides with a particle of the second given player
         (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
@@ -77,7 +103,14 @@ class LazerBikeGame(Game):
         """
         return super()._collidePlayers(player1, player2, frontal)
 
-    def _resizeTrace(self, trace, current_tile: Tile):
+    def _resizeTrace(self, trace, current_tile: Tile) -> None:
+        """
+        Resize the trace so that it does not exceed the tile's size
+
+        Args:
+            trace: The trace to resize
+            current_tile: The
+        """
         if current_tile.graphics is not None:
             width = int(round(self.board.graphics.sideLength / 2))
             height = int(round(self.board.graphics.sideLength / 2))

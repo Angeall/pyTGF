@@ -5,7 +5,6 @@ File containing the definition of ta builder of a AI Selection Frame
 import inspect
 import pickle
 import traceback
-from abc import ABCMeta
 from os import listdir
 from os.path import isfile, join, splitext
 from tkinter import *
@@ -14,7 +13,7 @@ from typing import Callable, Dict, Tuple
 
 import pytgf.utils.gui
 from pytgf.controls.controllers import Controller
-from pytgf.menu import BasicFrameBuilder
+from pytgf.menu.basicframe import BasicFrameBuilder
 
 
 class AISelectorFrameBuilder(BasicFrameBuilder):
@@ -234,10 +233,11 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             try:
                 module = __import__(file_name)
                 for name, cls in inspect.getmembers(module):  # Explore the classes inside the file
-                    if not isinstance(cls, ABCMeta):  # The abstract type cannot be instantiated as it is
-                        if inspect.isclass(cls) and issubclass(cls, self._aiType):
-                            self.aiClasses[name] = cls
-                            self.ais.append(name)
+                    if inspect.isclass(cls):
+                        if not inspect.isabstract(cls):  # The abstract type cannot be instantiated as it is
+                            if issubclass(cls, self._aiType):
+                                self.aiClasses[name] = cls
+                                self.ais.append(name)
             except ImportError:
                 print("Error while listings AIs:")
                 traceback.print_exc()

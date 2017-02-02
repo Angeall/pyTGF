@@ -1,16 +1,12 @@
-import game.game as game
-from characters.moves.listpath import ListPath
-from characters.moves.move import ShortMove
-from characters.moves.path import Path
-from controls.events.keyboard import KeyboardEvent
-from examples.sokoban.units.box import Box
-from game.game import Game
-from game.mainloop import MAX_FPS
-from gameboard import pathfinder
-from gameboard.board import Board, Tile
-from gameboard.pathfinder import UnreachableDestination
-
+import pytgf.game as game
+from pytgf.board import pathfinder, Board, Tile
+from pytgf.board.pathfinder import UnreachableDestination
+from pytgf.characters.moves import ListPath, ShortMove, Path
 from pytgf.characters.units import MovingUnit
+from pytgf.controls.events import KeyboardEvent
+from pytgf.examples.sokoban.units.box import Box
+from pytgf.game import Game
+from pytgf.game.mainloop import MAX_FPS
 
 FULL_HOLE_COLOR = (125, 125, 125)
 

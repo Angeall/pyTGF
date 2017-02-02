@@ -8,8 +8,8 @@ from queue import Queue
 from typing import List, Any
 
 from pytgf.characters.moves import MoveDescriptor
-from pytgf.controls.controllers import Controller
-from pytgf.controls.events import BotEvent
+from pytgf.controls.controllers.controller import Controller
+from pytgf.controls.events.bot import BotEvent
 from pytgf.game import Game, GameState
 
 __author__ = 'Anthony Rouneau'

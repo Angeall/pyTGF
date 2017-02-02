@@ -1,9 +1,7 @@
 import unittest
 
-from characters.moves.listpath import ListPath
-from characters.moves.move import ShortMove
-from gameboard.board import Tile
-
+from pytgf.board import Tile
+from pytgf.characters.moves import ListPath, ShortMove
 from pytgf.characters.units import MovingUnit
 
 

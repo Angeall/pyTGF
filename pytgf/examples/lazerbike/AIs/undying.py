@@ -1,16 +1,19 @@
+"""
+File containing the definition of an undying AI, its goal is not to die.
+"""
 import time
+from typing import Tuple
 
-from characters.ai.simultaneous_alphabeta import SimultaneousAlphaBeta
-from examples.lazerbike.control.api import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT
-from examples.lazerbike.control.player import LazerBikeBotPlayer
-
-from pytgf.game.gamestate import GameState
+from pytgf.characters.ai import SimultaneousAlphaBeta
+from pytgf.characters.moves import MoveDescriptor
+from pytgf.examples.lazerbike.control import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT, LazerBikeBotPlayer
+from pytgf.game import GameState
 
 
 class UndyingAI(LazerBikeBotPlayer):
-    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
-        pass
-
+    """
+    Defines an AI that focus on not dying.
+    """
     def __init__(self, player_number):
         """
         Instantiates a bot controller that choose its new move randomly for its unit.
@@ -22,14 +25,18 @@ class UndyingAI(LazerBikeBotPlayer):
         self._playersMove = []
         self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, (GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT), max_depth=4)
 
-    def _selectNewMove(self, game_state: GameState) -> None:
-        start = time.time()
-        game_state.game.copy()
-        print("ONE COPY:", time.time() - start)
-        action = self.alphabeta.alphaBetaSearching(self.playerNumber, game_state)
-        return action
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message) -> None:
+        """
+        Does nothing special if it receives a message from a teammate
 
-    def eval_fct(self, state: GameState):
+        Args:
+            teammate_number: The number representing the teammate sending the message
+            message: The message sent by the teammate
+        """
+        pass
+
+    @staticmethod
+    def eval_fct(state: GameState) -> Tuple[float, ...]:
         """
         Just give a score of 1 for a unit that is alive, and -1 for a player that is not alive
 
@@ -50,4 +57,19 @@ class UndyingAI(LazerBikeBotPlayer):
                         if not state.game.players[other_player_number].isAlive():
                             score += 1
             scores.append(score)
-        return scores
+        return tuple(scores)
+
+    def _selectNewMove(self, game_state: GameState) -> MoveDescriptor:
+        """
+        Selects a new move following a new game state
+
+        Args:
+            game_state: The new game state to react to
+
+        Returns: a new MoveDescriptor to send to the game
+        """
+        start = time.time()
+        game_state.game.copy()
+        print("ONE COPY:", time.time() - start)
+        action = self.alphabeta.alphaBetaSearching(self.playerNumber, game_state)
+        return action

@@ -1,18 +1,16 @@
 import unittest
 from typing import Tuple, List
 
-from characters.moves.path import Path
-from characters.units.moving_unit import MovingUnit
-from controls.controllers.bot import Bot
-from controls.events.bot import BotEvent
-from controls.events.special import SpecialEvent
-from game.game import Game, UnfeasibleMoveException
-from game.gamestate import GameState
-from gameboard.board import Builder
 from multiprocess.connection import Pipe
 from multiprocess.connection import PipeConnection
 
+from pytgf.board import Builder
+from pytgf.characters.moves import Path
+from pytgf.characters.units import MovingUnit
+from pytgf.controls.controllers import Bot
+from pytgf.controls.events import BotEvent, SpecialEvent
 from pytgf.controls.linkers.bot import BotLinker
+from pytgf.game import Game, UnfeasibleMoveException, GameState
 
 MOVE1 = "MOVE1"
 MOVE2 = "MOVE2"

@@ -268,7 +268,7 @@ class Game(metaclass=ABCMeta):
         """
         for other_unit in other_units:
             if not (unit is other_unit):
-                if isinstance(other_unit, MovingUnit):
+                if other_unit in self.unitsLocation.keys():
                     self._collidePlayers(unit, other_unit, frontal=True)
                 else:  # If the other unit is a Particle
                     other_player = None

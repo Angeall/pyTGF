@@ -1,11 +1,11 @@
 import unittest
 
 import pygame
-from controls.controllers.passive import PassiveController
-from examples.sokoban.parsing.builder import SokobanBoardBuilder
-from examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
-from examples.sokoban.units.box import Box
 
+from pytgf.controls.controllers import Passive
+from pytgf.examples.sokoban.parsing.builder import SokobanBoardBuilder
+from pytgf.examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
+from pytgf.examples.sokoban.units.box import Box
 from pytgf.game.mainloop import MainLoop
 
 
@@ -16,7 +16,7 @@ class TestSokoban(unittest.TestCase):
         self.height = 480
         self.parserResult = [[player_tile, wall, wall], [box, wall, wall],
                              [classical_tile, classical_tile, wall], [hole, classical_tile, winning]]
-        self.controller = PassiveController
+        self.controller = Passive
         builder = SokobanBoardBuilder(self.width, self.height, self.parserResult, [self.controller], 1000)
         builder.setBordersColor((0, 0, 0))
         builder.setTilesVisible(True)

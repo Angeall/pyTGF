@@ -4,18 +4,14 @@ from tkinter.ttk import Frame, Label, Button
 import pygame
 from pygame.locals import *
 
-from pytgf.board.board import Builder
-from pytgf.controls.controllers.bot import Bot
-from pytgf.controls.controllers.human import Human
-from pytgf.examples.lazerbike.control.linker import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, LazerBikeBotLinker, \
-    LazerBikeHumanLinker
-from pytgf.examples.lazerbike.control.player import LazerBikePlayer
+from pytgf.board import Builder
+from pytgf.controls.controllers import Bot, Human
+from pytgf.examples.lazerbike.control import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, LazerBikeBotLinker, \
+    LazerBikeHumanLinker, LazerBikePlayer
 from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeGame
 from pytgf.examples.lazerbike.units.bike import Bike
 from pytgf.game.mainloop import MainLoop
-from pytgf.menu.aiselectorframe import AISelectorFrameBuilder
-from pytgf.menu.buttonframe import ButtonFrameBuilder
-from pytgf.menu.gui import GUI
+from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),

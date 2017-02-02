@@ -6,7 +6,8 @@ from typing import Callable, Dict, Optional
 
 from pytgf.board import Tile
 from pytgf.board import TileIdentifier
-from pytgf.characters.moves import ShortMove, Path
+from pytgf.characters.moves.path import Path
+from pytgf.characters.moves.shortmove import ShortMove
 from pytgf.characters.units import MovingUnit
 
 

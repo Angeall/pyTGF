@@ -1,9 +1,6 @@
 from abc import ABCMeta
 
-from controls.linker import Linker
-from controls.linkers.human import HumanLinker
-
-from pytgf.controls.linkers.bot import BotLinker
+from pytgf.controls.linkers import Linker, HumanLinker, BotLinker
 
 
 class SokobanLinker(Linker, metaclass=ABCMeta):

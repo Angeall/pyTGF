@@ -9,9 +9,9 @@ from typing import Dict
 
 from multiprocess.connection import PipeConnection
 
-from pytgf.controls.controllers import Bot, TeammatePayload, TeammateMessage
-from pytgf.controls.events import BotEvent
-from pytgf.controls.linkers import Linker
+from pytgf.controls.controllers.bot import Bot, TeammatePayload, TeammateMessage
+from pytgf.controls.events.bot import BotEvent
+from pytgf.controls.linkers.linker import Linker
 
 __author__ = 'Anthony Rouneau'
 
