@@ -1,11 +1,18 @@
-from pytgf.controls.event import Event
+"""
+File containing the definition of a BotEvent used to be sent to BotControllers
+"""
+from pytgf.characters.moves import MoveDescriptor
+from pytgf.controls.events.event import Event
+
+__author__ = 'Anthony Rouneau'
 
 
 class BotEvent(Event):
     """
     Represents a move done inside the main game that is to be replicated inside the bot's local copy of the game.
     """
-    def __init__(self, player_number: int, move_descriptor):
+
+    def __init__(self, player_number: int, move_descriptor: MoveDescriptor):
         """
         Constructs the event to pass to the bot controller
 

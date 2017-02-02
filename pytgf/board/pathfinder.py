@@ -1,8 +1,11 @@
+"""
+File containing methods that can be used to find shortest paths inside a board.
+"""
+
 from queue import PriorityQueue
-from typing import Callable, Tuple, Dict, List, Union, Optional
+from typing import Callable, Tuple, Dict, List, Optional
 
 from pytgf.board import Tile, TileIdentifier
-
 
 __author__ = 'Anthony Rouneau'
 
@@ -11,8 +14,13 @@ Cost = int
 
 
 class UnreachableDestination(Exception):
+    """
+    Exception raised when the destination tile is not found in the exploration, and thus unreachable
+    """
     pass
 
+
+# -------------------- PUBLIC METHODS -------------------- #
 
 def get_shortest_path(source_tile_id, dest_tile_id, get_tile_by_id_func: Callable[[TileIdentifier], Tile],
                       get_tile_neighbours_func: Callable[[Tile], List[TileIdentifier]],

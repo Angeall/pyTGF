@@ -1,8 +1,21 @@
-from pytgf.controls import HumanEvent
+"""
+File containing the definition of a Mouse Event to send to Human Controllers
+"""
+from typing import Tuple
+
+from pytgf.board import TileIdentifier
+from pytgf.controls.events import HumanEvent
+
+__author__ = 'Anthony Rouneau'
 
 
 class MouseEvent(HumanEvent):
-    def __init__(self, pixel_clicked: tuple, mouse_state=(True, False, False), clicked_up=False, tile_id: tuple=None):
+    """
+    Defines an event representing a mouse click.
+    """
+
+    def __init__(self, pixel_clicked: tuple, mouse_state: Tuple[bool, bool, bool]=(True, False, False),
+                 clicked_up: bool=False, tile_id: TileIdentifier=None):
         """
         Instantiates a new Mouse event, telling which pixel (and optionally which tile) has been clicked.
 

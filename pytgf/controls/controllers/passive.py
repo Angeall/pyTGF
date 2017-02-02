@@ -1,13 +1,22 @@
-from controls.event import Event
+"""
+File containing the definition of a testing controller that does nothing
+"""
 
 from pytgf.controls.controllers import Bot
+from pytgf.controls.events import Event
+
+__author__ = 'Anthony Rouneau'
 
 
-class PassiveController(Bot):
+class Passive(Bot):
+    """
+    Controller that does literally nothing. Used for testing purpose
+    """
+
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
         pass
 
-    def _isMoveAllowed(self, move) -> bool:
+    def _isMoveAllowed(self, move_descriptor) -> bool:
         return False
 
     def _getGameStateAPI(self, game):

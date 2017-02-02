@@ -1,8 +1,19 @@
-from pytgf.controls import HumanEvent
+"""
+File containing the definition of a Keyboard Event, to send to Human Controllers
+"""
+from typing import Tuple
+
+from pytgf.controls.events import HumanEvent
+
+__author__ = 'Anthony Rouneau'
 
 
 class KeyboardEvent(HumanEvent):
-    def __init__(self, character_keys: tuple):
+    """
+    Defines a keyboard event, with the pressed character
+    """
+
+    def __init__(self, character_keys: Tuple):
         """
         Instantiates a new keyboard event, which consists in the character keys that the user pressed
 

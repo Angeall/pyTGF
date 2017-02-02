@@ -1,9 +1,6 @@
-from collections import namedtuple
-
-from pytgf.board.parser import BoardParser
+from pytgf.board.parser import BoardParser, TileProperty
 
 
-TileProperty = namedtuple("TileProperty", "deadly walkable internal_color border_color has_box winning has_player")
 hole = TileProperty(deadly=True, walkable=True, internal_color=(0, 0, 0), border_color=None, has_box=False,
                     winning=False, has_player=False)
 wall = TileProperty(deadly=False, walkable=False, internal_color=(125, 85, 7), border_color=None, has_box=False,

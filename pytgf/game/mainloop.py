@@ -1,26 +1,30 @@
+"""
+Fie containing the definition of the logical loop of a game, containing all the input events handling,
+and the bot controllers handling
+"""
+
 import time
 import traceback
 from queue import Queue, Empty
-from typing import Dict
+from typing import Dict, Optional
 from typing import Tuple
-from typing import Union, Any
+from typing import Union
 
 import pygame
-from characters.moves.move import IllegalMove, ImpossibleMove
-from characters.moves.path import Path
-from characters.units.moving_unit import MovingUnit
-from characters.units.unit import Unit
-from controls.events.bot import BotEvent
-from controls.events.special import SpecialEvent
-from controls.linker import Linker
-from controls.linkers.human import HumanLinker
-from game.game import Game, UnfeasibleMoveException
 from multiprocess.connection import Pipe, PipeConnection
 from pathos.pools import ProcessPool as Pool
 from pygame.constants import DOUBLEBUF, MOUSEBUTTONDOWN, MOUSEBUTTONUP, K_ESCAPE, KEYDOWN, QUIT
-from utils.unit import resize_unit
 
-from pytgf.controls.linkers.bot import BotLinker
+from pytgf.board import TileIdentifier
+from pytgf.characters.moves import IllegalMove, ImpossibleMove, Path, MoveDescriptor
+from pytgf.characters.units import MovingUnit, Unit
+from pytgf.controls.events import BotEvent, SpecialEvent
+from pytgf.controls.linkers import Linker, HumanLinker, BotLinker
+from pytgf.game import Game, UnfeasibleMoveException
+from pytgf.utils.geom import Coordinates
+from pytgf.utils.unit import resize_unit
+
+__author__ = 'Anthony Rouneau'
 
 CONTINUE = 0
 PAUSE = 1
@@ -30,8 +34,17 @@ MAX_FPS = 30
 
 
 class MainLoop:
-    # TODO: Add the collaborating pipes
+    """
+    Defines the logical loop of a game, running MAX_FPS times per second, sending the inputs to the HumanLinker, and the
+    game updates to the BotLinkers.
+    """
     def __init__(self, game: Game):
+        """
+        Instantiates the logical loop
+
+        Args:
+            game: The game to run in this loop
+        """
         self.game = game
         self.game.addCustomMoveFunc = self._addCustomMove
         self._screen = None
@@ -42,13 +55,15 @@ class MainLoop:
 
         self.linkers = {}  # type: Dict[Linker, MovingUnit]
         self._unitsMoves = {}  # type: Dict[MovingUnit, Tuple[Path, Queue]]
-        self._movesEvent = {}  # type: Dict[Path, Any]
+        self._movesEvent = {}  # type: Dict[Path, MoveDescriptor]
         self._otherMoves = {}  # type: Dict[Unit, Path]
         self._killSent = {}  # Used to maintain the fact that the kill event has been sent
         self.executor = None
         self._prepared = False
 
-    def run(self, max_fps: int = MAX_FPS) -> Union[None, tuple]:
+    # -------------------- PUBLIC METHODS -------------------- #
+
+    def run(self, max_fps: int=MAX_FPS) -> Union[None, Tuple[MovingUnit, ...]]:
         """
         Launch the game and its logical loop
 
@@ -61,7 +76,8 @@ class MainLoop:
         """
         pygame.init()
         clock = pygame.time.Clock()
-        self._screen = pygame.display.set_mode(self.game.board.size, DOUBLEBUF)
+        assert self.game.board.graphics is not None
+        self._screen = pygame.display.set_mode(self.game.board.graphics.size, DOUBLEBUF)
         if not self._prepared:
             self._prepareLoop()
         while self._state != END:
@@ -80,7 +96,8 @@ class MainLoop:
         self._prepared = False
         return self.game.winningPlayers
 
-    def addUnit(self, unit: MovingUnit, linker: Linker, tile_id, initial_action: Path = None, team: int = -1) -> None:
+    def addUnit(self, unit: MovingUnit, linker: Linker, tile_id: TileIdentifier, initial_action: Path=None,
+                team: int=-1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
         to the the given tile id and controlled by the given controller
@@ -113,6 +130,8 @@ class MainLoop:
         Resume the game
         """
         self._state = CONTINUE
+
+    # -------------------- PROTECTED METHODS -------------------- #
 
     def _refreshScreen(self) -> None:
         """
@@ -157,7 +176,7 @@ class MainLoop:
         fifo = self._unitsMoves[unit][1]  # type: Queue
         fifo.put(move)
 
-    def _addCustomMove(self, unit: Unit, move: Path, event: Any) -> None:
+    def _addCustomMove(self, unit: Unit, move: Path, event: MoveDescriptor) -> None:
         """
         Adds a move that is NOT PERFORMED BY A CONTROLLER
 
@@ -202,7 +221,7 @@ class MainLoop:
                 self._getPipeConnection(linker).send(self.game.createKeyboardEvent(self._getUnitFromLinker(linker),
                                                                                    input_key))
 
-    def _dispatchMouseEventToHumanControllers(self, pixel, click_up=False) -> None:
+    def _dispatchMouseEventToHumanControllers(self, pixel: Optional[Coordinates], click_up=False) -> None:
         """
         Handles mouse events and send them to Human Controllers to trigger actions if needed
 
@@ -331,7 +350,7 @@ class MainLoop:
             return END
         return CONTINUE
 
-    def _handleEvent(self, unit: MovingUnit, event) -> None:
+    def _handleEvent(self, unit: MovingUnit, event: MoveDescriptor) -> None:
         """
         The goal of this method is to handle the given event for the given unit
 
@@ -366,7 +385,7 @@ class MainLoop:
         """
         return self.linkers[linker]
 
-    def _informBotOnPerformedMove(self, moved_unit_number: int, move: Path):
+    def _informBotOnPerformedMove(self, moved_unit_number: int, move: Path) -> None:
         """
         Update the game state of the bot controllers
 
@@ -383,7 +402,7 @@ class MainLoop:
                 except:
                     traceback.print_exc()
 
-    def _killUnit(self, unit: MovingUnit, linker: Linker):
+    def _killUnit(self, unit: MovingUnit, linker: Linker) -> None:
         """
         Kills the given unit and tells its linker
 
@@ -395,7 +414,7 @@ class MainLoop:
         if not unit.isAlive():
             self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
 
-    def _addCollaborationPipes(self, linker: BotLinker):
+    def _addCollaborationPipes(self, linker: BotLinker) -> None:
         """
         Adds the collaboration pipes between the given linker and its teammate's
 
@@ -413,7 +432,7 @@ class MainLoop:
                 linker.addCollaborationPipe(teammate_linker.controller.playerNumber, pipe1)
                 teammate_linker.addCollaborationPipe(linker.controller.playerNumber, pipe2)
 
-    def _prepareLoop(self):
+    def _prepareLoop(self) -> None:
         """
         Launches the processes of the AIs
         """
@@ -429,10 +448,10 @@ class MainLoop:
                 self.executor.apipe(linker.run)
             except:
                 traceback.print_exc()
-        time.sleep(2)
+        time.sleep(2)  # Waiting for the processes to launch correctly
         self._prepared = True
 
-    def _addLinker(self, linker: Linker, unit: MovingUnit):
+    def _addLinker(self, linker: Linker, unit: MovingUnit) -> None:
         """
         Adds the linker to the loop, creating the pipe connections
 

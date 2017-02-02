@@ -1,22 +1,44 @@
+"""
+File containing the definition of a bot controller.
+"""
+
 import traceback
 from abc import ABCMeta, abstractmethod
 from queue import Queue
-from typing import List
+from typing import List, Any
 
-from controls.controller import Controller
-from controls.events.bot import BotEvent
-from game.game import Game
+from pytgf.characters.moves import MoveDescriptor
+from pytgf.controls.controllers import Controller
+from pytgf.controls.events import BotEvent
+from pytgf.game import Game, GameState
 
-from pytgf.game.gamestate import GameState
+__author__ = 'Anthony Rouneau'
+
+TeammateMessage = Any
 
 
 class TeammatePayload:
-    def __init__(self, teammate_number: int, message):
+    """
+    Class representing a payload that carries a message from a teammate to another.
+    """
+
+    def __init__(self, teammate_number: int, message: TeammateMessage):
+        """
+        Instantiates the payload
+
+        Args:
+            teammate_number: The number representing the teammate
+            message: The message to send to the teammate.
+        """
         self.teammateNumber = teammate_number
         self.message = message
 
 
 class Bot(Controller, metaclass=ABCMeta):
+    """
+    Class representing an abstract Bot controller, with the ability to speak to its teammate
+    """
+
     def __init__(self, player_number: int):
         """
        Instantiates a bot controller for a unit.
@@ -29,18 +51,30 @@ class Bot(Controller, metaclass=ABCMeta):
         self.previousGameState = None
         self.messagesToTeammates = Queue()
 
+    # -------------------- PUBLIC METHODS -------------------- #
+
     @property
-    def gameState(self):
+    def gameState(self) -> GameState:
+        """
+        Returns the API of this controller. It will be used to be aware of the game information.
+        """
         return self._gameStateLocalCopy
 
     @gameState.setter
-    def gameState(self, game: Game):
+    def gameState(self, game: Game) -> None:
+        """
+        Gives the game to start with in this controller. Generates the API around the game using the "_getGameStateAPI"
+        method
+
+        Args:
+            game: The game with which we will generate the API of this controller.
+        """
         if isinstance(game, Game):
             self._gameStateLocalCopy = self._getGameStateAPI(game)
 
-    def reactToEvents(self, events: List[BotEvent]):
+    def reactToEvents(self, events: List[BotEvent]) -> None:
         """
-        Performs a move in the local copy of the game
+        Performs a move in the local copy of the game, and select a new move if needed.
 
         Args:
             events: list of events, each member contains the move to perform in the local copy of the game
@@ -61,7 +95,7 @@ class Bot(Controller, metaclass=ABCMeta):
             if self._isMoveAllowed(selected_move):
                 self.moves.put(selected_move)
 
-    def sendMessageToTeammate(self, teammate_number: int, message):
+    def sendMessageToTeammate(self, teammate_number: int, message: TeammateMessage) -> None:
         """
         Adds the message to the message queue, that will be later used by the linker.
 
@@ -72,7 +106,7 @@ class Bot(Controller, metaclass=ABCMeta):
         self.messagesToTeammates.put(TeammatePayload(teammate_number, message))
 
     @abstractmethod
-    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message: TeammateMessage) -> None:
         """
         Main function for collaboration between teammates.
         Reacts when a collaboration message is received from the teammate represented by the given number
@@ -86,8 +120,10 @@ class Bot(Controller, metaclass=ABCMeta):
         """
         pass
 
+    # -------------------- PROTECTED METHODS -------------------- #
+
     @abstractmethod
-    def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:
+    def _isMoveInteresting(self, player_number: int, new_move_event: MoveDescriptor) -> bool:
         """
         Evaluates if the move that has been done must trigger a new move from this controller
 
@@ -100,7 +136,7 @@ class Bot(Controller, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _selectNewMove(self, game_state: GameState):
+    def _selectNewMove(self, game_state: GameState) -> MoveDescriptor:
         """
         Decision taking algorithm that, given the new game state, will (or won't if not needed) make a move in the game
         Returns the move. The move returned must return a correct move for the game (see self._isMoveAllowed)
@@ -109,11 +145,14 @@ class Bot(Controller, metaclass=ABCMeta):
             game_state:
                 The game state to react to. This game state must not be modified in place, in order to
                 maintain a stable local copy of the game state.
+
+        Returns:
+            The constant representing the newly chosen move
         """
         pass
 
     @abstractmethod
-    def _getGameStateAPI(self, game: Game):
+    def _getGameStateAPI(self, game: Game) -> GameState:
         """
         Generate the API of the game state, which will be used by this controller to make decisions.
 
@@ -125,11 +164,11 @@ class Bot(Controller, metaclass=ABCMeta):
         return GameState(game)
 
     @abstractmethod
-    def _isMoveAllowed(self, move) -> bool:
+    def _isMoveAllowed(self, move_descriptor: MoveDescriptor) -> bool:
         """
 
         Args:
-            move: The move to determine if allowed or not
+            move_descriptor: The move to determine if allowed or not
 
         Returns: True if the move is allowed. False otherwise
         """

@@ -1,3 +1,7 @@
+"""
+File containing the definition of a continuous path
+"""
+
 from typing import Callable, Dict, Optional
 
 from pytgf.board import Tile
@@ -10,6 +14,12 @@ __author__ = 'Anthony Rouneau'
 
 
 class ContinuousPath(Path):
+    """
+    Class defining a continuous path. Which means that when a move of the path is finished, another move is
+    generated from the new tile reached (using a function given in the constructor). This ends when the latter
+    function cannot give another destination tile or when the wanted move is invalid/impossible
+    """
+
     def __init__(self, unit: MovingUnit, source_tile_func: Callable[[MovingUnit], Tile],
                  next_tile_func: Callable[[Tile], Tile], fps: int,
                  units_location_dict: Dict[MovingUnit, TileIdentifier], pre_action: Optional[Callable[[], None]]=None,

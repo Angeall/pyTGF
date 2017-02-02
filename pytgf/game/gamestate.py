@@ -1,19 +1,35 @@
-from typing import Tuple
+"""
+File containing the definition of a basic API to interact with a game from a controller
+"""
 
-from characters.moves.move import IllegalMove
-from game.game import Game, UnfeasibleMoveException
+from typing import Tuple, Dict, Union, List
 
-from pytgf.characters.units.moving_unit import MovingUnit
+from pytgf.board import TileIdentifier
+from pytgf.characters.moves import IllegalMove, MoveDescriptor
+from pytgf.characters.moves import Path
+from pytgf.characters.units import MovingUnit
+from pytgf.game import Game, UnfeasibleMoveException
 
-direction_str = ["RIGHT", "UP", "LEFT", "DOWN"]
+__author__ = 'Anthony Rouneau'
 
 
 class GameState:
-
+    """
+    A class defining a basic API so a controller can get information on the current state of the game,
+    and simulate new moves in it.
+    """
     def __init__(self, game: Game):
+        """
+        Instantiates the API
+
+        Args:
+            game: The game that will be used in this API
+        """
         self.game = game
 
-    def simulateMove(self, player_number: int, wanted_move) -> tuple:
+    # -------------------- PUBLIC METHODS -------------------- #
+
+    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor) -> Tuple[bool, Union['GameState', None]]:
         """
         Simulates the move by creating a new GameState
 
@@ -32,7 +48,7 @@ class GameState:
         else:
             return False, None
 
-    def simulateMoves(self, player_moves: dict) -> tuple:
+    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor]) -> Tuple[bool, Union['GameState', None]]:
         """
         Simulates the given moves for the key players
 
@@ -54,7 +70,7 @@ class GameState:
             new_game_state.performMove(player_number, wanted_move)
         return True, new_game_state
 
-    def performMove(self, player_number: int, move_descriptor, force: bool=False) -> bool:
+    def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool=False) -> bool:
         """
         Performs the move inside this GameState
 
@@ -77,6 +93,15 @@ class GameState:
             return True
 
     def belongsToSameTeam(self, player_1_number: int, player_2_number: int) -> bool:
+        """
+        Checks if two players are in the same team
+
+        Args:
+            player_1_number: The number representing the first player to check
+            player_2_number: The number representing the second player to check
+
+        Returns: True if the two players belongs to the same team, False otherwise.
+        """
         return self.game.belongsToSameTeam(self.game.players[player_1_number], self.game.players[player_2_number])
 
     def getPlayerNumbers(self):
@@ -87,7 +112,10 @@ class GameState:
         players.sort()
         return players
 
-    def getNumberOfTeams(self):
+    def getNumberOfTeams(self) -> int:
+        """
+        Returns: The number of teams playing the game
+        """
         return len(self.game.teams)
 
     def getNumberOfAlivePlayers(self) -> int:
@@ -100,7 +128,8 @@ class GameState:
                 alive_units += 1
         return alive_units
 
-    def checkFeasibleMoves(self, player_number: int, possible_moves: tuple) -> list:
+    def checkFeasibleMoves(self, player_number: int, possible_moves: Tuple[MoveDescriptor, ...]) -> \
+            List[MoveDescriptor]:
         """
         Keeps only the feasible moves in the given list of possible moves
 
@@ -118,7 +147,7 @@ class GameState:
                 feasible_moves.append(move)
         return feasible_moves
 
-    def isFinished(self) ->bool:
+    def isFinished(self) -> bool:
         """
         Returns: True if the game is in a final state
         """
@@ -135,7 +164,7 @@ class GameState:
         """
         return self.game.players[player_number].isAlive()
 
-    def getPlayerLocation(self, player_number: int) -> tuple:
+    def getPlayerLocation(self, player_number: int) -> TileIdentifier:
         """
 
         Args:
@@ -145,7 +174,7 @@ class GameState:
         """
         return self.game.unitsLocation[self.game.players[player_number]]
 
-    def getAdjacent(self, tile_id: tuple) -> Tuple[tuple]:
+    def getAdjacent(self, tile_id: TileIdentifier) -> Tuple[TileIdentifier, ...]:
         """
 
         Args:
@@ -157,15 +186,21 @@ class GameState:
         """
         return self.game.board.getNeighboursIdentifier(tile_id)
 
-    def _generateMove(self, player_number: int, wanted_move) -> tuple:
+    # -------------------- PROTECTED METHODS -------------------- #
+
+    def _generateMove(self, player_number: int, wanted_move: MoveDescriptor) -> Tuple[bool, Union[Path, None]]:
         """
         Generates a move for a given event
 
         Args:
             player_number: The player that must perform the move
-            wanted_move: The move
+            wanted_move: The descriptor of the move to perform
 
         Returns:
+            A tuple containing
+
+             - A bool set to True if the move was successfully created, set to False otherwise
+             - The Path created from the given move descriptor, or None if the move was not successfully created
 
         """
         unit = self.game.players[player_number]

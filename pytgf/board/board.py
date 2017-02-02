@@ -1,11 +1,14 @@
+"""
+File containing the definition of Board, Tile and TileIdentifier
+"""
+
 from collections import namedtuple
-from typing import Union, Dict, Tuple, List
+from typing import Union, Tuple, List
 
 import pygame
 
-from pytgf.board.graphics import BoardGraphics
+from pytgf.board.graphics import BoardGraphics, Width, Height
 from pytgf.utils.geom import Coordinates
-
 
 __author__ = 'Anthony Rouneau'
 
@@ -15,13 +18,20 @@ TileIdentifier = Tuple[int, int]
 
 
 class BoardWithoutGraphicsException(Exception):
+    """
+    Exception raised when one tries to draw or update the graphics of a Board that has None
+    """
     pass
 
 
 class Board:
+    """
+    Class defining a Board containing Tiles. The tiles are linked to each other with a list of neighbours.
+    """
+
     OUT_OF_BOARD_TILE = Tile(identifier=(-1, -1), center=(-500, -500), deadly=True, walkable=True, neighbours=())
 
-    def __init__(self, lines: int, columns: int, tiles: List[List[Tile]],
+    def __init__(self, lines: int, columns: int, tiles: List[List[Tile]], size: Tuple[Width, Height],
                  centers: List[List[Coordinates]]=None, borders: List[Tuple[Coordinates, Coordinates]]=None,
                  tiles_borders: List[List[List[Coordinates]]]=None):
         """
@@ -39,9 +49,9 @@ class Board:
                  (e.g. [((1, 2), (3, 4)), ((0,1), (0,2)), ...])
             tiles_borders: The points that will serve to draw the tiles
         """
-        self.graphics = None
-        if tiles_borders is not None and centers is not None and borders is not None:
-            self.graphics = BoardGraphics(tiles_borders=tiles_borders, background_color=(255, 255, 255),
+        self.graphics = None  # type: Union[None, BoardGraphics]
+        if size is not None and tiles_borders is not None and centers is not None and borders is not None:
+            self.graphics = BoardGraphics(size=size, tiles_borders=tiles_borders, background_color=(255, 255, 255),
                                           border_line_color=(0, 0, 0), centers=centers, borders=borders,
                                           tiles_visible=False)
         self.lines = lines  # type: int

@@ -1,25 +1,43 @@
+"""
+File containing the definition of an abstract Linker, linking the game with a Controller
+"""
+
 from abc import ABCMeta, abstractmethod
 from queue import Empty
+from typing import Any
 
 import pygame
-from controls.controller import Controller
-from controls.events.special import SpecialEvent
 from multiprocess.connection import PipeConnection
 
-from pytgf.controls.event import Event
+from pytgf.controls.controllers import Controller
+from pytgf.controls.events import SpecialEvent, Event
+
+__author__ = 'Anthony Rouneau'
 
 MAX_FPS = 30
 
 
 class Linker(metaclass=ABCMeta):
+    """
+    Defines a Linker that will be the medium between the Game and a controller.
+    """
+
     def __init__(self, controller: Controller):
+        """
+        Instantiates this Linker
+
+        Args:
+            controller: The controller with which the Linker will communicate
+        """
         self._unitAlive = True
         self.controller = controller
         self._connected = True
         self.mainPipe = None
         self.gameInfoPipe = None
 
-    def setMainPipe(self, main_pipe: PipeConnection):
+    # -------------------- PUBLIC METHODS -------------------- #
+
+    def setMainPipe(self, main_pipe: PipeConnection) -> None:
         """
         Sets the main pipe of this linker
 
@@ -28,7 +46,7 @@ class Linker(metaclass=ABCMeta):
         """
         self.mainPipe = main_pipe
 
-    def setGameInfoPipe(self, game_info_pipe: PipeConnection):
+    def setGameInfoPipe(self, game_info_pipe: PipeConnection) -> None:
         """
         Sets the game info pipe of this linker
 
@@ -39,7 +57,7 @@ class Linker(metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def typeOfEventFromGame(self):
+    def typeOfEventFromGame(self) -> type:
         """
         Returns: The type of event this linker waits from the game
         """
@@ -55,28 +73,18 @@ class Linker(metaclass=ABCMeta):
         """
         pass
 
-    def close(self):
+    def close(self) -> None:
         """
         Closes this linker so that the run loop ends.
-
-        Args:
-            pipe_conn:
-
-        Returns:
-
         """
         self._connected = False
         self.mainPipe.close()
         self.gameInfoPipe.close()
 
-    def run(self):
+    def run(self) -> None:
         """
         Runs the logical loop of this linker, looking for actions coming from the controller and updating
         the controller's local copy of the game state. The loop runs with a maximum of MAX_FPS iteration/s
-
-        Args:
-            pipe_conn: The pipe connection used to communicate game events with the game
-            game_info_pipe_conn: The pipe connection used to communicate game info with the game
         """
         clock = pygame.time.Clock()
         while self._connected:
@@ -102,12 +110,9 @@ class Linker(metaclass=ABCMeta):
                                     % (str(type(event)), str(self.typeOfEventFromGame)))
             self.controller.reactToEvents(events)
 
-    def checkGameInfo(self):
+    def checkGameInfo(self) -> None:
         """
         Check if there is an update on the game information.
-
-        Args:
-            pipe_conn: The connection through which the game pass the information
         """
         event = None
         while self.gameInfoPipe.poll():
@@ -129,7 +134,7 @@ class Linker(metaclass=ABCMeta):
         move_descriptor = self.fetchControllerMoveDescriptor()
         self._sendActionToGame(move_descriptor)
 
-    def fetchControllerMoveDescriptor(self):
+    def fetchControllerMoveDescriptor(self) -> Any:
         """
         Returns: The action descriptor given by the controller or None if there is no action pending in the controller
         """
@@ -141,9 +146,11 @@ class Linker(metaclass=ABCMeta):
             pass
         return action
 
-    def _routine(self):
+    # -------------------- PROTECTED METHODS -------------------- #
+
+    def _routine(self) -> None:
         """
-        Defines what happens in the loop of the linker.
+        Defines what happens in the loop of the linker. (Sends and receive message to the game and the controller)
         Can optionally be overridden.
         """
         if self._unitAlive:
@@ -151,7 +158,7 @@ class Linker(metaclass=ABCMeta):
         self.checkGameInfo()
         self.handleNewGameStateChangeIfNeeded()
 
-    def _sendActionToGame(self, move_descriptor):
+    def _sendActionToGame(self, move_descriptor: Any) -> None:
         """
         Sends the given move descriptor to the game through the given pipe
         Args:

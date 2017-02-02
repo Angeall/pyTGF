@@ -1,17 +1,24 @@
+"""
+File containing the definition of a Particle.
+"""
+
 from copy import deepcopy
 from typing import Optional
 
 import pygame
 
-from pytgf.characters.units import UnitSprite
-from pytgf.utils.geom import Coordinates
 import pytgf.utils.geom
-
+from pytgf.characters.units.sprite import UnitSprite
+from pytgf.utils.geom import Coordinates
 
 __author__ = 'Anthony Rouneau'
 
 
 class Particle:
+    """
+    A Particle is something than can be placed on a tile of the game. It can be killed, drawn and moved.
+    """
+
     def __init__(self, sprite: Optional[UnitSprite]=None, nb_lives: int=1):
         """
         Instantiates a particle unit in the game

@@ -1,4 +1,8 @@
-from typing import List, Tuple, Dict
+"""
+File containing the definition of the Builder class, used to build a Board
+"""
+
+from typing import List, Tuple
 
 import pygame
 
@@ -19,6 +23,18 @@ class Builder:
     _BASE_MARGIN = 33
 
     def __init__(self, width: int, height: int, lines: int, columns: int) -> None:
+        """
+        Instantiates the Builder
+
+        Args:
+            width: The width in pixel of the future Board
+            height: The height in pixel of the future Board
+            lines: The number of lines that the Board will have
+            columns: The number of columns that the Board will have
+        """
+        if lines <= 0 or columns <= 0:
+            raise ValueError("The board must have a strictly positive number of lines and columns")
+
         self._width, self._height = width, height
         self._lines = lines
         self._columns = columns
@@ -81,8 +97,8 @@ class Builder:
         """
         tiles_borders, centers, tiles = self._buildGrid()
         borders = self._getBoardBorders(tiles_borders)
-        board = Board(len(centers), len(centers[0]),
-                      tiles, centers, borders, tiles_borders)
+        board = Board(len(centers), len(centers[0]), tiles, (self._width, self._height), centers, borders,
+                      tiles_borders)
         board.graphics.setBordersColor(self._bordersColor)
         board.graphics.setBackgroundColor(self._backgroundColor)
         board.graphics.setTilesVisible(self._tilesVisible)

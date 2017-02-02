@@ -1,24 +1,37 @@
+"""
+File containing the definition of an abstract BoardParser, and the definition of a TileProperty, used to create a Board
+"""
+
 from abc import ABCMeta, abstractmethod
+from collections import namedtuple
 
 
 class IncorrectShapeError(BaseException):
+    """
+    Exception raised when the parsed board is not rectangular.
+    """
     pass
 
 
 class InvalidCharacterError(BaseException):
+    """
+    Exception raised when an unknown character is parsed
+    """
     pass
 
 
-class InvalidCharacterConversionError(BaseException):
-    pass
+TileProperty = namedtuple("TileProperty", "deadly walkable internal_color border_color has_box winning has_player")
 
 
 class BoardParser(metaclass=ABCMeta):
+    """
+    Defines an abstract Board Parser, that lacks the method that links a parsed character to a TileProperty
+    """
 
     @abstractmethod
-    def characterToTileProperties(self, character: str):
+    def characterToTileProperties(self, character: str) -> TileProperty:
         """
-        Returns: The tile properties (e.g. a tuple of bool (walkable, deadly))
+        Returns: The tile properties that suits the parsed character, or None if the character is unknown
         """
         pass
 
@@ -33,7 +46,7 @@ class BoardParser(metaclass=ABCMeta):
         file = open(file_name, "r")
         text = ""
         for line in file:
-            text += (line)
+            text += line
         tiles_types = self.parse(text)
         return tiles_types
 
@@ -64,11 +77,10 @@ class BoardParser(metaclass=ABCMeta):
         for line in lines:
             tiles_line = []
             for char in line:
-                try:
-                    tile_type = self.characterToTileProperties(char)  # type: class
-                    tiles_line.append(tile_type)
-                except KeyError:
+                tile_type = self.characterToTileProperties(char)  # type: class
+                if tile_type is None:
                     raise InvalidCharacterError("The character %s is unknown for this board parser" % char)
+                tiles_line.append(tile_type)
             tiles.append(tiles_line)
         return tiles
 

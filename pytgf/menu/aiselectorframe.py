@@ -1,3 +1,7 @@
+"""
+File containing the definition of ta builder of a AI Selection Frame
+"""
+
 import inspect
 import pickle
 import traceback
@@ -6,22 +10,26 @@ from os import listdir
 from os.path import isfile, join, splitext
 from tkinter import *
 from tkinter.ttk import *
-from types import FunctionType as function
-
-from menu.basicframe import BasicFrameBuilder
+from typing import Callable, Dict, Tuple
 
 import pytgf.utils.gui
+from pytgf.controls.controllers import Controller
+from pytgf.menu import BasicFrameBuilder
 
 
 class AISelectorFrameBuilder(BasicFrameBuilder):
+    """
+    Defines the Builder of a Frame in which we can select the controller type of each player
+    """
+
     NONE_STRING = "None"
     CONFIG_FILE_NAME = "config.bin"
     TEAM_STRING = "Team "
     PLAYER_STRING = "Player "
 
-    def __init__(self, title: str, parent: Tk, ai_type, ok_action: function, cancel_action: function,
-                 min_players: int=2, max_players: int=4, min_teams: int=2, max_teams: int=4,
-                 players_description: dict=None):
+    def __init__(self, title: str, parent: Tk, ai_type, ok_action: Callable[[], None],
+                 cancel_action: Callable[[], None], min_players: int=2, max_players: int=4, min_teams: int=2,
+                 max_teams: int=4, players_description: dict=None):
         """
         Instantiates the builder
         Args:
@@ -55,9 +63,12 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         self.cancelAction = cancel_action
         self.playersDescription = players_description
 
-    def getSelection(self) -> tuple:
+    # -------------------- PUBLIC METHODS -------------------- #
+
+    def getSelection(self) -> Tuple[Dict[int, Controller], Dict[int, int]]:
         """
         Returns:
+
             - The selection as a dictionary with player number as key and the selected controller class as value.
             - The teams for each players in a dictionary. Key : player number, Value : team number
         """
@@ -74,12 +85,20 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         self._loadInstance()
         return frame
 
+    # -------------------- PROTECTED METHODS -------------------- #
+
     def _saveInstance(self) -> None:
+        """
+        Serializes the selection into a file
+        """
         lst = [self.selectedAIs, self.selectedTeams]
         file = open(self.CONFIG_FILE_NAME, mode="bw")
         pickle.dump(lst, file)
 
     def _loadInstance(self) -> None:
+        """
+        Load a serialized file (if there is one) containing the selection
+        """
         try:
             file = open(self.CONFIG_FILE_NAME, mode="br")
             lst = pickle.load(file)
@@ -107,7 +126,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             except Exception:
                 continue
 
-    def _setupControllerCombobox(self, combobox, player_number):
+    def _setupControllerCombobox(self, combobox: Combobox, player_number: int) -> None:
         """
         Setups the combobox so it displays the different controllers available
         Args:
@@ -123,7 +142,14 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         combobox.grid(column=1, row=0)
         self._aiSelectors.append(combobox)
 
-    def _setupTeamCombobox(self, combobox, player_number):
+    def _setupTeamCombobox(self, combobox, player_number) -> None:
+        """
+        Sets the team selection combobox
+
+        Args:
+            combobox: The combobox to setup
+            player_number: The player number for which we want to setup the combobox
+        """
         values = [self.TEAM_STRING + str(team) for team in range(1, self.maxPlayers+1)]
         combobox['values'] = values
         combobox.set(self.TEAM_STRING + str(player_number))
@@ -134,7 +160,14 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         combobox.grid(column=2, row=0)
         self._teamSelectors.append(combobox)
 
-    def _setupPlayerLabel(self, label, player_number):
+    def _setupPlayerLabel(self, label: Label, player_number) -> None:
+        """
+        Sets the player description correctly
+
+        Args:
+            label: The label to setup for the given player
+            player_number: The number representing the player for which we want to set the label
+        """
         player_desc = self.PLAYER_STRING + str(player_number)
         if self.playersDescription is not None and player_number in self.playersDescription.keys():
             player_desc += " (" + self.playersDescription[player_number] + ")"
@@ -143,12 +176,13 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         label['width'] = 30
         label.grid(column=0, row=0, padx=(0, 10))
 
-    def _addControllerToSelection(self, player_number, class_name):
+    def _addControllerToSelection(self, player_number: int, class_name: type) -> None:
         """
         Reacts to a selection for a player and adds it to the selection
+
         Args:
-            player_number:
-            class_name:
+            player_number: The player that selected a new controller
+            class_name: The name of the selected controller
         """
         if class_name != self.NONE_STRING:
             self.selectedAIs[player_number] = self.aiClasses[class_name]
@@ -156,12 +190,20 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             if player_number in self.selectedAIs.keys():
                 del self.selectedAIs[player_number]
 
-    def _addTeamToSelection(self, player_number, team_number):
+    def _addTeamToSelection(self, player_number: int, team_number: int) -> None:
+        """
+        Reacts when a new team is selected for the given player
+
+        Args:
+            player_number: The number representing the player that selected the team
+            team_number: The number of the newly selected team
+        """
         self.selectedTeams[player_number] = team_number
 
-    def _addSelector(self, frame, player_number: int) -> None:
+    def _addSelector(self, frame: Frame, player_number: int) -> None:
         """
         Add a selector for the given player to the given frame
+
         Args:
             frame: The frame to which the selector will be added
             player_number: The number of the player for which add the selector
@@ -225,7 +267,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
             self._saveInstance()
             self.okAction()
 
-    def _addButtons(self, frame) -> None:
+    def _addButtons(self, frame: Frame) -> None:
         """
         Adds the OK and the Cancel button to the bottom of the selectors
         Args:

@@ -1,3 +1,7 @@
+"""
+File containing the definition of a unit that is designed to be controlled by a player (bot or human)
+"""
+
 from typing import Optional
 
 from pytgf.characters.units import Unit
@@ -8,6 +12,9 @@ __author__ = 'Anthony Rouneau'
 
 
 class MovingUnit(Unit):
+    """
+    Defines a unit that is designed to be moved by a controller in the game.
+    """
     def __init__(self, player_number: int, sprite: Optional[UnitSprite]=None, max_particles: int=-1, nb_lives: int=1,
                  speed: int=150, surviving_particles: bool=False):
         """

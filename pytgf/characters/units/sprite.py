@@ -1,3 +1,7 @@
+"""
+File containing the abstract definition of a sprite designed to be linked with a unit
+"""
+
 import os
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
@@ -5,14 +9,20 @@ from copy import deepcopy
 import pygame
 import pygame.transform as transform
 
-
 __author__ = 'Anthony Rouneau'
 
 
 class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
+    """
+    Abstract definition of a unit's sprite.
+    """
+
     def __init__(self):
+        """
+        Instantiates the sprite
+        """
         super().__init__()
-        location = os.path.join(os.curdir, self.imageName)
+        location = os.path.join(os.curdir, self.imageRelativePath)
         img = pygame.image.load_extended(location)  # type: pygame.Surface
         # img = img.convert_alpha()
         self.image = img
@@ -29,16 +39,13 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
             self.image = transform.rotate(self.image, angle)
             self.rect = self.image.get_rect()  # type: pygame.Rect
 
-    def size(self, width: int, height: int):
+    def size(self, width: int, height: int) -> None:
         """
-        Resizes this sprite
+        Resize this sprite.
 
         Args:
             width: The new width
-            height:
-
-        Returns:
-
+            height: The new height
         """
         if self.image is not None and self.rect is not None:
             self.image = transform.scale(self.image, (width, height))
@@ -48,7 +55,10 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
 
     @property
     @abstractmethod
-    def imageName(self):
+    def imageRelativePath(self) -> str:
+        """
+        Contains the relative path to the image of this sprite.
+        """
         pass
 
     def __deepcopy__(self, memo={}):

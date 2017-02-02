@@ -1,16 +1,22 @@
+"""
+File containing the definition of an abstract Human Controller
+"""
+
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from controls.controller import Controller
-from controls.events.human import HumanEvent
-from controls.events.keyboard import KeyboardEvent
+from pytgf.controls.controllers import Controller
+from pytgf.controls.events import HumanEvent, KeyboardEvent, MouseEvent
 
-from pytgf.controls.events.mouse import MouseEvent
+__author__ = 'Anthony Rouneau'
 
 
 class Human(Controller, metaclass=ABCMeta):
+    """
+    An abstract definition of a Human Controller, reacting to keyboard and mouse events
+    """
 
-    def reactToEvents(self, events: List[HumanEvent]):
+    def reactToEvents(self, events: List[HumanEvent]) -> None:
         """
         The human controller reacts to human input => keyboard or mouse (joypad controller could be added)
 

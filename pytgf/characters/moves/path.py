@@ -1,3 +1,7 @@
+"""
+File containing the abstract definition of a Path. While the path has a next move, it continues.
+"""
+
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable, Tuple, Union
 
@@ -5,11 +9,15 @@ from pytgf.board import Tile
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves import ShortMove
 
-
 __author__ = 'Anthony Rouneau'
 
 
 class Path(metaclass=ABCMeta):
+    """
+    Class defining a Path, made of multiple moves, that can trigger actions at the beginning or the end of the path,
+    and at the beginning or the end of a step in the path. When there is no move left in the path, the path ends.
+    """
+
     def __init__(self, pre_action: Optional[Callable[[], None]]=None, post_action: Optional[Callable[[], None]]=None,
                  step_pre_action: Optional[Callable[[Tile, Tile], None]]=None,
                  step_post_action: Optional[Callable[[Tile, Tile], None]]=None, max_moves: int=-1):

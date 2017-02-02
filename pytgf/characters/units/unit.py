@@ -1,18 +1,29 @@
+"""
+File containing the definition of a Unit.
+"""
+
 from copy import deepcopy
 from queue import Queue, Empty
 from typing import List
 
 import pygame
-from characters.sprite import UnitSprite
 
-from pytgf.characters.units.particle import Particle
+from pytgf.characters.units import Particle
+from pytgf.characters.units.sprite import UnitSprite
+
+__author__ = 'Anthony Rouneau'
 
 
 class Unit(Particle):
+    """
+    A unit is a Particle that can have its own Particles. (e.g. a Gunner that owns its fired bullets)
+    """
+
     def __init__(self, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
                  surviving_particles: bool=False):
         """
         Instantiates a unit in the game
+
         Args:
             sprite: The sprite to draw on the board
             max_particles: The maximum number of particles for this unit (-1 = infinite)
@@ -29,13 +40,17 @@ class Unit(Particle):
     def draw(self, surface: pygame.Surface) -> None:
         """
         Draws the unit and its particles
+
         Args:
             surface: The surface the unit and its particle will be drawn on
         """
         super().draw(surface)
         self._particlesSpriteGroup.draw(surface)
 
-    def kill(self):
+    def kill(self) -> None:
+        """
+        Kills the unit and all its particle if "surviving particles" was set to False at the creation of this unit
+        """
         super().kill()
         if not self.isAlive():
             if not self.survivingParticles:
@@ -45,6 +60,7 @@ class Unit(Particle):
     def addParticle(self, particle: Particle) -> None:
         """
         Adds a particle linked to this unit
+
         Args:
             particle: the particle to add to this unit
         """
@@ -74,6 +90,7 @@ class Unit(Particle):
     def removeParticle(self, particle: Particle) -> None:
         """
         Removes the given particle from the belongings of this unit
+
         Args:
             particle: The particle to remove
         """
@@ -93,9 +110,10 @@ class Unit(Particle):
             if particle.sprite is not None:
                 self._particlesSpriteGroup.remove(particle.sprite)
 
-    def hasParticle(self, particle: Particle):
+    def hasParticle(self, particle: Particle) -> bool:
         """
         Checks if the given particle belongs to this unit
+
         Args:
             particle: The particle to check
 
@@ -110,10 +128,22 @@ class Unit(Particle):
         """
         return self._particlesList
 
-    def getParticlesSpriteGroup(self):
+    def getParticlesSpriteGroup(self) -> pygame.sprite.Group:
+        """
+        Gets the "SpriteGroup" of this unit, including all of its particle. Can be used for pygame's collision check
+        """
         return self._particlesSpriteGroup
 
     def isColliding(self, other_sprite_group) -> bool:
+        """
+        Returns True if this unit or any of its particle collide with the other unit or any of its particle.
+        (Uses the pygame collision check)
+
+        Args:
+            other_sprite_group: The other Sprite group with which we want to check if there is a collision
+
+        Returns: True if the two group are colliding, False otherwise
+        """
         for sprite in other_sprite_group.sprites:  # type: pygame.sprite.Sprite
             if pygame.sprite.collide_rect(self.sprite, sprite):
                 return True

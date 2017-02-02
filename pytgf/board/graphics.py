@@ -1,9 +1,14 @@
+"""
+File containing the Definition of Color (a 3-uple of int) and BoardGraphics that
+represents the graphical part of a Board
+"""
+
 from typing import Tuple, List, Union
 
+import numpy as np
 import pygame
 from pygame import gfxdraw
 from scipy.spatial import KDTree
-import numpy as np
 
 import pytgf.utils.geom
 from pytgf.utils.geom import Coordinates
@@ -13,19 +18,29 @@ __author__ = 'Anthony Rouneau'
 
 
 class NotAPolygonError(Exception):
+    """
+    Exception raised when a Tile is trying to be created without being a closed polygon
+    """
     pass
 
 
 Color = Tuple[int, int, int]
+Width = int
+Height = int
 
 
 class BoardGraphics:
+    """
+    Class defining the graphical part of a Board.
+    It contains the background color, the color of each tile, and the polygon formed by the tiles
+    """
+
     _BORDER_COLOR = 0
     _INTERNAL_COLOR = 1
 
     _TILE_LENGTH_EPSILON = 0.1
 
-    def __init__(self, tiles_borders: list, background_color: Color, border_line_color: Color,
+    def __init__(self, size: Tuple[Width, Height], tiles_borders: list, background_color: Color, border_line_color: Color,
                  centers: List[List[Coordinates]], borders: List[Tuple[Coordinates, Coordinates]], tiles_visible: bool):
         """
         Instantiates a BoardGraphics object, representing the graphical part of the board
@@ -39,6 +54,7 @@ class BoardGraphics:
                  (e.g. [((1, 2), (3, 4)), ((0,1), (0,2)), ...])
             tiles_visible: If true, the borders of each tile will be drawn by the "draw" method.
         """
+        self.size = size
         self.sideLength = pytgf.utils.geom.dist(tiles_borders[0][0][-1], tiles_borders[0][0][0])
         self.nbrOfSides = len(tiles_borders[0][0])
         self._tilesVisible = tiles_visible

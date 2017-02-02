@@ -1,4 +1,8 @@
-from typing import Dict
+"""
+File containing the definition of a ShortMove between two tiles
+"""
+
+from typing import Dict, Any
 
 from pytgf.board import Tile
 from pytgf.board import TileIdentifier
@@ -8,24 +12,26 @@ from pytgf.utils.geom import get_hypotenuse_length
 
 __author__ = 'Anthony Rouneau'
 
+MoveDescriptor = Any  # Represents any constants that can be interpreted as a move order for the game
+
 
 class IllegalMove(BaseException):
     """
-    The destination tile is not amongst the neighbours of the source tile
+    Exception raised when the destination tile is not amongst the neighbours of the source tile
     """
     pass
 
 
 class ImpossibleMove(BaseException):
     """
-    The move cannot be done because the destination tile is not walkable by the unit
+    Exception raised when the move cannot be done because the destination tile is not walkable by the unit
     """
     pass
 
 
 class InconsistentMove(ImpossibleMove):
     """
-    The unit performing the move is not located on the source tile at the beginning of the move
+    Exception raised when the unit performing the move is not located on the source tile at the beginning of the move
     """
     pass
 
@@ -37,6 +43,7 @@ class ShortMove(object):
 
     This class supposes that the unit comes from the center of the sourceTile.
     """
+
     def __init__(self, unit: MovingUnit, source_tile: Tile, destination_tile: Tile, fps: int,
                  units_location: Dict[MovingUnit, TileIdentifier], graphical: bool=True):
         """
