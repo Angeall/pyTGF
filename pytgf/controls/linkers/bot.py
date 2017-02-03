@@ -3,8 +3,7 @@ File containing the definition of a Bot Linker, linking the game with a bot cont
 """
 
 from abc import ABCMeta
-from queue import Empty
-from queue import Queue
+from queue import Empty, Queue
 from typing import Dict
 
 from multiprocess.connection import PipeConnection

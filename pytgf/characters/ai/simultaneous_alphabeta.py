@@ -58,10 +58,9 @@ class SimultaneousAlphaBeta:
         try:
             self.playerNumber = player_number
             if self.actions.get(state) is not None:
-                value, actions = self.actions[state]
+                _, actions = self.actions[state]
             else:
-
-                value, actions, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
+                _, actions, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
             self.playerNumber = None
             if actions is not None:
                 return actions[player_number]

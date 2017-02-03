@@ -297,9 +297,9 @@ class BoardGraphics:
         Returns: A matrix of tuples, containing a border color triplet (R,G,B) and an internal color triplet (R,G,B)
         """
         color_matrix = []
-        for i in range(lines):
+        for _ in range(lines):
             line = ()
-            for j in range(rows):
+            for _2 in range(rows):
                 temp = [None, None]
                 temp[self._BORDER_COLOR] = (0, 0, 0)
                 temp[self._INTERNAL_COLOR] = (255, 255, 255)
