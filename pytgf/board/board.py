@@ -84,7 +84,7 @@ class Board:
         """
         try:
             return self._tiles[identifier[0]][identifier[1]]
-        except KeyError:
+        except IndexError:
             return self.OUT_OF_BOARD_TILE
 
     def isAccessible(self, source_identifier: TileIdentifier, destination_identifier: TileIdentifier) -> bool:
