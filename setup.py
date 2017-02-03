@@ -17,5 +17,5 @@ setup(
     license='',
     author='Anthony Rouneau',
     author_email='',
-    description='', requires=['numpy', 'pygame', 'scipy', 'matplotlib', 'multiprocess', 'pathos']
+    description='', requires=['numpy', 'pygame', 'scipy', 'matplotlib', 'pathos']
 )

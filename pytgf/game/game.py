@@ -4,8 +4,7 @@ File containing the definition of a Game.
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from types import FunctionType as function
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union, Tuple, Callable
 
 from pytgf.board import Board, Tile
 from pytgf.board import TileIdentifier
@@ -63,7 +62,7 @@ class Game(metaclass=ABCMeta):
         self.unitsLocation = {}   # type: Dict[Particle, tuple]
         self._previousUnitsLocation = {}   # type: Dict[Particle, tuple]
         self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
-        self.addCustomMoveFunc = None  # type: function
+        self.addCustomMoveFunc = None  # type: Callable[[Particle, Path, MoveDescriptor], None]
 
     # -------------------- PUBLIC METHODS -------------------- #
 
