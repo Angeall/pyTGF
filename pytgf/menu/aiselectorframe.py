@@ -22,7 +22,8 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
     """
 
     NONE_STRING = "None"
-    CONFIG_FILE_NAME = "config.bin"
+    CONFIG_FILE_NAME = "config"
+    CONFIG_FILE_EXT = ".bin"
     TEAM_STRING = "Team "
     PLAYER_STRING = "Player "
 
@@ -91,7 +92,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         Serializes the selection into a file
         """
         lst = [self.selectedAIs, self.selectedTeams]
-        file = open(self.CONFIG_FILE_NAME, mode="bw")
+        file = open(self.CONFIG_FILE_NAME + "_" + self.parent.title() + self.CONFIG_FILE_EXT, mode="bw")
         pickle.dump(lst, file)
 
     def _loadInstance(self) -> None:
@@ -99,7 +100,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         Load a serialized file (if there is one) containing the selection
         """
         try:
-            file = open(self.CONFIG_FILE_NAME, mode="br")
+            file = open(self.CONFIG_FILE_NAME + "_" + self.parent.title() + self.CONFIG_FILE_EXT, mode="br")
             lst = pickle.load(file)
             self.selectedAIs = lst[0]
             self.selectedTeams = lst[1]
@@ -217,7 +218,8 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         """
         Look into the "AIs" folder for compatibles AIs or Human controllers and fill *self.ais*
         """
-        folder = "AIs"
+        res_folder = "res"
+        folder = join(res_folder, "AIs")
         files = [f for f in listdir(folder) if isfile(join(folder, f))]
         self.ais = []
         self.aiClasses = {}

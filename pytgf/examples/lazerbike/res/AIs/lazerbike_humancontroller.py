@@ -1,6 +1,7 @@
 """
 File containing the definition of a human player for the Lazerbike Game
 """
+from build.lib.pytgf.examples.lazerbike.control.api import GO_LEFT, GO_RIGHT, GO_UP, GO_DOWN
 from pytgf.controls.controllers import Human
 from pytgf.controls.events import KeyboardEvent, MouseEvent
 from pytgf.examples.lazerbike.control.player import LazerBikePlayer
@@ -35,15 +36,17 @@ class HumanPlayer(LazerBikePlayer, Human):
         Args:
             keyboard_event: The keyboard event received
         """
+        return_key = None
         for input_key in keyboard_event.characterKeys:
             if input_key == self.rightKey:
-                self.goRight()
+                return_key = GO_RIGHT
             elif input_key == self.leftKey:
-                self.goLeft()
+                return_key = GO_LEFT
             elif input_key == self.upKey:
-                self.goUp()
+                return_key = GO_UP
             elif input_key == self.downKey:
-                self.goDown()
+                return_key = GO_DOWN
+        return return_key
 
     def reactToMouseEvent(self, mouse_event: MouseEvent) -> None:
         """
