@@ -81,7 +81,10 @@ class MainLoop:
         pygame.init()
         clock = pygame.time.Clock()
         assert self.game.board.graphics is not None
-        self._screen = pygame.display.set_mode(self.game.board.graphics.size, DOUBLEBUF)
+        try:
+            self._screen = pygame.display.set_mode(self.game.board.graphics.size, DOUBLEBUF)
+        except pygame.error:  # No video device
+            pass
         if not self._prepared:
             self._prepareLoop()
         while self._state != END:
@@ -141,11 +144,16 @@ class MainLoop:
         """
         Update the visual state of the game
         """
-        self.game.board.draw(self._screen)
-        for unit in self.linkers.values():
-            if unit.isAlive():
-                unit.draw(self._screen)
-        pygame.display.flip()
+        try:
+            if self._screen is None:
+                raise pygame.error("No Video device")
+            self.game.board.draw(self._screen)
+            for unit in self.linkers.values():
+                if unit.isAlive():
+                    unit.draw(self._screen)
+            pygame.display.flip()
+        except pygame.error:  # No video device
+            pass
 
     def _handleInputs(self) -> None:
         """
