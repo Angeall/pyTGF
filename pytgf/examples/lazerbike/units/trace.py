@@ -49,7 +49,7 @@ class TraceSprite(UnitSprite):
 
     @property
     def imageRelativePath(self) -> str:
-        return os.path.join("sprites", "trace" + self._playerNumber + ".png")
+        return os.path.join(self.resFolder, "trace" + self._playerNumber + ".png")
 
     def makeAngle(self, previous_direction: int, current_direction: int, background_color) -> None:
         """

@@ -7,7 +7,7 @@ from pytgf.characters.units.sprite import UnitSprite
 class BoxSprite(UnitSprite):
     @property
     def imageRelativePath(self):
-        return os.path.join("sprites", "box.png")
+        return os.path.join(self.resFolder, "box.png")
 
 
 class Box(MovingUnit):
