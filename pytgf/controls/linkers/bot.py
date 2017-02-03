@@ -4,9 +4,13 @@ File containing the definition of a Bot Linker, linking the game with a bot cont
 
 from abc import ABCMeta
 from queue import Empty, Queue
-from typing import Dict
+from typing import Dict, NewType
 
-from multiprocess.connection import PipeConnection
+try:
+    from multiprocess.connection import PipeConnection
+except ImportError:
+    PipeConnection = NewType('PipeConnection', object)
+
 
 from pytgf.controls.controllers.bot import Bot, TeammatePayload, TeammateMessage
 from pytgf.controls.events.bot import BotEvent

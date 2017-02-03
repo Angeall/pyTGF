@@ -4,10 +4,14 @@ File containing the definition of an abstract Linker, linking the game with a Co
 
 from abc import ABCMeta, abstractmethod
 from queue import Empty
-from typing import Any
+from typing import Any, NewType
 
 import pygame
-from multiprocess.connection import PipeConnection
+
+try:
+    from multiprocess.connection import PipeConnection
+except ImportError:
+    PipeConnection = NewType("PipeConnection", object)
 
 from pytgf.controls.controllers.controller import Controller
 from pytgf.controls.events.event import Event

@@ -1,8 +1,12 @@
 import unittest
-from typing import Tuple, List
+from typing import Tuple, List, NewType
 
 from multiprocess.connection import Pipe
-from multiprocess.connection import PipeConnection
+
+try:
+    from multiprocess.connection import PipeConnection
+except ImportError:
+    PipeConnection = NewType("PipeConnection", object)
 
 from pytgf.board import Builder
 from pytgf.characters.moves import Path
