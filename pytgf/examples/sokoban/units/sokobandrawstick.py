@@ -7,7 +7,7 @@ from pytgf.characters.units.sprite import UnitSprite
 class SokobanPlayerSprite(UnitSprite):
     @property
     def imageRelativePath(self):
-        return os.path.join("sprites", "player.png")
+        return os.path.join(self.resFolder, "player.png")
 
 
 class SokobanDrawstick(MovingUnit):

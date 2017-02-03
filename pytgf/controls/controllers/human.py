@@ -5,6 +5,7 @@ File containing the definition of an abstract Human Controller
 from abc import ABCMeta, abstractmethod
 from typing import List
 
+from pytgf.characters.moves import MoveDescriptor
 from pytgf.controls.controllers.controller import Controller
 from pytgf.controls.events import HumanEvent, KeyboardEvent, MouseEvent
 
@@ -16,21 +17,24 @@ class Human(Controller, metaclass=ABCMeta):
     An abstract definition of a Human Controller, reacting to keyboard and mouse events
     """
 
-    def reactToEvents(self, events: List[HumanEvent]) -> None:
+    def reactToEvents(self, events: List[HumanEvent]) -> MoveDescriptor:
         """
         The human controller reacts to human input => keyboard or mouse (joypad controller could be added)
 
         Args:
             events: The list of input event
         """
+        res = None
         for event in events:
             if isinstance(event, MouseEvent):
-                self.reactToMouseEvent(event)
+                res = self.reactToMouseEvent(event)
             elif isinstance(event, KeyboardEvent):
-                self.reactToKeyboardEvent(event)
+                res = self.reactToKeyboardEvent(event)
+        if res is not None:
+            self.moves.put(res)
 
     @abstractmethod
-    def reactToKeyboardEvent(self, keyboard_event: KeyboardEvent) -> None:
+    def reactToKeyboardEvent(self, keyboard_event: KeyboardEvent) -> MoveDescriptor:
         """
         Makes the controller react to an input. (e.g. input_key == K_RIGHT: self.moves.put(Move(right=True)) )
 
@@ -40,7 +44,7 @@ class Human(Controller, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def reactToMouseEvent(self, mouse_event: MouseEvent) -> None:
+    def reactToMouseEvent(self, mouse_event: MouseEvent) -> MoveDescriptor:
         """
         Reacts to a click
         Args:

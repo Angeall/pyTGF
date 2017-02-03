@@ -57,7 +57,8 @@ def launch_game(gui: GUI, player_info: tuple):
     controllers = []
     for player_number, player_class in player_info[0].items():
         controllers.append(player_class)
-    parser_result = SokobanBoardParser().parseFile(os.path.join("boards", "test1.txt"))
+    boards_folder = os.path.join("res", "boards")
+    parser_result = SokobanBoardParser().parseFile(os.path.join(boards_folder, "test1.txt"))
     builder = SokobanBoardBuilder(width, height, parser_result, controllers, speed)
     game = builder.createGame()
     result = game.run()

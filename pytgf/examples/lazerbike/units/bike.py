@@ -19,7 +19,7 @@ class BikeSprite(UnitSprite):
 
     @property
     def imageRelativePath(self) -> str:
-        return os.path.join("sprites", "bike" + self.playerNumber + ".png")
+        return os.path.join(self.resFolder, "bike" + self.playerNumber + ".png")
 
 
 class Bike(MovingUnit):

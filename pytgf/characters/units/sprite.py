@@ -22,6 +22,7 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
         Instantiates the sprite
         """
         super().__init__()
+        self.resFolder = os.path.join("res", "sprites")
         location = os.path.join(os.curdir, self.imageRelativePath)
         img = pygame.image.load_extended(location)  # type: pygame.Surface
         # img = img.convert_alpha()
