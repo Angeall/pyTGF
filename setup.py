@@ -17,4 +17,5 @@ setup(
     license='MIT',
     author='Anthony Rouneau',
     author_email='angeal1105@gmail.com',
-    description='', requires=['multiprocess', 'pathos', 'pygame', 'matplotlib', 'numpy', 'scipy'])
+    description='', requires=['multiprocess', 'pathos', 'pygame', 'matplotlib', 'numpy', 'scipy']
+)
