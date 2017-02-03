@@ -69,7 +69,7 @@ class SokobanGame(Game):
                 if self.board.graphics is not None:
                     self.board.graphics.setInternalColor(FULL_HOLE_COLOR, box_next_tile_id[0], box_next_tile_id[1])
             event = box_next_tile_id
-            self._addCustomMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, MAX_FPS,
+            self._addCustomMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, MAX_FPS/2,
                                                          units_location=self.unitsLocation)]),
                                 event)
 
