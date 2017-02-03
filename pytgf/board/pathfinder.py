@@ -55,9 +55,9 @@ def get_shortest_path(source_tile_id, dest_tile_id, get_tile_by_id_func: Callabl
 
 
 def get_shortest_paths(source_tile_id: TileIdentifier, max_dist: int,
-                       get_tile_by_id_func: Callable[[[Any, ...], TileIdentifier], Tile],
-                       get_tile_neighbours_func:  Callable[[[Any, ...], Tile], List[Tuple]],
-                       walkable_tile_function: Callable[[[Any, ...], Tile], bool]) \
+                       get_tile_by_id_func: Callable[[Any, TileIdentifier], Tile],
+                       get_tile_neighbours_func:  Callable[[Any, Tile], List[Tuple]],
+                       walkable_tile_function: Callable[[Any, Tile], bool]) \
                                         -> Tuple[Dict[TileIdentifier, TileIdentifier], Dict[TileIdentifier, Cost]]:
     """
     Uses Dijkstra's algorithm to find all the paths available from the given source tile to any other tile
@@ -116,9 +116,9 @@ def reconstruct_path(came_from: Dict[TileIdentifier, TileIdentifier], source_til
 # -------------------- PRIVATE METHODS -------------------- #
 
 def __find_path(dest_tile_id: Optional[TileIdentifier], source_tile_id: TileIdentifier,
-                get_tile_by_id_func: Callable[[[Any, ...], TileIdentifier], Tile],
-                get_tile_neighbours_func:  Callable[[[Any, ...], Tile], List[TileIdentifier]],
-                walkable_tile_function: Callable[[[Any, ...], Tile], bool],
+                get_tile_by_id_func: Callable[[Any, TileIdentifier], Tile],
+                get_tile_neighbours_func:  Callable[[Any, Tile], List[TileIdentifier]],
+                walkable_tile_function: Callable[[Any, Tile], bool],
                 heuristic: Optional[Callable[[TileIdentifier, TileIdentifier], int]], max_dist: int)\
                                 -> Tuple[Dict[TileIdentifier, TileIdentifier], Dict[TileIdentifier, Cost]]:
     """

@@ -21,7 +21,7 @@ class ContinuousPath(Path):
     function cannot give another destination tile or when the wanted move is invalid/impossible
     """
 
-    def __init__(self, unit: MovingUnit, source_tile_func: Callable[[[Any, ...], MovingUnit], Tile],
+    def __init__(self, unit: MovingUnit, source_tile_func: Callable[[Any, MovingUnit], Tile],
                  next_tile_func: Callable[[Any, Tile], Tile], fps: int,
                  units_location_dict: Dict[Particle, TileIdentifier], pre_action: Optional[Callable[[], None]]=None,
                  post_action: Optional[Callable[[], None]]=None,
