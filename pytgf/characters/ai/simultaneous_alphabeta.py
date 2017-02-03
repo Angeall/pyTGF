@@ -67,7 +67,7 @@ class SimultaneousAlphaBeta:
                 return actions[player_number]
             else:
                 return self._randomChoice(self.possibleActions)
-        except:
+        except:  # Too broad so that AI developer can ammend of unexpected bug without crashing its AI
             traceback.print_exc()
 
     # -------------------- PROTECTED METHODS -------------------- #
@@ -210,7 +210,7 @@ class SimultaneousAlphaBeta:
         res = [order_dicts[key] for key in order_dicts]
         return res
 
-    def _randomChoice(self, choices: Union[List[T], Tuple[T]]) -> T:
+    def _randomChoice(self, choices: Union[List[T], Tuple[T, ...]]) -> T:
         """
         Select randomly inside a collection of possibilities
 

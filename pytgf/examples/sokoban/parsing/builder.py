@@ -102,7 +102,8 @@ class SokobanBoardBuilder(Builder):
                                    SokobanBotLinker(Passive(box_number)), (i, j), team=2)
             box_number -= 1
 
-    def _createEndingUnit(self, winning_tiles):
+    @staticmethod
+    def _createEndingUnit(winning_tiles):
         ending_unit = MovingUnit(1000)
         if len(winning_tiles) == 0:
             raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")

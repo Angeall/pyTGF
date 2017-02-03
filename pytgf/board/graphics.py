@@ -40,8 +40,9 @@ class BoardGraphics:
 
     _TILE_LENGTH_EPSILON = 0.1
 
-    def __init__(self, size: Tuple[Width, Height], tiles_borders: list, background_color: Color, border_line_color: Color,
-                 centers: List[List[Coordinates]], borders: List[Tuple[Coordinates, Coordinates]], tiles_visible: bool):
+    def __init__(self, size: Tuple[Width, Height], tiles_borders: list, background_color: Color,
+                 border_line_color: Color, centers: List[List[Coordinates]],
+                 borders: List[Tuple[Coordinates, Coordinates]], tiles_visible: bool):
         """
         Instantiates a BoardGraphics object, representing the graphical part of the board
         Args:

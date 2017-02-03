@@ -4,7 +4,6 @@ and the bot controllers handling
 """
 
 import time
-import traceback
 from queue import Queue, Empty
 from typing import Dict, Optional
 from typing import Tuple
@@ -305,8 +304,6 @@ class MainLoop:
                     self._cancelCurrentMoves(unit)
                 except ImpossibleMove:
                     self._cancelCurrentMoves(unit)
-                except:
-                    traceback.print_exc()
                 finally:
                     return False
         else:
@@ -328,15 +325,14 @@ class MainLoop:
         if current_move is None or current_move.finished():
             try:
                 if current_move is not None:
-                    del self._movesEvent[current_move]
+                    if isinstance(current_move, Path):
+                        del self._movesEvent[current_move]
                 move = moves[1].get_nowait()  # type: Path
                 self._unitsMoves[unit] = (move, moves[1])
                 current_move = move
             except Empty:
                 self._unitsMoves[unit] = (None, moves[1])
                 current_move = None
-            except:
-                traceback.print_exc()
         return current_move
 
     def _checkGameState(self) -> int:
@@ -364,8 +360,6 @@ class MainLoop:
             self._addMove(unit, move)
         except UnfeasibleMoveException:
             pass
-        except:
-            traceback.print_exc()
 
     def _getPipeConnection(self, linker: Linker) -> PipeConnection:
         """
@@ -397,10 +391,7 @@ class MainLoop:
             if issubclass(type(linker), BotLinker):
                 event = self._movesEvent[move]
                 pipe_conn = self._getPipeConnection(linker)
-                try:
-                    pipe_conn.send(BotEvent(moved_unit_number, event))
-                except:
-                    traceback.print_exc()
+                pipe_conn.send(BotEvent(moved_unit_number, event))
 
     def _killUnit(self, unit: MovingUnit, linker: Linker) -> None:
         """
@@ -444,10 +435,7 @@ class MainLoop:
         for linker in self.linkers:
             if isinstance(linker, BotLinker):
                 linker.controller.gameState = self.game.copy()
-            try:
-                self.executor.apipe(linker.run)
-            except:
-                traceback.print_exc()
+            self.executor.apipe(linker.run)
         time.sleep(2)  # Waiting for the processes to launch correctly
         self._prepared = True
 

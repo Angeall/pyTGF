@@ -243,16 +243,16 @@ if __name__ == "__main__":
     default = 700
     pygame.init()
     clock = pygame.time.Clock()
-    builder = Builder(1920, 1080, 50, 100)
-    builder.setBordersColor((255, 0, 0))
-    builder.setTilesVisible(True)
-    screen = pygame.display.set_mode((1920, 1080), pygame.DOUBLEBUF + pygame.HWSURFACE)
-    background = pygame.Surface(screen.get_size())
+    test_builder = Builder(1920, 1080, 50, 100)
+    test_builder.setBordersColor((255, 0, 0))
+    test_builder.setTilesVisible(True)
+    test_screen = pygame.display.set_mode((1920, 1080), pygame.DOUBLEBUF + pygame.HWSURFACE)
+    background = pygame.Surface(test_screen.get_size())
     background = background.convert()
     background.fill((255, 255, 255))
-    screen.blit(background, (0, 0))
-    board = builder.create()
-    board.draw(screen)
+    test_screen.blit(background, (0, 0))
+    test_board = test_builder.create()
+    test_board.draw(test_screen)
     pygame.display.flip()
     cancelled = False
     passed_int_color = (255, 255, 255)
@@ -265,17 +265,17 @@ if __name__ == "__main__":
                 cancelled = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if pygame.mouse.get_pressed()[0]:
-                    clicked_tile = board.getTileByPixel(event.pos)
+                    clicked_tile = test_board.getTileByPixel(event.pos)
                     if clicked_tile is not None:
-                        i, j = clicked_tile.identifier
-                        board.graphics.setInternalColor((255, 0, 0), i, j)
+                        k, l = clicked_tile.identifier
+                        test_board.graphics.setInternalColor((255, 0, 0), i, j)
                 else:
                     clicked_tile = None
             elif event.type == pygame.MOUSEBUTTONUP:
                 if clicked_tile is not None:
-                    i, j = clicked_tile.identifier
-                    board.graphics.setInternalColor(passed_int_color, i, j)
-            board.draw(screen)
+                    k, l = clicked_tile.identifier
+                    test_board.graphics.setInternalColor(passed_int_color, i, j)
+            test_board.draw(test_screen)
             pygame.display.flip()
 
             clock.tick(60)

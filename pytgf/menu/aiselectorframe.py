@@ -114,16 +114,10 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         Updates the values in the combobox's using self.selectedAIs and self.selectedTeams
         """
         for player_number in self.selectedAIs:
-            try:
-                self._aiSelectors[player_number-1].set(self.selectedAIs[player_number].__name__)
-            except Exception:
-                continue
+            self._aiSelectors[player_number-1].set(self.selectedAIs[player_number].__name__)
 
         for player_number in self.selectedTeams:
-            try:
-                self._teamSelectors[player_number-1].set(self.TEAM_STRING + str(self.selectedTeams[player_number]))
-            except Exception:
-                continue
+            self._teamSelectors[player_number-1].set(self.TEAM_STRING + str(self.selectedTeams[player_number]))
 
     def _setupControllerCombobox(self, combobox: Combobox, player_number: int) -> None:
         """
@@ -137,7 +131,8 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         combobox['values'] = self.ais
         combobox.set(self.NONE_STRING)
         combobox.state(("readonly",))
-        combobox.bind("<<ComboboxSelected>>", lambda event: self._addControllerToSelection(player_number, combobox.get()))
+        combobox.bind("<<ComboboxSelected>>", lambda event: self._addControllerToSelection(player_number,
+                                                                                           combobox.get()))
         combobox.grid(column=1, row=0)
         self._aiSelectors.append(combobox)
 
@@ -226,7 +221,6 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         files = [f for f in listdir(folder) if isfile(join(folder, f))]
         self.ais = []
         self.aiClasses = {}
-        path = list(sys.path)
         sys.path.insert(0, folder)
         for file in files:
             file_name = splitext(file)[0]

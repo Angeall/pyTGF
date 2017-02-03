@@ -7,6 +7,7 @@ from typing import Dict, Any
 from pytgf.board import Tile
 from pytgf.board import TileIdentifier
 from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Particle
 from pytgf.utils.geom import get_hypotenuse_length
 
 
@@ -45,7 +46,7 @@ class ShortMove(object):
     """
 
     def __init__(self, unit: MovingUnit, source_tile: Tile, destination_tile: Tile, fps: int,
-                 units_location: Dict[MovingUnit, TileIdentifier], graphical: bool=True):
+                 units_location: Dict[Particle, TileIdentifier], graphical: bool=True):
         """
         Instantiates a move object between two tiles
         Args:

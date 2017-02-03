@@ -68,7 +68,8 @@ class BasicFrameBuilder:
                           padding=(0, 50, 0, 175), font="Helvetica 30 bold")
         Style().configure(self.FRAME_STYLE, background=self.backgroundColor)
 
-    def _configureWeight(self, frame: Frame) -> None:
+    @staticmethod
+    def _configureWeight(frame: Frame) -> None:
         """
         Configure the columns of this frame
 

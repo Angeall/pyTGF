@@ -123,7 +123,7 @@ class Board:
         tile = self.getTileById(tile_identifier)
         i, j = tile_identifier
         self._tiles[i][j] = Tile(identifier=tile.identifier, center=tile.center, neighbours=tile.neighbours,
-                                            deadly=deadly, walkable=tile.walkable)
+                                 deadly=deadly, walkable=tile.walkable)
 
     def setTileNonWalkable(self, tile_identifier: TileIdentifier, walkable: bool=False) -> None:
         """
@@ -136,7 +136,7 @@ class Board:
         tile = self.getTileById(tile_identifier)
         i, j = tile_identifier
         self._tiles[i][j] = Tile(identifier=tile.identifier, center=tile.center, neighbours=tile.neighbours,
-                                            deadly=tile.deadly, walkable=walkable)
+                                 deadly=tile.deadly, walkable=walkable)
 
     def draw(self, surface: pygame.Surface) -> None:
         """

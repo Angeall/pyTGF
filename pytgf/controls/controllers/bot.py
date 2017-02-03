@@ -88,7 +88,7 @@ class Bot(Controller, metaclass=ABCMeta):
                           (str(event.playerNumber), str(event.moveDescriptor)))
 
                 move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
-            except:
+            except:  # Too broad so that AI developer can ammend of unexpected bug without crashing its AI
                 traceback.print_exc()
         if move_interesting:
             selected_move = self._selectNewMove(self.gameState)
