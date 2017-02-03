@@ -304,12 +304,11 @@ class MainLoop:
                     self._cancelCurrentMoves(unit)
                 except ImpossibleMove:
                     self._cancelCurrentMoves(unit)
-                finally:
-                    return False
+                return False
         else:
             if current_move is not None:
                 current_move.stop(cancel_post_action=True)
-                return False
+            return False
 
     def _getNextMoveForUnitIfAvailable(self, unit: MovingUnit) -> Path:
         """

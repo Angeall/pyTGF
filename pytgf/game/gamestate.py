@@ -89,8 +89,7 @@ class GameState:
             return False
         except IllegalMove:
             unit.kill()
-        finally:
-            return True
+        return True
 
     def belongsToSameTeam(self, player_1_number: int, player_2_number: int) -> bool:
         """
