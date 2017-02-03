@@ -6,4 +6,4 @@ install:
   - "pip install coveralls coverage"
 after_success:
   - coveralls
-script: "pytest"
+script: "coverage run -a --source pytgf -m pytest"
