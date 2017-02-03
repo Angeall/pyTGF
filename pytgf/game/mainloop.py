@@ -159,7 +159,11 @@ class MainLoop:
         """
         Handles all the user input (mouse and keyboard)
         """
-        for event in pygame.event.get():
+        try:
+            events_got = pygame.event.get()
+        except pygame.error:  # No video device
+            events_got = []
+        for event in events_got:
             if event.type == QUIT:
                 self._state = FINISH
             elif event.type == KEYDOWN:
