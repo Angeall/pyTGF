@@ -7,7 +7,7 @@ from typing import Tuple
 from pytgf.characters.ai import SimultaneousAlphaBeta
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.examples.lazerbike.control import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT, LazerBikeBotPlayer
-from pytgf.game import GameState
+from pytgf.game import API
 
 
 class UndyingAI(LazerBikeBotPlayer):
@@ -36,7 +36,7 @@ class UndyingAI(LazerBikeBotPlayer):
         pass
 
     @staticmethod
-    def eval_fct(state: GameState) -> Tuple[float, ...]:
+    def eval_fct(state: API) -> Tuple[float, ...]:
         """
         Just give a score of 1 for a unit that is alive, and -1 for a player that is not alive
 
@@ -59,7 +59,7 @@ class UndyingAI(LazerBikeBotPlayer):
             scores.append(score)
         return tuple(scores)
 
-    def _selectNewMove(self, game_state: GameState) -> MoveDescriptor:
+    def _selectNewMove(self, game_state: API) -> MoveDescriptor:
         """
         Selects a new move following a new game state
 

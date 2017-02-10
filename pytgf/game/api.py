@@ -1,24 +1,24 @@
 """
 File containing the definition of a basic API to interact with a game from a controller
 """
-
+from abc import ABCMeta, abstractmethod
 from typing import Tuple, Dict, Union, List
 
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves import IllegalMove, MoveDescriptor
 from pytgf.characters.moves import Path
 from pytgf.characters.units import MovingUnit
-from pytgf.game import Game, UnfeasibleMoveException
+from pytgf.game import Core, UnfeasibleMoveException
 
 __author__ = 'Anthony Rouneau'
 
 
-class GameState:
+class API(metaclass=ABCMeta):
     """
     A class defining a basic API so a controller can get information on the current state of the game,
     and simulate new moves in it.
     """
-    def __init__(self, game: Game):
+    def __init__(self, game: Core):
         """
         Instantiates the API
 
@@ -29,7 +29,7 @@ class GameState:
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor) -> Tuple[bool, Union['GameState', None]]:
+    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor) -> Tuple[bool, Union['API', None]]:
         """
         Simulates the move by creating a new GameState
 
@@ -42,13 +42,13 @@ class GameState:
         """
         feasible_move, move = self._generateMove(player_number, wanted_move)
         if feasible_move:
-            new_game_state = GameState(self.game.copy())
+            new_game_state = API(self.game.copy())
             new_game_state.performMove(player_number, wanted_move)
             return feasible_move, new_game_state
         else:
             return False, None
 
-    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor]) -> Tuple[bool, Union['GameState', None]]:
+    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor]) -> Tuple[bool, Union['API', None]]:
         """
         Simulates the given moves for the key players
 
@@ -65,7 +65,7 @@ class GameState:
             if not feasible_move:
                 return False, None
             moves.append(move)
-        new_game_state = GameState(self.game.copy())
+        new_game_state = self.copy()
         for player_number, wanted_move in player_moves.items():
             new_game_state.performMove(player_number, wanted_move)
         return True, new_game_state
@@ -81,7 +81,7 @@ class GameState:
         """
         unit = self.game.players[player_number]  # type: MovingUnit
         try:
-            move = self.game.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
+            move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
             new_tile_id = move.complete()
             unit.currentAction = move_descriptor
             self.game.updateGameState(unit, new_tile_id)
@@ -185,6 +185,28 @@ class GameState:
         """
         return self.game.board.getNeighboursIdentifier(tile_id)
 
+    def copy(self):
+        return type(self)(self.game.copy())
+
+    @abstractmethod
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+                                force: bool = False) -> Path:
+        """
+        Creates a move following the given event coming from the given unit
+
+        Args:
+            unit: The unit that triggered the event
+            move_descriptor: The descriptor of the move triggered by the given unit
+            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
+            force: Optional, a bot controller will force the move as it does not need to check if the move is possible
+
+        Returns: A Path of move(s) triggered by the given event for the given unit
+
+        Raises:
+            UnfeasibleMoveException: If the move is not possible.
+        """
+        pass
+
     # -------------------- PROTECTED METHODS -------------------- #
 
     def _generateMove(self, player_number: int, wanted_move: MoveDescriptor) -> Tuple[bool, Union[Path, None]]:
@@ -204,7 +226,7 @@ class GameState:
         """
         unit = self.game.players[player_number]
         try:
-            move = self.game.createMoveForDescriptor(unit, wanted_move, max_moves=1)
+            move = self.createMoveForDescriptor(unit, wanted_move, max_moves=1)
             return True, move
         except UnfeasibleMoveException:
             return False, None

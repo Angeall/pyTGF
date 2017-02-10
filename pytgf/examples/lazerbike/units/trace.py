@@ -5,7 +5,7 @@ import pygame.transform as transform
 
 from pytgf.characters.units import Particle
 from pytgf.characters.units.sprite import UnitSprite
-from pytgf.examples.lazerbike.control import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
 
 TOP_RIGHT = 0
 TOP_LEFT = 1

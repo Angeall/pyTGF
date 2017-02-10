@@ -1,2 +1,3 @@
-from pytgf.game.game import Game, UnfeasibleMoveException
-from pytgf.game.gamestate import GameState
+from pytgf.game.api import API
+from pytgf.game.core import Core, UnfeasibleMoveException
+
