@@ -6,8 +6,8 @@ from abc import ABCMeta
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.controls.controllers import Controller, Bot
-from pytgf.examples.lazerbike.control import LazerBikeGameState, GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
-from pytgf.game import Game
+from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from pytgf.examples.lazerbike.rules import LazerBikeAPI, LazerBikeCore
 
 
 class LazerBikePlayer(Controller, metaclass=ABCMeta):
@@ -32,7 +32,7 @@ class LazerBikeBotPlayer(LazerBikePlayer, Bot, metaclass=ABCMeta):
         self.availableMoves = [GO_DOWN, GO_UP, GO_RIGHT, GO_LEFT]
         self._playersMove = []
 
-    def _getGameStateAPI(self, game: Game) -> LazerBikeGameState:
+    def _getGameStateAPI(self, game: LazerBikeCore) -> LazerBikeAPI:
         """
         Get the API specific to this game
 
@@ -41,7 +41,7 @@ class LazerBikeBotPlayer(LazerBikePlayer, Bot, metaclass=ABCMeta):
 
         Returns: The specific API
         """
-        return LazerBikeGameState(game)
+        return LazerBikeAPI(game)
 
     def _isMoveInteresting(self, player_number: int, new_move_event: MoveDescriptor) -> bool:
         """

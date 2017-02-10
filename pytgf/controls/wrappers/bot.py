@@ -1,5 +1,5 @@
 """
-File containing the definition of a Bot Linker, linking the game with a bot controller
+File containing the definition of a Bot ControllerWrapper, linking the game with a bot controller
 """
 
 from abc import ABCMeta
@@ -14,14 +14,14 @@ except ImportError:
 
 from pytgf.controls.controllers.bot import Bot, TeammatePayload, TeammateMessage
 from pytgf.controls.events.bot import BotEvent
-from pytgf.controls.linkers.linker import Linker
+from pytgf.controls.wrappers.wrapper import ControllerWrapper
 
 __author__ = 'Anthony Rouneau'
 
 
-class BotLinker(Linker, metaclass=ABCMeta):
+class BotControllerWrapper(ControllerWrapper, metaclass=ABCMeta):
     """
-    Defines a Linker that is meant to be the medium between the Game and a Bot Controller
+    Defines a ControllerWrapper that is meant to be the medium between the Game and a Bot Controller
     """
     def __init__(self, controller: Bot):
         """

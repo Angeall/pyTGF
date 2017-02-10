@@ -10,7 +10,7 @@ from typing import List, Any
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.controls.controllers.controller import Controller
 from pytgf.controls.events.bot import BotEvent
-from pytgf.game import Game, GameState
+from pytgf.game import Core, API
 
 __author__ = 'Anthony Rouneau'
 
@@ -54,14 +54,14 @@ class Bot(Controller, metaclass=ABCMeta):
     # -------------------- PUBLIC METHODS -------------------- #
 
     @property
-    def gameState(self) -> GameState:
+    def gameState(self) -> API:
         """
         Returns the API of this controller. It will be used to be aware of the game information.
         """
         return self._gameStateLocalCopy
 
     @gameState.setter
-    def gameState(self, game: Game) -> None:
+    def gameState(self, game: Core) -> None:
         """
         Gives the game to start with in this controller. Generates the API around the game using the "_getGameStateAPI"
         method
@@ -69,7 +69,7 @@ class Bot(Controller, metaclass=ABCMeta):
         Args:
             game: The game with which we will generate the API of this controller.
         """
-        if isinstance(game, Game):
+        if isinstance(game, Core):
             self._gameStateLocalCopy = self._getGameStateAPI(game)
 
     def reactToEvents(self, events: List[BotEvent]) -> None:
@@ -136,7 +136,7 @@ class Bot(Controller, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _selectNewMove(self, game_state: GameState) -> MoveDescriptor:
+    def _selectNewMove(self, game_state: API) -> MoveDescriptor:
         """
         Decision taking algorithm that, given the new game state, will (or won't if not needed) make a move in the game
         Returns the move. The move returned must return a correct move for the game (see self._isMoveAllowed)
@@ -152,7 +152,7 @@ class Bot(Controller, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def _getGameStateAPI(self, game: Game) -> GameState:
+    def _getGameStateAPI(self, game: Core) -> API:
         """
         Generate the API of the game state, which will be used by this controller to make decisions.
 
@@ -161,7 +161,7 @@ class Bot(Controller, metaclass=ABCMeta):
 
         Returns: A new API to interact with
         """
-        return GameState(game)
+        return API(game)
 
     @abstractmethod
     def _isMoveAllowed(self, move_descriptor: MoveDescriptor) -> bool:

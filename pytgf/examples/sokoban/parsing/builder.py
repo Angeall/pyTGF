@@ -5,9 +5,10 @@ from pytgf.characters.units import MovingUnit
 from pytgf.controls.controllers import Passive
 from pytgf.controls.controllers.bot import Bot
 from pytgf.controls.controllers.human import Human
-from pytgf.examples.sokoban.controllers.linker import SokobanBotLinker, SokobanHumanLinker
+from pytgf.examples.sokoban.controllers.wrapper import SokobanBotControllerWrapper, SokobanHumanControllerWrapper
 from pytgf.examples.sokoban.parsing.parser import TileProperty, box, winning, player_tile
 from pytgf.examples.sokoban.rules.sokoban import SokobanGame
+from pytgf.examples.sokoban.rules.sokobanapi import SokobanAPI
 from pytgf.examples.sokoban.units.box import Box
 from pytgf.examples.sokoban.units.sokobandrawstick import SokobanDrawstick
 from pytgf.game.mainloop import MainLoop
@@ -45,7 +46,7 @@ class SokobanBoardBuilder(Builder):
         self._game = SokobanGame(board, ending_unit, winning_tiles)
         for tile in winning_tiles:
             self._game.addUnit(ending_unit, team_number=1000, origin_tile_id=tile.identifier)
-        self._mainLoop = MainLoop(self._game)
+        self._mainLoop = MainLoop(SokobanAPI(self._game))
         self._addBoxes()
         self._addPlayers()
         return self._mainLoop
@@ -84,11 +85,11 @@ class SokobanBoardBuilder(Builder):
         for (i, j) in self._playerLocations:
             controller = self._controllers[player_number - 1]
             if issubclass(controller, Bot):
-                linker = SokobanBotLinker(controller(player_number))
+                linker = SokobanBotControllerWrapper(controller(player_number))
             elif issubclass(controller, Human):  # Human player waiting for input keys
                 keys = human_controls[self._humanCounter]
                 self._humanCounter += 1
-                linker = SokobanHumanLinker(controller(player_number, keys[0], keys[1], keys[2], keys[3]))
+                linker = SokobanHumanControllerWrapper(controller(player_number, keys[0], keys[1], keys[2], keys[3]))
             else:
                 raise TypeError("The type of the player (\'%s\') must either be a Bot or a Human subclass."
                                 % (str(controller)))
@@ -99,7 +100,7 @@ class SokobanBoardBuilder(Builder):
         box_number = -1
         for (i, j) in self._boxLocations:
             self._mainLoop.addUnit(Box(self._unitSpeed, box_number),
-                                   SokobanBotLinker(Passive(box_number)), (i, j), team=2)
+                                   SokobanBotControllerWrapper(Passive(box_number)), (i, j), team=2)
             box_number -= 1
 
     @staticmethod

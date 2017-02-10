@@ -1,5 +1,5 @@
 """
-File containing the definition of an abstract Linker, linking the game with a Controller
+File containing the definition of an abstract ControllerWrapper, linking the game with a Controller
 """
 
 from abc import ABCMeta, abstractmethod
@@ -22,17 +22,17 @@ __author__ = 'Anthony Rouneau'
 MAX_FPS = 30
 
 
-class Linker(metaclass=ABCMeta):
+class ControllerWrapper(metaclass=ABCMeta):
     """
-    Defines a Linker that will be the medium between the Game and a controller.
+    Defines a ControllerWrapper that will be the medium between the Game and a controller.
     """
 
     def __init__(self, controller: Controller):
         """
-        Instantiates this Linker
+        Instantiates this ControllerWrapper
 
         Args:
-            controller: The controller with which the Linker will communicate
+            controller: The controller with which the ControllerWrapper will communicate
         """
         self._unitAlive = True
         self.controller = controller

@@ -6,9 +6,9 @@ from pygame.locals import *
 
 from pytgf.board import Builder
 from pytgf.controls.controllers import Bot, Human
-from pytgf.examples.lazerbike.control import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, LazerBikeBotLinker, \
-    LazerBikeHumanLinker, LazerBikePlayer
-from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeGame
+from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper, LazerBikePlayer
+from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from pytgf.examples.lazerbike.rules import LazerBikeCore, LazerBikeAPI
 from pytgf.examples.lazerbike.units.bike import Bike
 from pytgf.game.mainloop import MainLoop
 from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
@@ -62,11 +62,11 @@ def get_player_info(player_number: int):
 def add_controller(main_loop: MainLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
     global nb_human
     if issubclass(player_class, Bot):
-        linker = LazerBikeBotLinker(player_class(player_number))
+        linker = LazerBikeBotControllerWrapper(player_class(player_number))
     elif issubclass(player_class, Human):
         controls = human_controls[nb_human % len(human_controls)]
         nb_human += 1
-        linker = LazerBikeHumanLinker(player_class(player_number, controls[0], controls[1], controls[2], controls[3]))
+        linker = LazerBikeHumanControllerWrapper(player_class(player_number, controls[0], controls[1], controls[2], controls[3]))
     else:
         raise TypeError("The type of the player (\'%s\') must either be a Bot or a Human subclass."
                         % (str(player_class)))
@@ -102,8 +102,8 @@ def launch_game(gui: GUI, player_info: tuple):
     board = builder.create()
 
     speed = 0.5*board.graphics.sideLength
-    game = LazerBikeGame(board)
-    main_loop = MainLoop(game)
+    game = LazerBikeCore(board)
+    main_loop = MainLoop(LazerBikeAPI(game))
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
