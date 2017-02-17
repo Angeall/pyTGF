@@ -2,20 +2,25 @@ import unittest
 from queue import Empty
 
 from pytgf.board import Builder
+from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.moves import Path
 from pytgf.characters.units import MovingUnit
 from pytgf.controls.controllers import Bot, TeammatePayload
-from pytgf.game import Game, GameState
+from pytgf.game import Core, API
 
 
-class ExampleAPI(GameState):
+class ExampleAPI(API):
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+                                force: bool = False) -> Path:
+        pass
+
     def isItOneTestMethod(self):
         if isinstance(self.game, ExampleGame):
             return True
         return False
 
 
-class ExampleGame(Game):
+class ExampleGame(Core):
     @property
     def _teamKillAllowed(self) -> bool:
         return False
@@ -23,10 +28,6 @@ class ExampleGame(Game):
     @property
     def _suicideAllowed(self) -> bool:
         return False
-
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
-        pass
 
     def _collidePlayers(self, player1, player2, frontal: bool = False):
         pass
@@ -36,7 +37,7 @@ class ExampleBot(Bot):
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
         pass
 
-    def _getGameStateAPI(self, game: Game):
+    def _getGameStateAPI(self, game: Core):
         return ExampleAPI(game)
 
     def _isMoveInteresting(self, player_number: int, new_move_event) -> bool:
@@ -48,7 +49,7 @@ class ExampleBot(Bot):
     def reactToTeammateMessage(self, teammate_number: int, message):
         pass
 
-    def _selectNewMove(self, game_state: GameState):
+    def _selectNewMove(self, game_state: API):
         pass
 
 

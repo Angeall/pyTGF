@@ -9,7 +9,7 @@ import traceback
 from typing import Any, List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
-from pytgf.game import GameState
+from pytgf.game import API
 
 __author__ = 'Anthony Rouneau'
 
@@ -22,7 +22,7 @@ class SimultaneousAlphaBeta:
     Implementation of a cutoff AlphaBeta algorithm that performs the moves of all the players simultaneously
     """
 
-    def __init__(self, eval_fct: Callable[[GameState], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
+    def __init__(self, eval_fct: Callable[[API], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
                  max_depth: int=6):
         """
 
@@ -48,11 +48,11 @@ class SimultaneousAlphaBeta:
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def alphaBetaSearching(self, player_number: int, state: GameState) -> MoveDescriptor:
+    def alphaBetaSearching(self, player_number: int, state: API) -> MoveDescriptor:
         """
         :param player_number: The number of the player for which an action must be found
         :param state: The current state of the game (including the current player)
-        :type state: GameState
+        :type state: API
         :return: the best action among the possible ones
         """
         try:
@@ -71,7 +71,7 @@ class SimultaneousAlphaBeta:
 
     # -------------------- PROTECTED METHODS -------------------- #
 
-    def _maxValue(self, state: GameState, alpha: float, beta: float, depth: int) \
+    def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], bool]:
         """
         Computes the best step possible for the Player asking this alpha beta
@@ -125,7 +125,7 @@ class SimultaneousAlphaBeta:
 
         return max_value, best_combination, best_reached_end
 
-    def _minValue(self, state: GameState, actions: List[Dict[int, Any]], alpha: float, beta: float, depth: int) \
+    def _minValue(self, state: API, actions: List[Dict[int, Any]], alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], bool]:
         """
         Computes the possibilities of the other players, simulating the action of every players at the same time
@@ -159,7 +159,7 @@ class SimultaneousAlphaBeta:
         min_actions = self._randomChoice(equal_min_choices)
         return min_value, min_actions, min_reached_end
 
-    def _getTeamScore(self, state: GameState, players_score: Tuple[int, ...]) -> float:
+    def _getTeamScore(self, state: API, players_score: Tuple[int, ...]) -> float:
         """
         Given a tuple of players individual score for the given state, computes the score for the team of the player
         for which this alpha beta is running.
@@ -178,7 +178,7 @@ class SimultaneousAlphaBeta:
                 own_team_score += player_score
         return own_team_score
 
-    def _generateMovesCombinations(self, state: GameState) -> List[List[Dict[int, MoveDescriptor]]]:
+    def _generateMovesCombinations(self, state: API) -> List[List[Dict[int, MoveDescriptor]]]:
         """
         Generates al the possible combinations of movements for the given state
 

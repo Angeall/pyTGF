@@ -3,6 +3,8 @@ from typing import Tuple, List, NewType
 
 from multiprocess.connection import Pipe
 
+from pytgf.characters.moves import MoveDescriptor
+
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
@@ -13,8 +15,8 @@ from pytgf.characters.moves import Path
 from pytgf.characters.units import MovingUnit
 from pytgf.controls.controllers import Bot
 from pytgf.controls.events import BotEvent, SpecialEvent
-from pytgf.controls.linkers.bot import BotLinker
-from pytgf.game import Game, UnfeasibleMoveException, GameState
+from pytgf.controls.wrappers.bot import BotControllerWrapper
+from pytgf.game import Core, UnfeasibleMoveException, API
 
 MOVE1 = "MOVE1"
 MOVE2 = "MOVE2"
@@ -22,13 +24,17 @@ MSG1 = "DO_MOVE1"
 MSG2 = "DO_MOVE2"
 
 
-class ExampleBotLinker(BotLinker):
+class ExampleBotControllerWrapper(BotControllerWrapper):
     def isMoveDescriptorAllowed(self, move_descriptor) -> bool:
         return type(move_descriptor) == str and move_descriptor[0:4] == 'MOVE'
 
 
-class ExampleAPI(GameState):
-    def __init__(self, game: Game):
+class ExampleAPI(API):
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+                                force: bool = False) -> Path:
+        raise UnfeasibleMoveException()
+
+    def __init__(self, game: Core):
         super().__init__(game)
         self.move1 = 0
         self.move2 = 0
@@ -45,7 +51,7 @@ class ExampleAPI(GameState):
         self.move2 += 1
 
 
-class ExampleGame(Game):
+class ExampleGame(Core):
     @property
     def _teamKillAllowed(self) -> bool:
         return False
@@ -54,16 +60,12 @@ class ExampleGame(Game):
     def _suicideAllowed(self) -> bool:
         return False
 
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
-        raise UnfeasibleMoveException()
-
     def _collidePlayers(self, player1, player2, frontal: bool = False):
         pass
 
 
 class ExampleBot(Bot):
-    def _getGameStateAPI(self, game: Game):
+    def _getGameStateAPI(self, game: Core):
         return ExampleAPI(game)
 
     def reactToEvents(self, events: List[BotEvent]):
@@ -94,17 +96,17 @@ class ExampleBot(Bot):
         return "MOVE1-" + str(game_state.move1) + '/' + "MOVE2-" + str(game_state.move2)
 
 
-class TestBotLinker(unittest.TestCase):
+class TestBotControllerWrapper(unittest.TestCase):
     def setUp(self):
         self.game = ExampleGame(Builder(10, 10, 7, 6).create())
         self.game.addUnit(MovingUnit(1), 1, (0, 0))
         self.bot1 = ExampleBot(1)
         self.bot1.gameState = self.game.copy()
-        self.linker1 = ExampleBotLinker(self.bot1)
+        self.linker1 = ExampleBotControllerWrapper(self.bot1)
         self.game.addUnit(MovingUnit(2), 1, (0, 0))
         self.bot2 = ExampleBot(2)
         self.bot2.gameState = self.game.copy()
-        self.linker2 = ExampleBotLinker(self.bot2)
+        self.linker2 = ExampleBotControllerWrapper(self.bot2)
         self.game_info_pipe_parent1, self.game_info_pipe_child1 = Pipe()  # type: Tuple[PipeConnection, PipeConnection]
         self.game_info_pipe_parent2, self.game_info_pipe_child2 = Pipe()  # type: Tuple[PipeConnection, PipeConnection]
         self.move_pipe_parent1, self.move_pipe_child1 = Pipe()  # type: Tuple[PipeConnection, PipeConnection]

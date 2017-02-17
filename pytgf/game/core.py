@@ -39,7 +39,7 @@ class UnfeasibleMoveException(Exception):
     pass
 
 
-class Game(metaclass=ABCMeta):
+class Core(metaclass=ABCMeta):
     """
     The Game contains a Board, containing Tiles, but also Units, placed on Tiles
     """
@@ -75,7 +75,7 @@ class Game(metaclass=ABCMeta):
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
-        self._addUnitToTile(origin_tile_id, unit)
+        self.addUnitToTile(origin_tile_id, unit)
         self.players[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
         if team_number in self.teams.keys():
@@ -120,7 +120,7 @@ class Game(metaclass=ABCMeta):
                 raise InconsistentGameStateException(error_msg)
             else:
                 return
-        self._addUnitToTile(tile_id, unit)
+        self.addUnitToTile(tile_id, unit)
         if self.board.getTileById(tile_id).deadly:
             unit.kill()
             self._removeUnitFromTile(unit)
@@ -131,7 +131,7 @@ class Game(metaclass=ABCMeta):
                 if not unit.isAlive():
                     self.tilesOccupants[tile_id].remove(unit)
 
-    def copy(self) -> 'Game':
+    def copy(self) -> 'Core':
         """
         Copy this game so that any modification on the copy does not affect this one.
 
@@ -236,24 +236,43 @@ class Game(metaclass=ABCMeta):
             return tuple(self.tilesOccupants[tile_id])
         return ()
 
-    @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool=False) -> Path:
+    def addCustomMove(self, unit: MovingUnit, move: Path, event: MoveDescriptor) -> None:
         """
-        Creates a move following the given event coming from the given unit
+        Uses the "addCustomMoveFunc" that could have been defined by the mainloop to add a move that will be performed
+         step by step each frame.
 
         Args:
-            unit: The unit that triggered the event
-            move_descriptor: The descriptor of the move triggered by the given unit
-            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
-            force: Optional, a bot controller will force the move as it does not need to check if the move is possible
-
-        Returns: A Path of move(s) triggered by the given event for the given unit
-
-        Raises:
-            UnfeasibleMoveException: If the move is not possible.
+            unit: The unit to move
+            move: The move for the given unit to perform
+            event: The descriptor of the move to create
         """
-        pass
+        if self.addCustomMoveFunc is not None:
+            try:
+                self.addCustomMoveFunc(unit, move, event)
+            except TypeError:
+                pass
+
+    def addUnitToTile(self, new_tile_id: TileIdentifier, unit: Particle) -> None:
+        """
+        Adds the given unit to the tile for which the id was given.
+        Also removes the tile from its previous tile if needed
+
+        Args:
+            new_tile_id: The identifier of the tile on which place the given unit
+            unit: The unit to place on the given tile.
+        """
+        if unit not in self.unitsLocation:
+            self.unitsLocation[unit] = new_tile_id
+        if unit in self._previousUnitsLocation:
+            old_tile_id = self._previousUnitsLocation[unit]
+            self.tilesOccupants[old_tile_id].remove(unit)
+            if len(self.tilesOccupants[old_tile_id]) == 0:
+                del self.tilesOccupants[old_tile_id]
+        self._previousUnitsLocation[unit] = new_tile_id
+        if new_tile_id in self.tilesOccupants:
+            self.tilesOccupants[new_tile_id].append(unit)
+        else:
+            self.tilesOccupants[new_tile_id] = [unit]
 
     # -------------------- PROTECTED METHODS -------------------- #
 
@@ -300,43 +319,6 @@ class Game(metaclass=ABCMeta):
         self.tilesOccupants[old_tile_id].remove(unit)
         if len(self.tilesOccupants) == 0:
             del self.tilesOccupants[old_tile_id]
-
-    def _addCustomMove(self, unit: MovingUnit, move: Path, event: MoveDescriptor) -> None:
-        """
-        Uses the "addCustomMoveFunc" that could have been defined by the mainloop to add a move that will be performed
-         step by step each frame.
-
-        Args:
-            unit: The unit to move
-            move: The move for the given unit to perform
-        """
-        if self.addCustomMoveFunc is not None:
-            try:
-                self.addCustomMoveFunc(unit, move, event)
-            except TypeError:
-                pass
-
-    def _addUnitToTile(self, new_tile_id: TileIdentifier, unit: Particle) -> None:
-        """
-        Adds the given unit to the tile for which the id was given.
-        Also removes the tile from its previous tile if needed
-
-        Args:
-            new_tile_id: The identifier of the tile on which place the given unit
-            unit: The unit to place on the given tile.
-        """
-        if unit not in self.unitsLocation:
-            self.unitsLocation[unit] = new_tile_id  # FIXME need to continue on this
-        if unit in self._previousUnitsLocation:
-            old_tile_id = self._previousUnitsLocation[unit]
-            self.tilesOccupants[old_tile_id].remove(unit)
-            if len(self.tilesOccupants[old_tile_id]) == 0:
-                del self.tilesOccupants[old_tile_id]
-        self._previousUnitsLocation[unit] = new_tile_id
-        if new_tile_id in self.tilesOccupants:
-            self.tilesOccupants[new_tile_id].append(unit)
-        else:
-            self.tilesOccupants[new_tile_id] = [unit]
 
     @property
     @abstractmethod

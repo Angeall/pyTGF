@@ -23,8 +23,8 @@ from pytgf.board import TileIdentifier
 from pytgf.characters.moves import IllegalMove, ImpossibleMove, Path, MoveDescriptor
 from pytgf.characters.units import MovingUnit, Unit
 from pytgf.controls.events import BotEvent, SpecialEvent
-from pytgf.controls.linkers import Linker, HumanLinker, BotLinker
-from pytgf.game import Game, UnfeasibleMoveException
+from pytgf.controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
+from pytgf.game import API, UnfeasibleMoveException
 from pytgf.utils.geom import Coordinates
 from pytgf.utils.unit import resize_unit
 
@@ -39,25 +39,26 @@ MAX_FPS = 30
 
 class MainLoop:
     """
-    Defines the logical loop of a game, running MAX_FPS times per second, sending the inputs to the HumanLinker, and the
-    game updates to the BotLinkers.
+    Defines the logical loop of a game, running MAX_FPS times per second, sending the inputs to the HumanControllerWrapper, and the
+    game updates to the BotControllerWrappers.
     """
-    def __init__(self, game: Game):
+    def __init__(self, api: API):
         """
         Instantiates the logical loop
 
         Args:
-            game: The game to run in this loop
+            api: The game to run in this loop
         """
-        self.game = game
+        self.api = api
+        self.game = api.game
         self.game.addCustomMoveFunc = self._addCustomMove
         self._screen = None
         self._state = CONTINUE  # The game must go on at start
 
-        self.linkersConnection = {}  # type: Dict[Linker, PipeConnection]
-        self.linkersInfoConnection = {}  # type: Dict[Linker, PipeConnection]
+        self.linkersConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
+        self.linkersInfoConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
 
-        self.linkers = {}  # type: Dict[Linker, MovingUnit]
+        self.linkers = {}  # type: Dict[ControllerWrapper, MovingUnit]
         self._unitsMoves = {}  # type: Dict[MovingUnit, Tuple[Path, Queue]]
         self._movesEvent = {}  # type: Dict[Path, MoveDescriptor]
         self._otherMoves = {}  # type: Dict[Unit, Path]
@@ -92,7 +93,7 @@ class MainLoop:
             clock.tick(max_fps)
             self._handleInputs()
             if self._state == CONTINUE:
-                self._getNextMoveFromLinkerIfAvailable()
+                self._getNextMoveFromControllerWrapperIfAvailable()
                 self._handlePendingMoves()
                 self._refreshScreen()
             elif self._state == FINISH:
@@ -103,7 +104,7 @@ class MainLoop:
         self._prepared = False
         return self.game.winningPlayers
 
-    def addUnit(self, unit: MovingUnit, linker: Linker, tile_id: TileIdentifier, initial_action: Path=None,
+    def addUnit(self, unit: MovingUnit, linker: ControllerWrapper, tile_id: TileIdentifier, initial_action: Path=None,
                 team: int=-1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
@@ -117,7 +118,7 @@ class MainLoop:
             team: The number of the team this player is in (-1 = no team)
         """
         self.game.addUnit(unit, team, tile_id)
-        self._addLinker(linker, unit)
+        self._addControllerWrapper(linker, unit)
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
         resize_unit(unit, self.game.board)
@@ -232,10 +233,11 @@ class MainLoop:
         Args:
             input_key: The key pressed on the keyboard
         """
-        for linker in self.linkers:  # type: HumanLinker
-            if issubclass(type(linker), HumanLinker):
-                self._getPipeConnection(linker).send(self.game.createKeyboardEvent(self._getUnitFromLinker(linker),
-                                                                                   input_key))
+        for linker in self.linkers:  # type: HumanControllerWrapper
+            if issubclass(type(linker), HumanControllerWrapper):
+                self._getPipeConnection(linker).send(
+                    self.game.createKeyboardEvent(self._getUnitFromControllerWrapper(linker),
+                                                  input_key))
 
     def _dispatchMouseEventToHumanControllers(self, pixel: Optional[Coordinates], click_up=False) -> None:
         """
@@ -250,15 +252,16 @@ class MainLoop:
             tile = self.game.board.getTileByPixel(pixel)
         self._previouslyClickedTile = tile
         mouse_state = pygame.mouse.get_pressed()
-        for linker in self.linkers:  # type: Linker
-            if issubclass(type(linker), HumanLinker):
+        for linker in self.linkers:  # type: ControllerWrapper
+            if issubclass(type(linker), HumanControllerWrapper):
                 tile_id = None
                 if tile is not None:
                     tile_id = tile.identifier
-                self._getPipeConnection(linker).send(self.game.createMouseEvent(self._getUnitFromLinker(linker),
-                                                                                pixel, mouse_state, click_up, tile_id))
+                self._getPipeConnection(linker).send(
+                    self.game.createMouseEvent(self._getUnitFromControllerWrapper(linker),
+                                               pixel, mouse_state, click_up, tile_id))
 
-    def _getNextMoveFromLinkerIfAvailable(self) -> None:
+    def _getNextMoveFromControllerWrapperIfAvailable(self) -> None:
         """
         Gets event from the controllers and dispatch them to the right method
         """
@@ -277,7 +280,7 @@ class MainLoop:
         for unit in self._otherMoves:  # type: MovingUnit
             unit_linker = None
             for linker in self.linkers:
-                if self._getUnitFromLinker(linker) is unit:
+                if self._getUnitFromControllerWrapper(linker) is unit:
                     unit_linker = linker
             if unit_linker is not None:
                 if self._otherMoves[unit] is not None:
@@ -287,8 +290,8 @@ class MainLoop:
                     if self._otherMoves[unit].finished():
                         self._otherMoves[unit] = None
 
-        for linker in self.linkers:  # type: Linker
-            unit = self._getUnitFromLinker(linker)
+        for linker in self.linkers:  # type: ControllerWrapper
+            unit = self._getUnitFromControllerWrapper(linker)
             if unit not in moved_units:  # Two moves on the same unit cannot be performed at the same time...
                 if not unit.isAlive() and (unit not in self._killSent or not self._killSent[unit]):
                     self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
@@ -297,7 +300,7 @@ class MainLoop:
                 self._handleMoveForUnit(unit, current_move, linker)
         self.game.checkIfFinished()
 
-    def _handleMoveForUnit(self, unit: MovingUnit, current_move: Path, linker: Linker):
+    def _handleMoveForUnit(self, unit: MovingUnit, current_move: Path, linker: ControllerWrapper):
         """
         Perform the next step of the given move on the given unit
 
@@ -371,13 +374,13 @@ class MainLoop:
             event: The event sent by the controller
         """
         try:
-            move = self.game.createMoveForDescriptor(unit, event)  # May raise: UnfeasibleMoveException
+            move = self.api.createMoveForDescriptor(unit, event)  # May raise: UnfeasibleMoveException
             self._movesEvent[move] = event
             self._addMove(unit, move)
         except UnfeasibleMoveException:
             pass
 
-    def _getPipeConnection(self, linker: Linker) -> PipeConnection:
+    def _getPipeConnection(self, linker: ControllerWrapper) -> PipeConnection:
         """
         Args:
             linker: The linker for which we want the pipe connection
@@ -386,7 +389,7 @@ class MainLoop:
         """
         return self.linkersConnection[linker]
 
-    def _getUnitFromLinker(self, linker: Linker) -> MovingUnit:
+    def _getUnitFromControllerWrapper(self, linker: ControllerWrapper) -> MovingUnit:
         """
         Args:
             linker: The linker for which we want the unit
@@ -404,12 +407,12 @@ class MainLoop:
             move: The move that caused the update
         """
         for linker in self.linkers:
-            if issubclass(type(linker), BotLinker):
+            if issubclass(type(linker), BotControllerWrapper):
                 event = self._movesEvent[move]
                 pipe_conn = self._getPipeConnection(linker)
                 pipe_conn.send(BotEvent(moved_unit_number, event))
 
-    def _killUnit(self, unit: MovingUnit, linker: Linker) -> None:
+    def _killUnit(self, unit: MovingUnit, linker: ControllerWrapper) -> None:
         """
         Kills the given unit and tells its linker
 
@@ -421,7 +424,7 @@ class MainLoop:
         if not unit.isAlive():
             self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
 
-    def _addCollaborationPipes(self, linker: BotLinker) -> None:
+    def _addCollaborationPipes(self, linker: BotControllerWrapper) -> None:
         """
         Adds the collaboration pipes between the given linker and its teammate's
 
@@ -430,7 +433,7 @@ class MainLoop:
         """
         for teammate in self.game.teams[self.game.unitsTeam[self.linkers[linker]]]:
             if teammate is not self.linkers[linker]:
-                teammate_linker = None  # type: BotLinker
+                teammate_linker = None  # type: BotControllerWrapper
                 for other_linker in self.linkers:
                     if self.linkers[other_linker] is teammate:
                         teammate_linker = other_linker
@@ -449,13 +452,13 @@ class MainLoop:
         except ValueError:
             self.executor.restart()
         for linker in self.linkers:
-            if isinstance(linker, BotLinker):
+            if isinstance(linker, BotControllerWrapper):
                 linker.controller.gameState = self.game.copy()
             self.executor.apipe(linker.run)
         time.sleep(2)  # Waiting for the processes to launch correctly
         self._prepared = True
 
-    def _addLinker(self, linker: Linker, unit: MovingUnit) -> None:
+    def _addControllerWrapper(self, linker: ControllerWrapper, unit: MovingUnit) -> None:
         """
         Adds the linker to the loop, creating the pipe connections
 
@@ -470,5 +473,5 @@ class MainLoop:
         self.linkersInfoConnection[linker] = parent_info_conn
         linker.setMainPipe(child_conn)
         linker.setGameInfoPipe(child_info_conn)
-        if isinstance(linker, BotLinker):
+        if isinstance(linker, BotControllerWrapper):
             self._addCollaborationPipes(linker)

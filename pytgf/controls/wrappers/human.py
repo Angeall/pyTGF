@@ -1,18 +1,18 @@
 """
-File containing the definition of a Linker that links the game with a human controller
+File containing the definition of a ControllerWrapper that links the game with a human controller
 """
 
 from abc import ABCMeta
 
 from pytgf.controls.events.human import HumanEvent
-from pytgf.controls.linkers.linker import Linker
+from pytgf.controls.wrappers.wrapper import ControllerWrapper
 
 __author__ = 'Anthony Rouneau'
 
 
-class HumanLinker(Linker, metaclass=ABCMeta):
+class HumanControllerWrapper(ControllerWrapper, metaclass=ABCMeta):
     """
-    Linker between the game and a human controller
+    ControllerWrapper between the game and a human controller
     """
     @property
     def typeOfEventFromGame(self) -> type:
