@@ -1,7 +1,7 @@
 """
 Contains the definition of a routine to gather daata
 """
-from typing import Iterable, Union, Callable, Optional, Tuple
+from typing import Iterable, Union, Callable, Optional, Tuple, Any, List
 
 from pytgf.game import API
 from pytgf.learning.component import Data, Component
@@ -13,8 +13,37 @@ __author__ = "Anthony Rouneau"
 
 
 class Routine:
-    def __init__(self, gatherer: Gatherer):
+    def __init__(self, gatherer: Gatherer, player_number: int, possible_moves: Iterable[Any], max_depth: int=-1):
         self._gatherer = gatherer
+        self._playerNumber = player_number
+        self._maxDepth = max_depth
+        self._possibleMoves = tuple(possible_moves)
+        if self._maxDepth == -1:
+            self._maxDepth = float('inf')
+
+    def gather(self, api: API, depth: int=0):
+        if api.isFinished():
+            return int(api.isPlayerAlive(self._playerNumber))  # If the player is alive at the end of the game, it won
+        if depth < self._maxDepth:
+            for player_number in api.getPlayerNumbers():
+                if player_number == self._playerNumber:
+                    player_moves = self._choosePlayerMoves(api)
+                else:
+                    player_moves = self._chooseOtherPlayerMoves(api, player_number)
+                # TODO: combination
+
+
+    def _choosePlayerMoves(self, api: API) -> List[Any]:
+        return api.checkFeasibleMoves(self._playerNumber, self._possibleMoves)
+
+    def _chooseOtherPlayerMoves(self, api: API, other_player_number: int):
+        moves = api.checkFeasibleMoves(other_player_number, self._possibleMoves)
+        safe_moves = []
+        for move in moves:
+            if api.isMoveDeadly(other_player_number, move):
+                safe_moves.append(move)
+        return safe_moves
+
 
 
 class RoutineBuilder:

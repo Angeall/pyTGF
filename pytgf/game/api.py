@@ -29,13 +29,15 @@ class API(metaclass=ABCMeta):
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor) -> Tuple[bool, Union['API', None]]:
+    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor, max_moves: int=1) \
+            -> Tuple[bool, Union['API', None]]:
         """
         Simulates the move by creating a new GameState
 
         Args:
             player_number: The number of the player moving
             wanted_move: The event triggering the move
+            max_moves: The maximum number of short moves to perform in case of a path or continuous move.
 
         Returns:
             A copy of this GameState in which the move have been applied (if it is possible)
@@ -43,17 +45,19 @@ class API(metaclass=ABCMeta):
         feasible_move, move = self._generateMove(player_number, wanted_move)
         if feasible_move:
             new_game_state = API(self.game.copy())
-            new_game_state.performMove(player_number, wanted_move)
+            new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
             return feasible_move, new_game_state
         else:
             return False, None
 
-    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor]) -> Tuple[bool, Union['API', None]]:
+    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor], max_moves: int=1) \
+            -> Tuple[bool, Union['API', None]]:
         """
         Simulates the given moves for the key players
 
         Args:
             player_moves: a dictionary with player_number as key and a move as value for the key player
+            max_moves: The maximum number of short moves to perform in case of a path or continuous move.
 
         Returns:
             - A boolean -- True if all the moves succeeded, False otherwise
@@ -67,10 +71,11 @@ class API(metaclass=ABCMeta):
             moves.append(move)
         new_game_state = self.copy()
         for player_number, wanted_move in player_moves.items():
-            new_game_state.performMove(player_number, wanted_move)
+            new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
         return True, new_game_state
 
-    def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool=False) -> bool:
+    def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool=False, max_moves: int=1) \
+            -> bool:
         """
         Performs the move inside this GameState
 
@@ -78,10 +83,11 @@ class API(metaclass=ABCMeta):
             player_number: The number of the player moving
             move_descriptor: The move to perform (either a Path or a move descriptor)
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
+            max_moves: The maximum number of short moves to perform in case of a path or continuous move.
         """
         unit = self.game.players[player_number]  # type: MovingUnit
         try:
-            move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=1, force=force)
+            move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=max_moves, force=force)
             new_tile_id = move.complete()
             unit.currentAction = move_descriptor
             self.game.updateGameState(unit, new_tile_id)
@@ -157,7 +163,7 @@ class API(metaclass=ABCMeta):
         """
 
         Args:
-            player_number: The number of the player for which we want to know its state.
+            player_number: The number of the player for which we want to know the state.
 
         Returns: True if the player is alive, False otherwise
         """
@@ -167,7 +173,7 @@ class API(metaclass=ABCMeta):
         """
 
         Args:
-            player_number: The number of the player for which we want to know its state.
+            player_number: The number of the player for which we want to know the state.
 
         Returns: The (i, j) coordinates of the player, i being the row index and j being the column index.
         """
@@ -185,12 +191,28 @@ class API(metaclass=ABCMeta):
         """
         return self.game.board.getNeighboursIdentifier(tile_id)
 
+    def isMoveDeadly(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) -> bool:
+        """
+
+        Args:
+            player_number: The player that will perform the move
+            move_descriptor: The descriptor of the move to perform
+            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
+
+        Returns: True if the move kills the unit in the simulation
+        """
+        if self.isPlayerAlive(player_number):
+            succeeded, new_api = self.simulateMove(player_number, move_descriptor, max_moves)
+            if succeeded:
+                return not new_api.isPlayerAlive(player_number)
+        return True
+
     def copy(self):
         return type(self)(self.game.copy())
 
     @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int=-1,
+                                force: bool=False) -> Path:
         """
         Creates a move following the given event coming from the given unit
 
