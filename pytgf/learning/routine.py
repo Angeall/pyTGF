@@ -3,6 +3,7 @@ Contains the definition of a routine to gather daata
 """
 from typing import Iterable, Union, Callable, Optional, Tuple, Any, List
 
+from pytgf.characters.utils.moves import getMovesCombinations
 from pytgf.game import API
 from pytgf.learning.component import Data, Component
 from pytgf.learning.gatherer import Gatherer
@@ -24,13 +25,20 @@ class Routine:
     def gather(self, api: API, depth: int=0):
         if api.isFinished():
             return int(api.isPlayerAlive(self._playerNumber))  # If the player is alive at the end of the game, it won
+        finished = False
         if depth < self._maxDepth:
+            players_moves = {}
             for player_number in api.getPlayerNumbers():
                 if player_number == self._playerNumber:
-                    player_moves = self._choosePlayerMoves(api)
+                    players_moves[player_number] = self._choosePlayerMoves(api)
                 else:
-                    player_moves = self._chooseOtherPlayerMoves(api, player_number)
-                # TODO: combination
+                    players_moves[player_number] = self._chooseOtherPlayerMoves(api, player_number)
+            combinations = getMovesCombinations(players_moves)
+            for combination in combinations:
+                succeeded, new_api = api.simulateMoves(combination)
+                finished = finished or (succeeded and self.gather(new_api, depth+1))
+                # TODO save info in file
+        return finished
 
 
     def _choosePlayerMoves(self, api: API) -> List[Any]:

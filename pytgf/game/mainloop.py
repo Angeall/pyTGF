@@ -26,7 +26,7 @@ from pytgf.controls.events import BotEvent, SpecialEvent
 from pytgf.controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
 from pytgf.game import API, UnfeasibleMoveException
 from pytgf.utils.geom import Coordinates
-from pytgf.utils.unit import resize_unit
+from pytgf.characters.utils.units import resize_unit
 
 __author__ = 'Anthony Rouneau'
 
