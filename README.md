@@ -20,6 +20,7 @@
  - [`Scipy`](https://pypi.python.org/pypi/scipy/)
  - [`Pathos`](https://pypi.python.org/pypi/pathos/)
  - [`Matplotlib`](https://pypi.python.org/pypi/matplotlib/)
+ - [`Pandas (required for the data module)`](https://pypi.python.org/pypi/pandas/) 
 
 ## Examples
  Two examples have been developed with this framework. They are located in the `examples` package:

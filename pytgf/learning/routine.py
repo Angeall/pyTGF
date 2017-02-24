@@ -3,14 +3,14 @@ Contains the definition of a routine to gather daata
 """
 from typing import Iterable, Union, Callable, Optional, Tuple, Any, List
 
+import pandas as pd
+
 from pytgf.characters.utils.moves import getMovesCombinations
 from pytgf.game import API
 from pytgf.learning.component import Data, Component
 from pytgf.learning.gatherer import Gatherer
 
 __author__ = "Anthony Rouneau"
-
-
 
 
 class Routine:
@@ -22,24 +22,27 @@ class Routine:
         if self._maxDepth == -1:
             self._maxDepth = float('inf')
 
-    def gather(self, api: API, depth: int=0):
+    def gather(self, api: API, data_frame: pd.DataFrame, depth: int=0):
         if api.isFinished():
-            return int(api.isPlayerAlive(self._playerNumber))  # If the player is alive at the end of the game, it won
+            return True
         finished = False
         if depth < self._maxDepth:
             players_moves = {}
-            for player_number in api.getPlayerNumbers():
-                if player_number == self._playerNumber:
-                    players_moves[player_number] = self._choosePlayerMoves(api)
-                else:
-                    players_moves[player_number] = self._chooseOtherPlayerMoves(api, player_number)
-            combinations = getMovesCombinations(players_moves)
+            combinations = self._getPlayerMovesCombinations(api, players_moves)
             for combination in combinations:
                 succeeded, new_api = api.simulateMoves(combination)
                 finished = finished or (succeeded and self.gather(new_api, depth+1))
-                # TODO save info in file
+                # TODO save info in file + return right final score (nb turn before a win ? + lose ?)
         return finished
 
+    def _getPlayerMovesCombinations(self, api, players_moves):
+        for player_number in api.getPlayerNumbers():
+            if player_number == self._playerNumber:
+                players_moves[player_number] = self._choosePlayerMoves(api)
+            else:
+                players_moves[player_number] = self._chooseOtherPlayerMoves(api, player_number)
+        combinations = getMovesCombinations(players_moves)
+        return combinations
 
     def _choosePlayerMoves(self, api: API) -> List[Any]:
         return api.checkFeasibleMoves(self._playerNumber, self._possibleMoves)
