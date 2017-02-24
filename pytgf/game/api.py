@@ -85,7 +85,7 @@ class API(metaclass=ABCMeta):
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
             max_moves: The maximum number of short moves to perform in case of a path or continuous move.
         """
-        unit = self.game.players[player_number]  # type: MovingUnit
+        unit = self.game.getUnitForNumber(player_number) # type: MovingUnit
         try:
             move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=max_moves, force=force)
             new_tile_id = move.complete()
@@ -168,6 +168,17 @@ class API(metaclass=ABCMeta):
         Returns: True if the player is alive, False otherwise
         """
         return self.game.players[player_number].isAlive()
+
+    def hasWon(self, player_number: int) -> bool:
+        """
+
+        Args:
+            player_number: The number representing the player.
+
+        Returns: True if the player represented by the given number has won.
+        """
+        unit = self.game.getUnitForNumber(player_number)
+        return self.isFinished() and unit in self.game.winningPlayers
 
     def getPlayerLocation(self, player_number: int) -> TileIdentifier:
         """

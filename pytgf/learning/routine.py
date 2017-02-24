@@ -23,17 +23,25 @@ class Routine:
             self._maxDepth = float('inf')
 
     def gather(self, api: API, data_frame: pd.DataFrame, depth: int=0):
+        # FIXME : Change following the notes => +1 if could win, 0.5 if unfinished, 0 if only lead to loss
+        # FIXME :                               +1/nb_turn_to win, or 0 if unfinished or lead to loss
         if api.isFinished():
-            return True
+            if api.hasWon(self._playerNumber):
+                return True, 1                                                                                                           # The player has won due to its last move
+            else:
+                return True, -1  # The player is dead due to its last move
         finished = False
+        game_finished_score = 0  # 0 = game not finished
         if depth < self._maxDepth:
             players_moves = {}
             combinations = self._getPlayerMovesCombinations(api, players_moves)
             for combination in combinations:
                 succeeded, new_api = api.simulateMoves(combination)
-                finished = finished or (succeeded and self.gather(new_api, depth+1))
+                simulation_finished, simulation_nb_of_turn_until_end = self.gather(new_api, None, depth+1)
+                finished = finished or simulation_finished
+
                 # TODO save info in file + return right final score (nb turn before a win ? + lose ?)
-        return finished
+        return finished, game_finished_score
 
     def _getPlayerMovesCombinations(self, api, players_moves):
         for player_number in api.getPlayerNumbers():

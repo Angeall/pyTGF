@@ -213,6 +213,15 @@ class Core(metaclass=ABCMeta):
         """
         return MouseEvent(pixel, mouse_state, click_up, tile_id)
 
+    def getUnitForNumber(self, player_number: int) -> MovingUnit:
+        """
+        Args:
+            player_number: The number representing the wanted unit
+
+        Returns: The unit linked to the given number
+        """
+        return self.players[player_number]
+
     def getTileIdForUnit(self, unit: Particle) -> Union[tuple, None]:
         """
 
