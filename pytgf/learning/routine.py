@@ -28,7 +28,7 @@ class Routine:
         # FIXME :                               +1/nb_turn_to win, or 0 if unfinished or lead to loss
         if api.isFinished():
             if api.hasWon(self._playerNumber):
-                return True, 1                                                                                                           # The player has won due to its last move
+                return True, 1   # The player has won due to its last move
             else:
                 return True, -1  # The player is dead due to its last move
         finished = False

@@ -23,7 +23,7 @@ class UndyingAI(LazerBikeBotPlayer):
         """
         super().__init__(player_number)
         self._playersMove = []
-        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, (GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT), max_depth=4)
+        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, (GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT), max_depth=3)
 
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message) -> None:
         """
