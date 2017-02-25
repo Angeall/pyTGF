@@ -46,15 +46,6 @@ class Gatherer:
         """
         return self._getData(api, self._aPosterioriComponents)
 
-    def getFinalData(self, api: API) -> np.ndarray:
-        """
-        Args:
-            api: The API that will be used to get the data in the components
-
-        Returns: A list containing the final components' data for the given API
-        """
-        return self._getData(api, self._finalComponents)
-
     @staticmethod
     def _getData(api: API, components: Iterable[Component]):
         """

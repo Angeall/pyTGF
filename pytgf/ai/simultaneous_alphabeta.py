@@ -6,7 +6,7 @@ for all the players
 import itertools
 import random
 import traceback
-from typing import Any, List, Dict, Union, Callable, TypeVar, Tuple
+from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.game import API
@@ -15,6 +15,7 @@ __author__ = 'Anthony Rouneau'
 
 Value = Union[int, float]
 T = TypeVar('T')
+EndState = Tuple[bool, int, bool]
 
 
 class SimultaneousAlphaBeta:
@@ -39,7 +40,9 @@ class SimultaneousAlphaBeta:
             max_depth: the maximum depth of the tree the algorithm can explore
         """
         self.eval = eval_fct
-        self.max_depth = max_depth
+        self.maxDepth = max_depth
+        if self.maxDepth == -1:  # If there is no maximum depth...
+            self.maxDepth = float('inf')
         self.random = random.Random()
         self.possibleActions = possible_actions
         self.actions = {}  # Will retain the best action for a given state (will speed up the tree search)
@@ -66,13 +69,20 @@ class SimultaneousAlphaBeta:
                 return actions[player_number]
             else:
                 return self._randomChoice(self.possibleActions)
-        except:  # Too broad so that AI developer can ammend of unexpected bug without crashing its AI
+        except:  # Too broad so that AI developer can take knowledge of unexpected bug without crashing its AI
             traceback.print_exc()
 
     # -------------------- PROTECTED METHODS -------------------- #
 
+    @property
+    def _mustCutOff(self) -> bool:
+        """
+        Returns: True if this Alpha beta must cut off when it can, using the alpha and beta bounds.
+        """
+        return True
+
     def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], bool, Union[API, None]]:
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None]]:
         """
         Computes the best step possible for the Player asking this alpha beta
 
@@ -86,47 +96,50 @@ class SimultaneousAlphaBeta:
 
               - The best value
               - The best action combination
-              - True if the action has reached a end state
+              - A 3-uple containing :
+                    - A bool set to True if the action has reached a end state
+                    - An int indicating the depth at which the game ended (0 if the game hasn't ended yet)
+                    - A bool set to True if the player for which this AB is launched had won when the game ended
               - The API that represents the game after the best move
 
         """
         # Check if we reached the end of the tree
-        if depth > self.max_depth:
+        if depth > self.maxDepth:
             score = self._getTeamScore(state, self.eval(state))
-            return score, None, False, state
+            return score, None, (False, depth, False), state
         # Check if the game state is final
         elif state.isFinished():
-            return self._getTeamScore(state, self.eval(state)), None, True, state
+            return self._getTeamScore(state, self.eval(state)), None, (True, depth, state.hasWon(self.playerNumber)), \
+                   state
 
         # Initializing the best values
         max_value = -float('inf')
-        best_reached_end = False
-        equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API]]
+        equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API, EndState]]
 
         # Explore every possible actions from this point
         actions_combinations = self._generateMovesCombinations(state)
         actions_combinations_scores = {}  # type: Dict[float, Tuple[Dict[int, MoveDescriptor], bool, API]]
         for actions in actions_combinations:
-            min_value, min_actions, min_reached_end, min_game_state = self._minValue(state, actions, alpha, beta, depth)
-            actions_combinations_scores[min_value] = min_actions, min_reached_end, min_game_state
-            if min_value >= beta:
-                return min_value, min_actions, min_reached_end, min_game_state
-            alpha = max(alpha, min_value)  # Confirmed
+            min_value, min_actions, min_end_state, min_game_state = self._minValue(state, actions, alpha, beta, depth)
+            actions_combinations_scores[min_value] = min_actions, min_end_state, min_game_state
+            if self._mustCutOff and min_value >= beta:  # Cutoff
+                return min_value, min_actions, min_end_state, min_game_state
+            alpha = max(alpha, min_value)
         for score in actions_combinations_scores:
-            combination, reached_end, new_game_state = actions_combinations_scores[score]
+            combination, end_state, new_game_state = actions_combinations_scores[score]
             if score > max_value:
                 max_value = score
-                equally_good_choices = [(combination, new_game_state)]
-                best_reached_end = reached_end
+                equally_good_choices = [(combination, new_game_state, end_state)]
             elif score == max_value:
-                equally_good_choices.append((combination, new_game_state))
+                equally_good_choices.append((combination, new_game_state, end_state))
         if len(equally_good_choices) == 0:  # No choice is good to take...
-            return self._getTeamScore(state, self.eval(state)), None, True, None
-        best_combination, best_game_state = self._randomChoice(equally_good_choices)
-        return max_value, best_combination, best_reached_end, best_game_state
+            return self._getTeamScore(state, self.eval(state)), None, \
+                   (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
+        best_combination, best_game_state, best_end_state = self._randomChoice(equally_good_choices)
+        return max_value, best_combination, best_end_state, best_game_state
 
-    def _minValue(self, state: API, actions: List[Dict[int, Any]], alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], bool, API]:
+    def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
         """
         Computes the possibilities of the other players, simulating the action of every players at the same time
 
@@ -138,27 +151,33 @@ class SimultaneousAlphaBeta:
             depth: The current depth in the tree
 
         Returns:
+            A 4-uple
 
+            - The best value
+              - The best action combination
+              - A 3-uple containing :
+                    - A bool set to True if the action has reached a end state
+                    - An int indicating the depth at which the game ended (0 if the game hasn't ended yet)
+                    - A bool set to True if the player for which this AB is launched had won when the game ended
+              - The API that represents the game after the best move
         """
-        min_reached_end = False
         min_value = float('inf')
-        equal_min_choices = []  # type: Tuple[Dict[int, MoveDescriptor], API]
+        equal_min_choices = []  # type: Tuple[Dict[int, MoveDescriptor], API, EndState]
         for combination in actions:
             feasible_moves, new_game_state = state.simulateMoves(combination)
             if feasible_moves and new_game_state is not None:
-                value, _, reached_end, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
+                value, _, end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
                 if value < min_value:
                     min_value = value
-                    equal_min_choices = [(combination, game_state)]
-                    min_reached_end = reached_end
+                    equal_min_choices = [(combination, game_state, end_state)]
                 elif value == min_value:
-                    equal_min_choices.append((combination, game_state))
-                if value <= alpha:  # Cutoff because we are in a min situation
-                    best_combination, best_game_state = self._randomChoice(equal_min_choices)
-                    return value, best_combination, min_reached_end, best_game_state
+                    equal_min_choices.append((combination, game_state, end_state))
+                if self._mustCutOff and value <= alpha:  # Cutoff because we are in a min situation
+                    best_combination, best_game_state, best_end_state = self._randomChoice(equal_min_choices)
+                    return value, best_combination, best_end_state, best_game_state
                 beta = min(beta, value)
-        min_actions, min_game_state = self._randomChoice(equal_min_choices)
-        return min_value, min_actions, min_reached_end, min_game_state
+        min_actions, min_game_state, min_end_state = self._randomChoice(equal_min_choices)
+        return min_value, min_actions, min_end_state, min_game_state
 
     def _getTeamScore(self, state: API, players_score: Tuple[int, ...]) -> float:
         """
@@ -193,11 +212,7 @@ class SimultaneousAlphaBeta:
             concerned in this alpha beta. (e.g. [[{1: 2, 2: 3}, {1: 2, 2: 1}] , [{1: 3, 2: 3}, {1: 3, 2: 2}]])
         """
         players = state.getPlayerNumbers()
-        moves = []
-        for player_number in [player for player in players if state.game.players[player].isAlive()]:
-            possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
-            moves.append(itertools.product([player_number],
-                                           possible_moves_for_player))
+        moves = self._getPossibleMoves(players, state)
         temp = itertools.product(*moves)
         dicts = [dict(choices) for choices in temp]
         order_dicts = {}
@@ -209,6 +224,36 @@ class SimultaneousAlphaBeta:
                     order_dicts[dico[self.playerNumber]].append(dico)
         res = [order_dicts[key] for key in order_dicts]
         return res
+
+    def _getPossibleMoves(self, players: List[int], state: API) -> List[Tuple[int, MoveDescriptor]]:
+        """
+        Generate all the possible moves for the players
+
+        Args:
+            players: The list of player numbers for which generate the moves
+            state: The API for which the move will be generated
+
+        Returns: A list containing couples [player_number, move_descriptor]
+        """
+        moves = []
+        for player_number in [player for player in players if state.game.players[player].isAlive()]:
+            possible_moves_for_player = self._getPossibleMovesForPlayer(player_number, state)
+            moves.append(itertools.product([player_number],
+                                           possible_moves_for_player))
+        return moves
+
+    def _getPossibleMovesForPlayer(self, player_number: int, state: API) -> List[MoveDescriptor]:
+        """
+        Get the possible moves for the given player
+
+        Args:
+            player_number:  The number representing the player for which the moves must be generated
+            state: The API for which the moves must be generated
+
+        Returns: A list of move descriptors possible for the given player and API
+        """
+        possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
+        return possible_moves_for_player
 
     def _randomChoice(self, choices: Union[List[T], Tuple[T, ...]]) -> T:
         """

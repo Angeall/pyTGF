@@ -2,70 +2,95 @@
 Contains the definition of a routine to gather daata
 """
 import random
-from typing import Iterable, Union, Callable, Optional, Tuple, Any, List
+from typing import Iterable, Union, Callable, Optional, Tuple, Any, List, Dict
 
-import pandas as pd
+import numpy as np
 
-from pytgf.characters.utils.moves import getMovesCombinations
+from pytgf.ai import SimultaneousAlphaBeta
+from pytgf.ai.simultaneous_alphabeta import Value, EndState
+from pytgf.characters.moves import MoveDescriptor
 from pytgf.game import API
 from pytgf.learning.component import Data, Component
 from pytgf.learning.gatherer import Gatherer
 
 __author__ = "Anthony Rouneau"
+ObjID = int
 
 
-class Routine:
-    def __init__(self, gatherer: Gatherer, player_number: int, possible_moves: Iterable[Any], max_depth: int=-1):
+class Routine(SimultaneousAlphaBeta):
+
+    def __init__(self, gatherer: Gatherer, possible_moves: Iterable[Any],
+                 eval_fct: Callable[[API], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
+                 max_depth: int = -1):
+        super().__init__(eval_fct, possible_actions, max_depth)
         self._gatherer = gatherer
-        self._playerNumber = player_number
-        self._maxDepth = max_depth
         self._possibleMoves = tuple(possible_moves)
-        if self._maxDepth == -1:
-            self._maxDepth = float('inf')
+        self._aPrioriDataVectors = {}  # type: Dict[ObjID, np.ndarray]
+        self._aPosterioriDataVectors = {}  # type: Dict[ObjID, List[np.ndarray]]
+        self._concludedStates = []  # type: List[ObjID]
 
-    def gather(self, api: API, data_frame: pd.DataFrame, depth: int=0):
-        # FIXME : Change following the notes => +1 if could win, 0.5 if unfinished, 0 if only lead to loss
-        # FIXME :                               +1/nb_turn_to win, or 0 if unfinished or lead to loss
-        if api.isFinished():
-            if api.hasWon(self._playerNumber):
-                return True, 1   # The player has won due to its last move
+    def routine(self, player_number: int, state: API):
+        self.alphaBetaSearching(player_number, state)
+        self._writeToFile()
+
+    def _mustCutOff(self) -> bool:
+        """
+        Returns: False because our data gathering routine must consider all movements
+        """
+        return False
+
+    def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
+        self._aPrioriDataVectors[id(state)] = self._gatherer.getAPrioriData(state)
+        self._aPosterioriDataVectors[id(state)] = []  # init list for _minValue
+        retVal = super()._maxValue(state, alpha, beta, depth)
+        self._concludedStates.append(id(state))
+        if len(self._concludedStates) > 1000:
+            self._writeToTempFile()
+        return retVal
+
+    def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
+        player_move_descriptor = actions[self.playerNumber]
+        value, best_actions, end_state, new_game_state = super()._minValue(state, actions,
+                                                                           alpha, beta, depth)  # Simulate the actions
+        a_posteriori_data = self._gatherer.getAPosterioriData(state)
+        final_state = self._computeFinalStateScore(depth, end_state)
+        a_posteriori_data = np.append(player_move_descriptor, a_posteriori_data)
+        a_posteriori_data = np.append(a_posteriori_data, final_state)
+        self._aPosterioriDataVectors[id(state)].append(a_posteriori_data)
+        return value, best_actions, end_state, new_game_state
+
+    @staticmethod
+    def _computeFinalStateScore(depth, end_state):
+        final_state = (0, 0)  # We suppose that the game has not ended
+        if end_state[0]:
+            nb_turn = end_state[1] - depth  # The number of turn in which the game ended
+            if not end_state[2]:  # If the game ended but the player lost
+                final_state = (-1, nb_turn)
             else:
-                return True, -1  # The player is dead due to its last move
-        finished = False
-        game_finished_score = 0  # 0 = game not finished
-        if depth < self._maxDepth:
-            players_moves = {}
-            combinations = self._getPlayerMovesCombinations(api, players_moves)
-            for combination in combinations:
-                succeeded, new_api = api.simulateMoves(combination)
-                simulation_finished, simulation_nb_of_turn_until_end = self.gather(new_api, None, depth+1)
-                finished = finished or simulation_finished
+                final_state = (1, nb_turn)
+        return final_state
 
-                # TODO save info in file + return right final score (nb turn before a win ? + lose ?)
-        return finished, game_finished_score
-
-    def _getPlayerMovesCombinations(self, api, players_moves):
-        for player_number in api.getPlayerNumbers():
-            if player_number == self._playerNumber:
-                players_moves[player_number] = self._choosePlayerMoves(api)
-            else:
-                players_moves[player_number] = self._chooseOtherPlayerMoves(api, player_number)
-        combinations = getMovesCombinations(players_moves)
-        return combinations
-
-    def _choosePlayerMoves(self, api: API) -> List[Any]:
-        return api.checkFeasibleMoves(self._playerNumber, self._possibleMoves)
-
-    def _chooseOtherPlayerMoves(self, api: API, other_player_number: int):
-        moves = api.checkFeasibleMoves(other_player_number, self._possibleMoves)
+    def _getPossibleMovesForPlayer(self, player_number: int, state: API) -> List[MoveDescriptor]:
+        moves = super()._getPossibleMovesForPlayer(player_number, state)
+        if player_number == self.playerNumber:
+            return moves
         safe_moves = []
         for move in moves:
-            if api.isMoveDeadly(other_player_number, move):
+            if not state.isMoveDeadly(player_number, move):
                 safe_moves.append(move)
         if len(safe_moves) == 0:  # If all the moves are deadly
             safe_moves.append(random.choice(moves))
         return safe_moves
 
+    def _writeToTempFile(self):
+        # TODO : Convert into DataFrame using self._concludedStates and save it into csv + add name to temp_file_names
+        pass
+
+    def _writeToFile(self):
+        # TODO : Join temp files of there are and add the last vectors
+        pass
 
 
 class RoutineBuilder:
