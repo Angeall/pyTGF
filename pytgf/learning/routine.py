@@ -1,6 +1,7 @@
 """
 Contains the definition of a routine to gather daata
 """
+import random
 from typing import Iterable, Union, Callable, Optional, Tuple, Any, List
 
 import pandas as pd
@@ -61,6 +62,8 @@ class Routine:
         for move in moves:
             if api.isMoveDeadly(other_player_number, move):
                 safe_moves.append(move)
+        if len(safe_moves) == 0:  # If all the moves are deadly
+            safe_moves.append(random.choice(moves))
         return safe_moves
 
 
