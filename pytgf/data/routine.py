@@ -3,7 +3,7 @@ Contains the definition of a routine to gather daata
 """
 import os
 import random
-from typing import Iterable, Union, Callable, Optional, Tuple, Any, List, Dict
+from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -11,9 +11,9 @@ import pandas as pd
 from pytgf.ai import SimultaneousAlphaBeta
 from pytgf.ai.simultaneous_alphabeta import Value, EndState
 from pytgf.characters.moves import MoveDescriptor
+from pytgf.data.component import Data, Component
+from pytgf.data.gatherer import Gatherer
 from pytgf.game import API
-from pytgf.learning.component import Data, Component
-from pytgf.learning.gatherer import Gatherer
 
 __author__ = "Anthony Rouneau"
 ObjID = int
@@ -21,22 +21,25 @@ ObjID = int
 
 MAX_TEMP_VECTORS = 1000
 COLLECTED_DATA_PATH_NAME = "collected_data"
-TEMP_DATA_PATH_NAME = os.path.join(COLLECTED_DATA_PATH_NAME, "temp")
 
 
 class Routine(SimultaneousAlphaBeta):
-
-    def __init__(self, gatherer: Gatherer, possible_moves: Iterable[Any],
-                 eval_fct: Callable[[API], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
-                 max_depth: int = -1):
-        super().__init__(eval_fct, possible_actions, max_depth)
+    def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
+                 eval_fct: Callable[[API], Tuple[Value, ...]], max_depth: int = -1):
+        super().__init__(eval_fct, possible_moves, max_depth)
+        self.TEMP_DATA_PATH_NAME = os.path.join(COLLECTED_DATA_PATH_NAME, "temp" + str(id(self)))
         self._gatherer = gatherer
         self._possibleMoves = tuple(possible_moves)
         self._aPrioriDataVectors = {}  # type: Dict[ObjID, np.ndarray]
+        self._aPrioriTitles = [component.title for component in self._gatherer.aPrioriComponents]
+        self._aPosterioriTitles = [component.title for component in self._gatherer.aPosterioriComponents]
+        self._aPosterioriTitles.extend(["leads_to_win", "nb_turn_till_end"])
+        self._nbAPosterioriComponent = len(self._gatherer.aPosterioriComponents) + 2
+        self._aPrioriDescriptions = [component.description for component in self._gatherer.aPrioriComponents]
+        self._aPosterioriDescriptions = [component.description for component in self._gatherer.aPosterioriComponents]
         self._aPosterioriDataVectors = {}  # type: Dict[ObjID, Dict[MoveDescriptor, List]]
         self._concludedStates = []  # type: List[ObjID]
         self._tempFileIDs = []  # type: List[str]
-        self._nbAPosterioriComponent = 1
 
     def routine(self, player_number: int, state: API):
         self.alphaBetaSearching(player_number, state)
@@ -56,11 +59,11 @@ class Routine(SimultaneousAlphaBeta):
         # SEARCHING MAX VALUE
         retVal = super()._maxValue(state, alpha, beta, depth)
         # WE COMPLETE THE A POSTERIORI MOVES IF A MOVE WAS UNFEASIBLE
-        for action in self._possibleMoves:
-            if action not in self._aPosterioriDataVectors[id(state)]:
-                data =  np.ndarray((1, self._nbAPosterioriComponent))[0]
-                data.fill(np.nan)
-                self._aPosterioriDataVectors[id(state)] = data
+        for action, lst in self._aPosterioriDataVectors[id(state)].items():
+            if len(lst) == 0:
+                data = [np.nan for _ in range(self._nbAPosterioriComponent)]
+                self._aPosterioriDataVectors[id(state)][action] = data
+                print(data)
         # AS WE FINISHED TO SEARCH MAX, WE CAN MARK THIS STATE AS "CONCLUDED"
         self._concludedStates.append(id(state))
         # IF NEEDED, WE WRITE INTO A FILE THE CURRENT PROGRESSION
@@ -70,16 +73,18 @@ class Routine(SimultaneousAlphaBeta):
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
-        player_move_descriptor = actions[self.playerNumber]
+        player_move_descriptor = actions[0][self.playerNumber]
         # SEARCHING MIN VALUE
         value, best_actions, end_state, new_game_state = super()._minValue(state, actions,
                                                                            alpha, beta, depth)  # Simulate the actions
         # AS WE FINISHED SEARCHING, WE CAN STORE THE A POSTERIORI DATA
         a_posteriori_data = self._gatherer.getAPosterioriData(state)
         final_state = self._computeFinalStateScore(depth, end_state)  # Storing whether this move led to a winning state
-        a_posteriori_data = np.append(a_posteriori_data, final_state)
-        self._nbAPosterioriComponent = len(a_posteriori_data)
-        self._aPosterioriDataVectors[id(state)][player_move_descriptor].append(a_posteriori_data)
+        a_posteriori_data.extend(final_state)
+        print(a_posteriori_data)
+        a_posteriori_dict = self._aPosterioriDataVectors[id(state)]
+        a_posteriori_list = a_posteriori_dict[player_move_descriptor]
+        a_posteriori_list.extend(a_posteriori_data)
         return value, best_actions, end_state, new_game_state
 
     @staticmethod
@@ -109,23 +114,29 @@ class Routine(SimultaneousAlphaBeta):
         """
         Writes the data stocked in the data structures in temporary files to save the current progress
         """
-        a_priori_vectors = [self._aPosterioriDataVectors[state_id] for state_id in self._concludedStates]
+        a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates]
+        print("POSTERIORI", self._aPosterioriDataVectors)
         if len(a_priori_vectors) > 0:
             a_posteriori_vectors_dicts = {action: [self._aPosterioriDataVectors[state_id][action]
                                                    for state_id in self._concludedStates]
                                           for action in self.possibleActions}
-
             a_priori_vectors = np.array(a_priori_vectors).reshape((len(a_priori_vectors), len(a_priori_vectors[0])))
 
             self._createDirectoryIfNeeded(COLLECTED_DATA_PATH_NAME)
-            self._createDirectoryIfNeeded(TEMP_DATA_PATH_NAME + str(id(self)))
+            self._createDirectoryIfNeeded(self.TEMP_DATA_PATH_NAME)
 
             file_id = str(random.randint(0, 1000))
             self._tempFileIDs.append(file_id)
-            self._writeToCsv(a_priori_vectors, self._getDataFileName(file_id), TEMP_DATA_PATH_NAME)
+            self._writeToCsv(a_priori_vectors, self._aPrioriTitles, self._getDataFileName(file_id),
+                             self.TEMP_DATA_PATH_NAME)
             for action, data_vectors in a_posteriori_vectors_dicts.items():
-                data_vectors = np.array(data_vectors).reshape((len(data_vectors), len(data_vectors[0])))
-                self._writeToCsv(data_vectors, self._getTargetFileName(file_id, action), TEMP_DATA_PATH_NAME)
+                data_vectors = np.array(data_vectors)
+                print(data_vectors.shape)
+                print(len(data_vectors))
+                print(len(data_vectors[0]))
+                data_vectors = data_vectors.reshape((len(data_vectors), len(data_vectors[0])))
+                self._writeToCsv(data_vectors, self._aPosterioriTitles, self._getTargetFileName(file_id, action),
+                                 self.TEMP_DATA_PATH_NAME)
         for state_id in self._concludedStates:
             del self._aPrioriDataVectors[state_id]
             del self._aPosterioriDataVectors[state_id]
@@ -165,7 +176,7 @@ class Routine(SimultaneousAlphaBeta):
         a_posteriori = {}
         for file_id in self._tempFileIDs:
             data_file_name = self._getDataFileName(file_id)
-            data_file_path = os.path.join(TEMP_DATA_PATH_NAME, data_file_name)
+            data_file_path = os.path.join(self.TEMP_DATA_PATH_NAME, data_file_name)
             data_file = open(data_file_path, "w")
             data = pd.DataFrame.from_csv(data_file)
             if a_priori is None:
@@ -176,7 +187,7 @@ class Routine(SimultaneousAlphaBeta):
 
             for action in self._possibleMoves:
                 target_file_name = self._getTargetFileName(file_id, action)
-                target_file_path = os.path.join(TEMP_DATA_PATH_NAME, target_file_name)
+                target_file_path = os.path.join(self.TEMP_DATA_PATH_NAME, target_file_name)
                 target_file = open(target_file_path, "w")
                 target_data = pd.DataFrame.from_csv(target_file)
                 if action not in a_posteriori:
@@ -186,10 +197,10 @@ class Routine(SimultaneousAlphaBeta):
                 target_file.close()
                 os.remove(target_file_path) # The temporary file is no longer needed
             os.remove(data_file_path)  # The temporary file is no longer needed
-        self._writeToCsv(a_priori, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME)
+        self._writeToCsv(a_priori, self._aPrioriTitles, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME)
         for action in a_posteriori:
-            self._writeToCsv(a_posteriori[action], self._getTargetFileName(str(id(self)), action),
-                             COLLECTED_DATA_PATH_NAME)
+            self._writeToCsv(a_posteriori[action], self._aPosterioriTitles,
+                             self._getTargetFileName(str(id(self)), action), COLLECTED_DATA_PATH_NAME)
 
     @staticmethod
     def _createDirectoryIfNeeded(path_name: str):
@@ -200,22 +211,20 @@ class Routine(SimultaneousAlphaBeta):
             path_name: The path of the directory to create
         """
         try:
-            os.mkdir(path_name)
+            path = os.path.join(os.path.curdir, path_name)
+            os.mkdir(path)
         except FileExistsError:
             pass
 
     @staticmethod
-    def _writeToCsv(data: np.ndarray, file_name:str, path: str):
+    def _writeToCsv(data: np.ndarray, column_titles: List[str], file_name: str, path: str):
         """
         Writes the given data into a CSV file
 
         Args:
             data: The data to write into a CSV file
             file_name: The name of the file that will contain the data (without extension !)
-            path: The path in which the file will
-
-        Returns:
-
+            path: The path in which the file will be written
         """
         file_name = os.path.join(path, file_name)
         addition = ""
@@ -225,7 +234,7 @@ class Routine(SimultaneousAlphaBeta):
                 break
             except FileExistsError:
                 addition += "_1"
-        pd.DataFrame(data).to_csv(file)
+        pd.DataFrame(data, columns=column_titles).to_csv(file)
         file.close()
 
 
@@ -240,17 +249,20 @@ class RoutineBuilder:
         self._components = []
 
     def addComponent(self, methods: Union[Iterable[Callable[[API], Data]], Callable[[API], Data]],
+                     title: str, description: str="",
                      reduce_function: Optional[Callable[[Tuple[Data, ...]], Data]]=None) -> None:
         """
         Adds a component to the routine being built
 
         Args:
             methods: An iterable of methods or just one method that takes an API as a parameter and returns a data
+            title: The title to give to this component
+            description: A short description of this component
             reduce_function:
                 A method that, given a tuple of data, returns a single data (e.g. functools.reduce)
                 Unused if the "methods" parameter is a lone method, but necessary if there is more than one method.
         """
-        self._components.append(Component(methods, reduce_function))
+        self._components.append(Component(methods, title, description, reduce_function))
 
     def create(self) -> Routine:
         """

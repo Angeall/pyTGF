@@ -14,6 +14,7 @@ Data = Any
 
 class Component:
     def __init__(self, methods: Union[Iterable[Callable[[API], Data]], Callable[[API], Data]],
+                 title: str, description: str= "",
                  reduce_function: Optional[Callable[[Tuple[Data, ...]], Data]]=None):
         """
         Creates a component of a data gather routine
@@ -27,6 +28,8 @@ class Component:
         Raises:
             AttributeError: When the reduce_function is None while the methods is an iterable;
         """
+        self.title = title
+        self.description = description
         self.methods = None  # type: Iterable[Callable[[API], Any]]
         if isinstance(methods, list) or isinstance(methods, tuple):
             if reduce_function is None:

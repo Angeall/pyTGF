@@ -44,7 +44,7 @@ class API(metaclass=ABCMeta):
         """
         feasible_move, move = self._generateMove(player_number, wanted_move)
         if feasible_move:
-            new_game_state = API(self.game.copy())
+            new_game_state = self.copy();
             new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
             return feasible_move, new_game_state
         else:

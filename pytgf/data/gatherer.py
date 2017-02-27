@@ -4,10 +4,8 @@ Contains the definition of a data gatherer, which is a class that contains multi
 
 from typing import Iterable
 
-import numpy as np
-
+from pytgf.data.component import Component
 from pytgf.game import API
-from pytgf.learning.component import Component
 
 __author__ = "Anthony Rouneau"
 
@@ -25,29 +23,29 @@ class Gatherer:
             a_posteriori_components: The component(s) destined to be gathered just after the move was performed
             final_components: The component(s) destined to be gathered once the game ended
         """
-        self._aPrioriComponents = a_priori_components
-        self._aPosterioriComponents = a_posteriori_components
+        self.aPrioriComponents = a_priori_components
+        self.aPosterioriComponents = a_posteriori_components
 
-    def getAPrioriData(self, api: API) -> np.ndarray:
+    def getAPrioriData(self, api: API) -> list:
         """
         Args:
             api: The API that will be used to get the data in the components
 
         Returns: A list containing the a priori components' data for the given API
         """
-        return self._getData(api, self._aPrioriComponents)
+        return self._getData(api, self.aPrioriComponents)
 
-    def getAPosterioriData(self, api: API) -> np.ndarray:
+    def getAPosterioriData(self, api: API) -> list:
         """
         Args:
             api: The API that will be used to get the data in the components
 
         Returns: A list containing the a posteriori components' data for the given API
         """
-        return self._getData(api, self._aPosterioriComponents)
+        return self._getData(api, self.aPosterioriComponents)
 
     @staticmethod
-    def _getData(api: API, components: Iterable[Component]):
+    def _getData(api: API, components: Iterable[Component]) -> list:
         """
         Args:
             api: The API that will be used to get the data in components
@@ -58,4 +56,4 @@ class Gatherer:
         data_vector = []
         for component in components:
             data_vector.append(component.getData(api))
-        return np.array(data_vector)
+        return data_vector
