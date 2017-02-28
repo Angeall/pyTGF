@@ -22,17 +22,21 @@ class TestLazerbikeData(unittest.TestCase):
         pygame.init()
         self.width = 720
         self.height = 480
-        self.lines = 4
-        self.columns = 4
+        self.lines = 5
+        self.columns = 5
         builder = Builder(self.width, self.height, self.lines, self.columns)
         builder.setBordersColor((0, 125, 125))
         builder.setBackgroundColor((25, 25, 25))
         builder.setTilesVisible(False)
         board = builder.create()  # type: Board
         self.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
-        self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
+        b1 = Bike(200, 1, max_trace=-1)
+        b1.turn(3)
+        self.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (1, 1), GO_DOWN,
                           team=1)
-        self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotControllerWrapper(Passive(2)), (3, 3), GO_LEFT,
+        b2 = Bike(200, 2, max_trace=-1)
+        b2.turn(1)
+        self.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (3, 3), GO_UP,
                           team=2)
 
         a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1],
@@ -53,3 +57,4 @@ class TestLazerbikeData(unittest.TestCase):
 
     def test_gathering(self):
         self.routine.routine(1, self.api)
+        self.loop.run()

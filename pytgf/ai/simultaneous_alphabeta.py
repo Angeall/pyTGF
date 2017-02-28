@@ -114,29 +114,55 @@ class SimultaneousAlphaBeta:
 
         # Initializing the best values
         max_value = -float('inf')
-        equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API, EndState]]
-
+        equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API]]
+        end_state = (False, 0, False)
         # Explore every possible actions from this point
         actions_combinations = self._generateMovesCombinations(state)
-        actions_combinations_scores = {}  # type: Dict[float, Tuple[Dict[int, MoveDescriptor], bool, API]]
+        actions_combinations_scores = {}  # type: Dict[float, Tuple[Dict[int, MoveDescriptor], API]]
         for actions in actions_combinations:
-            min_value, min_actions, min_end_state, min_game_state = self._minValue(state, actions, alpha, beta, depth)
-            actions_combinations_scores[min_value] = min_actions, min_end_state, min_game_state
+            min_value, min_actions, new_end_state, min_game_state = self._minValue(state, actions, alpha, beta, depth)
+            end_state = self._evaluateEndState(end_state, new_end_state)
+            actions_combinations_scores[min_value] = min_actions, min_game_state
             if self._mustCutOff and min_value >= beta:  # Cutoff
-                return min_value, min_actions, min_end_state, min_game_state
+                return min_value, min_actions, end_state, min_game_state
             alpha = max(alpha, min_value)
         for score in actions_combinations_scores:
-            combination, end_state, new_game_state = actions_combinations_scores[score]
+            combination, new_game_state = actions_combinations_scores[score]
             if score > max_value:
                 max_value = score
-                equally_good_choices = [(combination, new_game_state, end_state)]
+                equally_good_choices = [(combination, new_game_state)]
             elif score == max_value:
-                equally_good_choices.append((combination, new_game_state, end_state))
+                equally_good_choices.append((combination, new_game_state))
         if len(equally_good_choices) == 0:  # No choice is good to take...
             return self._getTeamScore(state, self.eval(state)), None, \
                    (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
-        best_combination, best_game_state, best_end_state = self._randomChoice(equally_good_choices)
-        return max_value, best_combination, best_end_state, best_game_state
+        best_combination, best_game_state = self._randomChoice(equally_good_choices)
+        return max_value, best_combination, end_state, best_game_state
+
+    @staticmethod
+    def _evaluateEndState(current_end_state: EndState, new_end_state: EndState) -> EndState:
+        """
+        Updates the end state if needed
+
+        Args:
+            current_end_state: The end state currently used
+            new_end_state: The new end state coming from the depth further
+
+        Returns: The end state that was updated if it was needed
+        """
+        if new_end_state[0]:
+            if current_end_state[0]:  # If the current state finished the game
+                if current_end_state[2] and new_end_state[2]:  # If both states ends in a win from the player
+                    nb_turn = min(current_end_state[1], new_end_state[1] + 1)  # The less turn to win the better
+                    return True, nb_turn, True
+                elif new_end_state[2]:  # The new state finishes in a win
+                    return new_end_state  # We save that chance to win
+                else:  # Both states ends in an inevitable loss
+                    nb_turn = min(current_end_state[1], new_end_state[1] + 1)
+                    return True, nb_turn, False
+            else:   # Only the new state finishes the game => no doubt, we need to update the current state
+                return True, new_end_state[1] + 1, new_end_state[2]
+        return current_end_state
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
@@ -162,22 +188,24 @@ class SimultaneousAlphaBeta:
               - The API that represents the game after the best move
         """
         min_value = float('inf')
-        equal_min_choices = []  # type: Tuple[Dict[int, MoveDescriptor], API, EndState]
+        equal_min_choices = []  # type: Tuple[Dict[int, MoveDescriptor], API]
+        end_state = (False, 0, False)
         for combination in actions:
             feasible_moves, new_game_state = state.simulateMoves(combination)
             if feasible_moves and new_game_state is not None:
-                value, _, end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
+                value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
+                end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
-                    equal_min_choices = [(combination, game_state, end_state)]
+                    equal_min_choices = [(combination, game_state)]
                 elif value == min_value:
-                    equal_min_choices.append((combination, game_state, end_state))
+                    equal_min_choices.append((combination, game_state))
                 if self._mustCutOff and value <= alpha:  # Cutoff because we are in a min situation
-                    best_combination, best_game_state, best_end_state = self._randomChoice(equal_min_choices)
-                    return value, best_combination, best_end_state, best_game_state
+                    best_combination, best_game_state = self._randomChoice(equal_min_choices)
+                    return value, best_combination, end_state, best_game_state
                 beta = min(beta, value)
-        min_actions, min_game_state, min_end_state = self._randomChoice(equal_min_choices)
-        return min_value, min_actions, min_end_state, min_game_state
+        min_actions, min_game_state = self._randomChoice(equal_min_choices)
+        return min_value, min_actions, end_state, min_game_state
 
     def _getTeamScore(self, state: API, players_score: Tuple[int, ...]) -> float:
         """
