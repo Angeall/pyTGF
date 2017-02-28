@@ -40,6 +40,7 @@ class Routine(SimultaneousAlphaBeta):
         self._aPosterioriDataVectors = {}  # type: Dict[ObjID, Dict[MoveDescriptor, List]]
         self._concludedStates = []  # type: List[ObjID]
         self._tempFileIDs = []  # type: List[str]
+        self._test = {}
 
     def routine(self, player_number: int, state: API):
         self.alphaBetaSearching(player_number, state)
@@ -54,7 +55,13 @@ class Routine(SimultaneousAlphaBeta):
     def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
         # STOCKING A PRIORI DATA AND INIT A POSTERIORI DATA STRUCTURE
-        self._aPrioriDataVectors[id(state)] = self._gatherer.getAPrioriData(state)
+        data = self._gatherer.getAPrioriData(state)
+        if id(state) in self._concludedStates:
+            print("ALREADY THERE", self._aPrioriDataVectors[id(state)], "depth:", depth)
+            print(self._test[id(state)] is state)
+            raise AssertionError("State already finished")
+        self._test[id(state)] = state
+        self._aPrioriDataVectors[id(state)] = data
         self._aPosterioriDataVectors[id(state)] = {action: [] for action in self._possibleMoves}
         # SEARCHING MAX VALUE
         retVal = super()._maxValue(state, alpha, beta, depth)
@@ -63,7 +70,6 @@ class Routine(SimultaneousAlphaBeta):
             if len(lst) == 0:
                 data = [np.nan for _ in range(self._nbAPosterioriComponent)]
                 self._aPosterioriDataVectors[id(state)][action] = data
-                print(data)
         # AS WE FINISHED TO SEARCH MAX, WE CAN MARK THIS STATE AS "CONCLUDED"
         self._concludedStates.append(id(state))
         # IF NEEDED, WE WRITE INTO A FILE THE CURRENT PROGRESSION
@@ -78,17 +84,16 @@ class Routine(SimultaneousAlphaBeta):
         value, best_actions, end_state, new_game_state = super()._minValue(state, actions,
                                                                            alpha, beta, depth)  # Simulate the actions
         # AS WE FINISHED SEARCHING, WE CAN STORE THE A POSTERIORI DATA
-        a_posteriori_data = self._gatherer.getAPosterioriData(state)
+        a_posteriori_data = self._gatherer.getAPosterioriData(new_game_state)
         final_state = self._computeFinalStateScore(depth, end_state)  # Storing whether this move led to a winning state
         a_posteriori_data.extend(final_state)
-        print(a_posteriori_data)
         a_posteriori_dict = self._aPosterioriDataVectors[id(state)]
         a_posteriori_list = a_posteriori_dict[player_move_descriptor]
         a_posteriori_list.extend(a_posteriori_data)
         return value, best_actions, end_state, new_game_state
 
     @staticmethod
-    def _computeFinalStateScore(depth, end_state):
+    def _computeFinalStateScore(depth: int, end_state: EndState) -> Tuple[int, int]:
         final_state = (0, 0)  # We suppose that the game has not ended
         if end_state[0]:
             nb_turn = end_state[1] - depth  # The number of turn in which the game ended
@@ -98,24 +103,23 @@ class Routine(SimultaneousAlphaBeta):
                 final_state = (1, nb_turn)
         return final_state
 
-    def _getPossibleMovesForPlayer(self, player_number: int, state: API) -> List[MoveDescriptor]:
-        moves = super()._getPossibleMovesForPlayer(player_number, state)
-        if player_number == self.playerNumber:
-            return moves
-        safe_moves = []
-        for move in moves:
-            if not state.isMoveDeadly(player_number, move):
-                safe_moves.append(move)
-        if len(safe_moves) == 0:  # If all the moves are deadly
-            safe_moves.append(random.choice(moves))
-        return safe_moves
+    # def _getPossibleMovesForPlayer(self, player_number: int, state: API) -> List[MoveDescriptor]:
+    #     moves = super()._getPossibleMovesForPlayer(player_number, state)
+    #     if player_number == self.playerNumber:
+    #         return moves
+    #     safe_moves = []
+    #     for move in moves:
+    #         if not state.isMoveDeadly(player_number, move):
+    #             safe_moves.append(move)
+    #     if len(safe_moves) == 0:  # If all the moves are deadly
+    #         safe_moves.append(random.choice(moves))
+    #     return safe_moves
 
     def _writeToTempFile(self):
         """
         Writes the data stocked in the data structures in temporary files to save the current progress
         """
         a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates]
-        print("POSTERIORI", self._aPosterioriDataVectors)
         if len(a_priori_vectors) > 0:
             a_posteriori_vectors_dicts = {action: [self._aPosterioriDataVectors[state_id][action]
                                                    for state_id in self._concludedStates]
@@ -131,9 +135,6 @@ class Routine(SimultaneousAlphaBeta):
                              self.TEMP_DATA_PATH_NAME)
             for action, data_vectors in a_posteriori_vectors_dicts.items():
                 data_vectors = np.array(data_vectors)
-                print(data_vectors.shape)
-                print(len(data_vectors))
-                print(len(data_vectors[0]))
                 data_vectors = data_vectors.reshape((len(data_vectors), len(data_vectors[0])))
                 self._writeToCsv(data_vectors, self._aPosterioriTitles, self._getTargetFileName(file_id, action),
                                  self.TEMP_DATA_PATH_NAME)
@@ -176,25 +177,21 @@ class Routine(SimultaneousAlphaBeta):
         a_posteriori = {}
         for file_id in self._tempFileIDs:
             data_file_name = self._getDataFileName(file_id)
-            data_file_path = os.path.join(self.TEMP_DATA_PATH_NAME, data_file_name)
-            data_file = open(data_file_path, "w")
-            data = pd.DataFrame.from_csv(data_file)
+            data_file_path = os.path.join(self.TEMP_DATA_PATH_NAME, data_file_name + ".csv")
+            data = pd.read_csv(data_file_path)
             if a_priori is None:
                 a_priori = data
             else:
                 a_priori = a_priori.append(data, ignore_index=True)
-            data_file.close()
 
             for action in self._possibleMoves:
                 target_file_name = self._getTargetFileName(file_id, action)
-                target_file_path = os.path.join(self.TEMP_DATA_PATH_NAME, target_file_name)
-                target_file = open(target_file_path, "w")
-                target_data = pd.DataFrame.from_csv(target_file)
+                target_file_path = os.path.join(self.TEMP_DATA_PATH_NAME, target_file_name + ".csv")
+                target_data = pd.read_csv(target_file_path)
                 if action not in a_posteriori:
                     a_posteriori[action] = target_data
                 else:
                     a_posteriori[action] = a_posteriori[action].append(target_data, ignore_index=True)
-                target_file.close()
                 os.remove(target_file_path) # The temporary file is no longer needed
             os.remove(data_file_path)  # The temporary file is no longer needed
         self._writeToCsv(a_priori, self._aPrioriTitles, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME)
@@ -234,7 +231,7 @@ class Routine(SimultaneousAlphaBeta):
                 break
             except FileExistsError:
                 addition += "_1"
-        pd.DataFrame(data, columns=column_titles).to_csv(file)
+        pd.DataFrame(data, columns=column_titles).to_csv(file, index=False)
         file.close()
 
 

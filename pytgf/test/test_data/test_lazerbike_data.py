@@ -22,8 +22,8 @@ class TestLazerbikeData(unittest.TestCase):
         pygame.init()
         self.width = 720
         self.height = 480
-        self.lines = 3
-        self.columns = 3
+        self.lines = 4
+        self.columns = 4
         builder = Builder(self.width, self.height, self.lines, self.columns)
         builder.setBordersColor((0, 125, 125))
         builder.setBackgroundColor((25, 25, 25))
@@ -32,11 +32,12 @@ class TestLazerbikeData(unittest.TestCase):
         self.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
         self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
                           team=1)
-        self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotControllerWrapper(Passive(2)), (2, 2), GO_LEFT,
+        self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotControllerWrapper(Passive(2)), (3, 3), GO_LEFT,
                           team=2)
 
-        a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1]]
-        a_priori_title = ["location_x", "location_y"]
+        a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1],
+                            lambda api: api.getPlayerLocation(2)[0], lambda api: api.getPlayerLocation(2)[1]]
+        a_priori_title = ["location_x", "location_y", "opponent_x", "opponent_y"]
         a_posteriori_methods = [lambda api: 1000 if api.hasWon(1) else 0]
         a_posteriori_titles = ["final_points"]
         a_priori_components = []
@@ -46,7 +47,8 @@ class TestLazerbikeData(unittest.TestCase):
         for i in range(len(a_posteriori_methods)):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         self.gatherer = Gatherer(a_priori_components, a_posteriori_components)
-        self.routine = Routine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN), lambda api: (100, 100))
+        self.routine = Routine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
+                               lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]))
         self.api = self.loop.api
 
     def test_gathering(self):
