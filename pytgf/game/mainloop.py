@@ -319,6 +319,7 @@ class MainLoop:
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
                 except IllegalMove:
+                    self.game.unitsLocation[unit] = self.game.board.OUT_OF_BOARD_TILE.identifier
                     self._killUnit(unit, linker)
                     self.game.checkIfFinished()
                     self._cancelCurrentMoves(unit)

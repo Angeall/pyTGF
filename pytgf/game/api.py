@@ -67,6 +67,7 @@ class API(metaclass=ABCMeta):
         for player_number, wanted_move in player_moves.items():
             feasible_move, move = self._generateMove(player_number, wanted_move)
             if not feasible_move:
+                print(self.getPlayerLocation(player_number), self.getCurrentDirection(player_number), wanted_move)
                 return False, None
             moves.append(move)
         new_game_state = self.copy()

@@ -56,10 +56,6 @@ class Routine(SimultaneousAlphaBeta):
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
         # STOCKING A PRIORI DATA AND INIT A POSTERIORI DATA STRUCTURE
         data = self._gatherer.getAPrioriData(state)
-        if id(state) in self._concludedStates:
-            print("ALREADY THERE", self._aPrioriDataVectors[id(state)], "depth:", depth)
-            print(self._test[id(state)] is state)
-            raise AssertionError("State already finished")
         self._test[id(state)] = state
         self._aPrioriDataVectors[id(state)] = data
         self._aPosterioriDataVectors[id(state)] = {action: [] for action in self._possibleMoves}
@@ -70,7 +66,7 @@ class Routine(SimultaneousAlphaBeta):
             if len(lst) == 0:
                 data = [np.nan for _ in range(self._nbAPosterioriComponent)]
                 self._aPosterioriDataVectors[id(state)][action] = data
-        # AS WE FINISHED TO SEARCH MAX, WE CAN MARK THIS STATE AS "CONCLUDED"
+        # AS WE FINISHED TO SEARCH THE MAX, WE CAN MARK THIS STATE AS "CONCLUDED"
         self._concludedStates.append(id(state))
         # IF NEEDED, WE WRITE INTO A FILE THE CURRENT PROGRESSION
         if len(self._concludedStates) > MAX_TEMP_VECTORS:
@@ -103,17 +99,17 @@ class Routine(SimultaneousAlphaBeta):
                 final_state = (1, nb_turn)
         return final_state
 
-    # def _getPossibleMovesForPlayer(self, player_number: int, state: API) -> List[MoveDescriptor]:
-    #     moves = super()._getPossibleMovesForPlayer(player_number, state)
-    #     if player_number == self.playerNumber:
-    #         return moves
-    #     safe_moves = []
-    #     for move in moves:
-    #         if not state.isMoveDeadly(player_number, move):
-    #             safe_moves.append(move)
-    #     if len(safe_moves) == 0:  # If all the moves are deadly
-    #         safe_moves.append(random.choice(moves))
-    #     return safe_moves
+    def _getPossibleMovesForPlayer(self, player_number: int, state: API) -> List[MoveDescriptor]:
+        moves = super()._getPossibleMovesForPlayer(player_number, state)
+        if player_number == self.playerNumber:
+            return moves
+        safe_moves = []
+        for move in moves:
+            if not state.isMoveDeadly(player_number, move):
+                safe_moves.append(move)
+        if len(safe_moves) == 0:  # If all the moves are deadly
+            safe_moves.append(random.choice(moves))
+        return safe_moves
 
     def _writeToTempFile(self):
         """

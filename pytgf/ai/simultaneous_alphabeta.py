@@ -5,7 +5,6 @@ for all the players
 
 import itertools
 import random
-import traceback
 from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
@@ -58,19 +57,16 @@ class SimultaneousAlphaBeta:
         :type state: API
         :return: the best action among the possible ones
         """
-        try:
-            self.playerNumber = player_number
-            if self.actions.get(state) is not None:
-                _, actions = self.actions[state]
-            else:
-                _, actions, _, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
-            self.playerNumber = None
-            if actions is not None:
-                return actions[player_number]
-            else:
-                return self._randomChoice(self.possibleActions)
-        except:  # Too broad so that AI developer can take knowledge of unexpected bug without crashing its AI
-            traceback.print_exc()
+        self.playerNumber = player_number
+        if self.actions.get(state) is not None:
+            _, actions = self.actions[state]
+        else:
+            _, actions, _, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
+        self.playerNumber = None
+        if actions is not None:
+            return actions[player_number]
+        else:
+            return random.choice(self.possibleActions)
 
     # -------------------- PROTECTED METHODS -------------------- #
 
@@ -103,13 +99,15 @@ class SimultaneousAlphaBeta:
               - The API that represents the game after the best move
 
         """
+        print(2*depth*"-", "MAX State: ", state.getPlayerLocation(1), state.getCurrentDirection(1),
+              state.getPlayerLocation(2), state.getCurrentDirection(2))
         # Check if we reached the end of the tree
         if depth > self.maxDepth:
             score = self._getTeamScore(state, self.eval(state))
-            return score, None, (False, depth, False), state
+            return score, None, (False, depth-1, False), state
         # Check if the game state is final
         elif state.isFinished():
-            return self._getTeamScore(state, self.eval(state)), None, (True, depth, state.hasWon(self.playerNumber)), \
+            return self._getTeamScore(state, self.eval(state)), None, (True, depth-1, state.hasWon(self.playerNumber)), \
                    state
 
         # Initializing the best values
@@ -136,7 +134,8 @@ class SimultaneousAlphaBeta:
         if len(equally_good_choices) == 0:  # No choice is good to take...
             return self._getTeamScore(state, self.eval(state)), None, \
                    (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
-        best_combination, best_game_state = self._randomChoice(equally_good_choices)
+        best_combination, best_game_state = random.choice(equally_good_choices)
+
         return max_value, best_combination, end_state, best_game_state
 
     @staticmethod
@@ -152,9 +151,12 @@ class SimultaneousAlphaBeta:
         """
         if new_end_state[0]:
             if current_end_state[0]:  # If the current state finished the game
-                if current_end_state[2] and new_end_state[2]:  # If both states ends in a win from the player
-                    nb_turn = min(current_end_state[1], new_end_state[1] + 1)  # The less turn to win the better
-                    return True, nb_turn, True
+                if current_end_state[2]:
+                    if new_end_state[2]:  # If both states ends in a win from the player
+                        nb_turn = min(current_end_state[1], new_end_state[1] + 1)  # The less turn to win the better
+                        return True, nb_turn, True
+                    else:  # The new state ends in a loss while the initial ended in a win
+                        return current_end_state
                 elif new_end_state[2]:  # The new state finishes in a win
                     return new_end_state  # We save that chance to win
                 else:  # Both states ends in an inevitable loss
@@ -188,23 +190,28 @@ class SimultaneousAlphaBeta:
               - The API that represents the game after the best move
         """
         min_value = float('inf')
-        equal_min_choices = []  # type: Tuple[Dict[int, MoveDescriptor], API]
+        equal_min_choices = []  # type: List[Dict[int, MoveDescriptor], API]
+        print(2*depth*"-", "MIN State: ", state.getPlayerLocation(1), state.getCurrentDirection(1),
+              state.getPlayerLocation(2), state.getCurrentDirection(2))
         end_state = (False, 0, False)
         for combination in actions:
+            print(2*depth*"-", combination)
             feasible_moves, new_game_state = state.simulateMoves(combination)
             if feasible_moves and new_game_state is not None:
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
+                old_state = end_state
                 end_state = self._evaluateEndState(end_state, new_end_state)
+                print(2*depth*"-", old_state, new_end_state, end_state)
                 if value < min_value:
                     min_value = value
                     equal_min_choices = [(combination, game_state)]
                 elif value == min_value:
                     equal_min_choices.append((combination, game_state))
                 if self._mustCutOff and value <= alpha:  # Cutoff because we are in a min situation
-                    best_combination, best_game_state = self._randomChoice(equal_min_choices)
+                    best_combination, best_game_state = random.choice(equal_min_choices)
                     return value, best_combination, end_state, best_game_state
                 beta = min(beta, value)
-        min_actions, min_game_state = self._randomChoice(equal_min_choices)
+        min_actions, min_game_state = random.choice(equal_min_choices)
         return min_value, min_actions, end_state, min_game_state
 
     def _getTeamScore(self, state: API, players_score: Tuple[int, ...]) -> float:
@@ -282,16 +289,3 @@ class SimultaneousAlphaBeta:
         """
         possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
         return possible_moves_for_player
-
-    def _randomChoice(self, choices: Union[List[T], Tuple[T, ...]]) -> T:
-        """
-        Select randomly inside a collection of possibilities
-
-        Args:
-            choices: A collection of choices in which the method will choose
-
-        Returns: A random choice in the choices
-        """
-        multiplier = 10
-        selector = self.random.randint(0, multiplier * (len(choices) - 1))
-        return choices[selector // multiplier]

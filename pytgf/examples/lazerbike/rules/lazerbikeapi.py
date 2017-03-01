@@ -167,3 +167,13 @@ class LazerBikeAPI(API):
         Returns: The tile located to the bottom of the given tile
         """
         return self.game.board.getTileById((origin_tile_id[0] + 1, origin_tile_id[1]))
+
+    def getCurrentDirection(self, player_number: int):
+        """
+
+        Args:
+            player_number: The number that represents the player for which it will return the current direction
+
+        Returns: The current direction of the player (0: right, 1: top, 2: left, 3: bottom)
+        """
+        return self.game.getUnitForNumber(player_number).currentAction

@@ -22,26 +22,30 @@ class TestLazerbikeData(unittest.TestCase):
         pygame.init()
         self.width = 720
         self.height = 480
-        self.lines = 5
-        self.columns = 5
+        self.lines = 3
+        self.columns = 3
         builder = Builder(self.width, self.height, self.lines, self.columns)
         builder.setBordersColor((0, 125, 125))
         builder.setBackgroundColor((25, 25, 25))
         builder.setTilesVisible(False)
         board = builder.create()  # type: Board
         self.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
+        try:
+            self.loop._screen = pygame.display.set_mode(self.loop.game.board.graphics.size, pygame.DOUBLEBUF)
+        except pygame.error:  # No video device
+            pass
         b1 = Bike(200, 1, max_trace=-1)
-        b1.turn(3)
-        self.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (1, 1), GO_DOWN,
+        self.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
                           team=1)
         b2 = Bike(200, 2, max_trace=-1)
-        b2.turn(1)
-        self.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (3, 3), GO_UP,
+        self.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (2, 2), GO_LEFT,
                           team=2)
 
         a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1],
-                            lambda api: api.getPlayerLocation(2)[0], lambda api: api.getPlayerLocation(2)[1]]
-        a_priori_title = ["location_x", "location_y", "opponent_x", "opponent_y"]
+                            lambda api: api.getCurrentDirection(1),
+                            lambda api: api.getPlayerLocation(2)[0], lambda api: api.getPlayerLocation(2)[1],
+                            lambda api: api.getCurrentDirection(2)]
+        a_priori_title = ["location_x", "location_y", "direction", "opponent_x", "opponent_y", "opponent_direction"]
         a_posteriori_methods = [lambda api: 1000 if api.hasWon(1) else 0]
         a_posteriori_titles = ["final_points"]
         a_priori_components = []
@@ -57,4 +61,4 @@ class TestLazerbikeData(unittest.TestCase):
 
     def test_gathering(self):
         self.routine.routine(1, self.api)
-        self.loop.run()
+        self.loop._refreshScreen()
