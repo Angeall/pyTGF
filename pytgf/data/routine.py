@@ -42,9 +42,43 @@ class Routine(SimultaneousAlphaBeta):
         self._tempFileIDs = []  # type: List[str]
         self._test = {}
 
-    def routine(self, player_number: int, state: API):
+    def routine(self, player_number: int, state: API) -> Tuple[pd.DataFrame, Dict[MoveDescriptor, pd.DataFrame]]:
+        """
+        Launches the data gathering routine and saves into file(s) the results
+
+        Args:
+            player_number: The number of the play er for which the data is gathered
+            state: The initial state from which the data will be gathered
+
+        Returns:
+            The DataFrames containing the gathered data as a tuple
+                (A Priori Data, A Posteriori data indexed by actions)
+        """
         self.alphaBetaSearching(player_number, state)
-        self._writeToFinalFile()
+        return self._writeToFinalFile()
+
+    @staticmethod
+    def updateTargetVectors(current_target: np.ndarray, new_target: np.ndarray) -> np.ndarray:
+        """
+        Compares two target vectors and returns the one to keep from the two.
+        Pessimistic comparison => keeps the least advantageous vector
+
+        Args:
+            current_target: The first vector to compare
+            new_target: The second vector to compare
+
+        Returns: The vector to keep between the two given vectors
+        """
+        assert len(current_target.shape) == 0 and len(new_target.shape) == 0  # We can only compare flat vectors
+        current_has_won, current_nb_turns = current_target[-2:]
+        new_has_won, new_nb_turns = new_target[-2:]  # type: Tuple[float, float]
+        if new_has_won < current_has_won:  # pessimistic
+            return new_target
+        if current_has_won < new_has_won:  # pessimistic
+            return current_target
+        else:  # If winning, the pessimistic option is the maximum number of turn 'til we win.
+               # Else, it is the minimum number of turn till we lose.
+            return new_target if new_nb_turns > current_nb_turns else current_target
 
     def _mustCutOff(self) -> bool:
         """
@@ -60,7 +94,7 @@ class Routine(SimultaneousAlphaBeta):
         self._aPrioriDataVectors[id(state)] = data
         self._aPosterioriDataVectors[id(state)] = {action: [] for action in self._possibleMoves}
         # SEARCHING MAX VALUE
-        retVal = super()._maxValue(state, alpha, beta, depth)
+        ret_val = super()._maxValue(state, alpha, beta, depth)
         # WE COMPLETE THE A POSTERIORI MOVES IF A MOVE WAS UNFEASIBLE
         for action, lst in self._aPosterioriDataVectors[id(state)].items():
             if len(lst) == 0:
@@ -71,7 +105,7 @@ class Routine(SimultaneousAlphaBeta):
         # IF NEEDED, WE WRITE INTO A FILE THE CURRENT PROGRESSION
         if len(self._concludedStates) > MAX_TEMP_VECTORS:
             self._writeToTempFile()
-        return retVal
+        return ret_val
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
@@ -164,9 +198,14 @@ class Routine(SimultaneousAlphaBeta):
         """
         return "target(" + str(move_descriptor) + ")" + file_id
 
-    def _writeToFinalFile(self):
+    def _writeToFinalFile(self) -> Tuple[pd.DataFrame, Dict[MoveDescriptor, pd.DataFrame]]:
         """
         Joins all the temporary files and the data that has not yet be written into one file
+
+        Returns:
+            The DataFrames containing the data of all temp files as a tuple
+                (A Priori Data, A Posteriori data indexed by actions)
+
         """
         self._writeToTempFile()  # WRITES WHAT HAS NOT ALREADY BEEN WRITTEN
         a_priori = None
@@ -194,6 +233,7 @@ class Routine(SimultaneousAlphaBeta):
         for action in a_posteriori:
             self._writeToCsv(a_posteriori[action], self._aPosterioriTitles,
                              self._getTargetFileName(str(id(self)), action), COLLECTED_DATA_PATH_NAME)
+        return a_priori, a_posteriori
 
     @staticmethod
     def _createDirectoryIfNeeded(path_name: str):

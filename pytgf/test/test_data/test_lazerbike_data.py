@@ -1,6 +1,7 @@
 import unittest
 
 import pygame
+import numpy as np
 
 from pytgf.board import Board
 from pytgf.board import Builder
@@ -60,5 +61,16 @@ class TestLazerbikeData(unittest.TestCase):
         self.api = self.loop.api
 
     def test_gathering(self):
-        self.routine.routine(1, self.api)
-        self.loop._refreshScreen()
+        a_priori_data, a_posteriori_dict = self.routine.routine(1, self.api)
+        found = False
+        i = 0
+        for i in range(len(a_priori_data)):
+            if (a_priori_data.take((i,)) == np.array([1, 1, 0, 0, 2, 1])).all().all():
+                found = True
+                break
+        if not found:
+            self.assertTrue(False)
+        else:
+            print(a_posteriori_dict[3].take((i,)))
+            self.assertListEqual(a_posteriori_dict[3].take((i,)).get_values().tolist(), [0., 1., 1.])
+

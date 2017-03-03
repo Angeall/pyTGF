@@ -99,8 +99,6 @@ class SimultaneousAlphaBeta:
               - The API that represents the game after the best move
 
         """
-        print(2*depth*"-", "MAX State: ", state.getPlayerLocation(1), state.getCurrentDirection(1),
-              state.getPlayerLocation(2), state.getCurrentDirection(2))
         # Check if we reached the end of the tree
         if depth > self.maxDepth:
             score = self._getTeamScore(state, self.eval(state))
@@ -164,6 +162,9 @@ class SimultaneousAlphaBeta:
                     return True, nb_turn, False
             else:   # Only the new state finishes the game => no doubt, we need to update the current state
                 return True, new_end_state[1] + 1, new_end_state[2]
+        else:  # The new state hasn't reached a final state => indeterminate... benefit of the doubt
+            if not current_end_state[2]:
+                return False, 0, False
         return current_end_state
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
@@ -190,29 +191,26 @@ class SimultaneousAlphaBeta:
               - The API that represents the game after the best move
         """
         min_value = float('inf')
-        equal_min_choices = []  # type: List[Dict[int, MoveDescriptor], API]
-        print(2*depth*"-", "MIN State: ", state.getPlayerLocation(1), state.getCurrentDirection(1),
-              state.getPlayerLocation(2), state.getCurrentDirection(2))
+        equal_min_choices = []  # type: List[Dict[int, MoveDescriptor]]
         end_state = (False, 0, False)
+        new_game_state = None
         for combination in actions:
-            print(2*depth*"-", combination)
             feasible_moves, new_game_state = state.simulateMoves(combination)
             if feasible_moves and new_game_state is not None:
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
                 old_state = end_state
                 end_state = self._evaluateEndState(end_state, new_end_state)
-                print(2*depth*"-", old_state, new_end_state, end_state)
                 if value < min_value:
                     min_value = value
-                    equal_min_choices = [(combination, game_state)]
+                    equal_min_choices = [combination]
                 elif value == min_value:
-                    equal_min_choices.append((combination, game_state))
+                    equal_min_choices.append(combination)
                 if self._mustCutOff and value <= alpha:  # Cutoff because we are in a min situation
-                    best_combination, best_game_state = random.choice(equal_min_choices)
-                    return value, best_combination, end_state, best_game_state
+                    best_combination = random.choice(equal_min_choices)
+                    return value, best_combination, end_state, new_game_state
                 beta = min(beta, value)
-        min_actions, min_game_state = random.choice(equal_min_choices)
-        return min_value, min_actions, end_state, min_game_state
+        min_actions = random.choice(equal_min_choices)
+        return min_value, min_actions, end_state, new_game_state
 
     def _getTeamScore(self, state: API, players_score: Tuple[int, ...]) -> float:
         """
