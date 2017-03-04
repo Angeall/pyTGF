@@ -1,7 +1,7 @@
 import unittest
 
-import pygame
 import numpy as np
+import pygame
 
 from pytgf.board import Board
 from pytgf.board import Builder
@@ -60,7 +60,7 @@ class TestLazerbikeData(unittest.TestCase):
                                lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]))
         self.api = self.loop.api
 
-    def test_gathering(self):
+    def test_gathering_posibility_to_win_in_one_turn(self):
         a_priori_data, a_posteriori_dict = self.routine.routine(1, self.api)
         found = False
         i = 0
@@ -71,6 +71,5 @@ class TestLazerbikeData(unittest.TestCase):
         if not found:
             self.assertTrue(False)
         else:
-            print(a_posteriori_dict[3].take((i,)))
-            self.assertListEqual(a_posteriori_dict[3].take((i,)).get_values().tolist(), [0., 1., 1.])
+            self.assertListEqual(a_posteriori_dict[3].take((i,)).get_values().ravel().tolist(), [0., 1., 1.])
 

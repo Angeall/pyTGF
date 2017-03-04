@@ -105,7 +105,7 @@ class SimultaneousAlphaBeta:
             return score, None, (False, depth-1, False), state
         # Check if the game state is final
         elif state.isFinished():
-            return self._getTeamScore(state, self.eval(state)), None, (True, depth-1, state.hasWon(self.playerNumber)), \
+            return self._getTeamScore(state, self.eval(state)), None, (True, depth-1, state.hasWon(self.playerNumber)),\
                    state
 
         # Initializing the best values
@@ -151,17 +151,17 @@ class SimultaneousAlphaBeta:
             if current_end_state[0]:  # If the current state finished the game
                 if current_end_state[2]:
                     if new_end_state[2]:  # If both states ends in a win from the player
-                        nb_turn = min(current_end_state[1], new_end_state[1] + 1)  # The less turn to win the better
+                        nb_turn = min(current_end_state[1], new_end_state[1])  # The less turn to win the better
                         return True, nb_turn, True
                     else:  # The new state ends in a loss while the initial ended in a win
                         return current_end_state
                 elif new_end_state[2]:  # The new state finishes in a win
                     return new_end_state  # We save that chance to win
                 else:  # Both states ends in an inevitable loss
-                    nb_turn = min(current_end_state[1], new_end_state[1] + 1)
+                    nb_turn = min(current_end_state[1], new_end_state[1])
                     return True, nb_turn, False
             else:   # Only the new state finishes the game => no doubt, we need to update the current state
-                return True, new_end_state[1] + 1, new_end_state[2]
+                return new_end_state
         else:  # The new state hasn't reached a final state => indeterminate... benefit of the doubt
             if not current_end_state[2]:
                 return False, 0, False
@@ -198,7 +198,6 @@ class SimultaneousAlphaBeta:
             feasible_moves, new_game_state = state.simulateMoves(combination)
             if feasible_moves and new_game_state is not None:
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
-                old_state = end_state
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
