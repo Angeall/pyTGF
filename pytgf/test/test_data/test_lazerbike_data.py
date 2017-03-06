@@ -19,7 +19,8 @@ from pytgf.game.mainloop import MainLoop
 
 class TestLazerbikeData(unittest.TestCase):
 
-    def setUp(self):
+    @classmethod
+    def setUpClass(self):
         pygame.init()
         self.width = 720
         self.height = 480
@@ -31,10 +32,6 @@ class TestLazerbikeData(unittest.TestCase):
         builder.setTilesVisible(False)
         board = builder.create()  # type: Board
         self.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
-        try:
-            self.loop._screen = pygame.display.set_mode(self.loop.game.board.graphics.size, pygame.DOUBLEBUF)
-        except pygame.error:  # No video device
-            pass
         b1 = Bike(200, 1, max_trace=-1)
         self.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
                           team=1)
@@ -57,19 +54,32 @@ class TestLazerbikeData(unittest.TestCase):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         self.gatherer = Gatherer(a_priori_components, a_posteriori_components)
         self.routine = Routine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                               lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]))
+                               lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
+                               must_keep_temp_files=False, must_write_files=False)
         self.api = self.loop.api
+        self.a_priori_data, self.a_posteriori_dict = self.routine.routine(1, self.api)
 
-    def test_gathering_posibility_to_win_in_one_turn(self):
-        a_priori_data, a_posteriori_dict = self.routine.routine(1, self.api)
+    def test_gathering_possibility_to_win_in_one_turn(self):
         found = False
         i = 0
-        for i in range(len(a_priori_data)):
-            if (a_priori_data.take((i,)) == np.array([1, 1, 0, 0, 2, 1])).all().all():
+        for i in range(len(self.a_priori_data)):
+            if (self.a_priori_data.take((i,)) == np.array([1, 1, 0, 0, 2, 1])).all().all():
                 found = True
                 break
         if not found:
             self.assertTrue(False)
         else:
-            self.assertListEqual(a_posteriori_dict[3].take((i,)).get_values().ravel().tolist(), [0., 1., 1.])
+            self.assertListEqual(self.a_posteriori_dict[3].take((i,)).get_values().ravel().tolist(), [0., 1., 1.])
+
+    def test_gathering_no_way_out(self):
+        found = False
+        i = 0
+        for i in range(len(self.a_priori_data)):
+            if (self.a_priori_data.take((i,)) == np.array([2, 0, 3, 1, 1, 2])).all().all():
+                found = True
+                break
+        if not found:
+            self.assertTrue(False)
+        else:
+            self.assertListEqual(self.a_posteriori_dict[0].take((i,)).get_values().ravel().tolist(), [0., -1., 1.])
 

@@ -158,7 +158,7 @@ class SimultaneousAlphaBeta:
                 elif new_end_state[2]:  # The new state finishes in a win
                     return new_end_state  # We save that chance to win
                 else:  # Both states ends in an inevitable loss
-                    nb_turn = min(current_end_state[1], new_end_state[1])
+                    nb_turn = max(current_end_state[1], new_end_state[1])
                     return True, nb_turn, False
             else:   # Only the new state finishes the game => no doubt, we need to update the current state
                 return new_end_state

@@ -25,10 +25,13 @@ COLLECTED_DATA_PATH_NAME = "collected_data"
 
 class Routine(SimultaneousAlphaBeta):
     def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
-                 eval_fct: Callable[[API], Tuple[Value, ...]], max_depth: int = -1):
+                 eval_fct: Callable[[API], Tuple[Value, ...]], max_depth: int = -1, must_write_files: bool=True,
+                 must_keep_temp_files: bool=False):
         super().__init__(eval_fct, possible_moves, max_depth)
         self.TEMP_DATA_PATH_NAME = os.path.join(COLLECTED_DATA_PATH_NAME, "temp" + str(id(self)))
         self._gatherer = gatherer
+        self._mustKeepTempFiles = must_keep_temp_files
+        self._mustWriteFiles = must_write_files
         self._possibleMoves = tuple(possible_moves)
         self._aPrioriDataVectors = {}  # type: Dict[ObjID, np.ndarray]
         self._aPrioriTitles = [component.title for component in self._gatherer.aPrioriComponents]
@@ -80,6 +83,7 @@ class Routine(SimultaneousAlphaBeta):
                # Else, it is the minimum number of turn till we lose.
             return new_target if new_nb_turns > current_nb_turns else current_target
 
+    @property
     def _mustCutOff(self) -> bool:
         """
         Returns: False because our data gathering routine must consider all movements
@@ -88,23 +92,26 @@ class Routine(SimultaneousAlphaBeta):
 
     def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
+        finished = state.isFinished()
         # STOCKING A PRIORI DATA AND INIT A POSTERIORI DATA STRUCTURE
-        data = self._gatherer.getAPrioriData(state)
-        self._test[id(state)] = state
-        self._aPrioriDataVectors[id(state)] = data
-        self._aPosterioriDataVectors[id(state)] = {action: [] for action in self._possibleMoves}
+        if not finished:
+            data = self._gatherer.getAPrioriData(state)
+            self._test[id(state)] = state
+            self._aPrioriDataVectors[id(state)] = data
+            self._aPosterioriDataVectors[id(state)] = {action: [] for action in self._possibleMoves}
         # SEARCHING MAX VALUE
         ret_val = super()._maxValue(state, alpha, beta, depth)
         # WE COMPLETE THE A POSTERIORI MOVES IF A MOVE WAS UNFEASIBLE
-        for action, lst in self._aPosterioriDataVectors[id(state)].items():
-            if len(lst) == 0:
-                data = [np.nan for _ in range(self._nbAPosterioriComponent)]
-                self._aPosterioriDataVectors[id(state)][action] = data
-        # AS WE FINISHED TO SEARCH THE MAX, WE CAN MARK THIS STATE AS "CONCLUDED"
-        self._concludedStates.append(id(state))
-        # IF NEEDED, WE WRITE INTO A FILE THE CURRENT PROGRESSION
-        if len(self._concludedStates) > MAX_TEMP_VECTORS:
-            self._writeToTempFile()
+        if not finished:
+            for action, lst in self._aPosterioriDataVectors[id(state)].items():
+                if len(lst) == 0:
+                    data = [np.nan for _ in range(self._nbAPosterioriComponent)]
+                    self._aPosterioriDataVectors[id(state)][action] = data
+            # AS WE FINISHED TO SEARCH THE MAX, WE CAN MARK THIS STATE AS "CONCLUDED"
+            self._concludedStates.append(id(state))
+            # IF NEEDED, WE WRITE INTO A FILE THE CURRENT PROGRESSION
+            if len(self._concludedStates) > MAX_TEMP_VECTORS:
+                self._writeToTempFile()
         return ret_val
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
@@ -227,12 +234,14 @@ class Routine(SimultaneousAlphaBeta):
                     a_posteriori[action] = target_data
                 else:
                     a_posteriori[action] = a_posteriori[action].append(target_data, ignore_index=True)
-                os.remove(target_file_path) # The temporary file is no longer needed
-            os.remove(data_file_path)  # The temporary file is no longer needed
-        self._writeToCsv(a_priori, self._aPrioriTitles, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME)
-        for action in a_posteriori:
-            self._writeToCsv(a_posteriori[action], self._aPosterioriTitles,
-                             self._getTargetFileName(str(id(self)), action), COLLECTED_DATA_PATH_NAME)
+                self._removeTempFileIfNeeded(target_file_path) # The temporary file is no longer needed
+            self._removeTempFileIfNeeded(data_file_path)  # The temporary file is no longer needed
+        if self._mustWriteFiles:
+            self._writeToCsv(a_priori, self._aPrioriTitles, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME)
+            for action in a_posteriori:
+                self._writeToCsv(a_posteriori[action], self._aPosterioriTitles,
+                                 self._getTargetFileName(str(id(self)), action), COLLECTED_DATA_PATH_NAME)
+        self._removeTempFileIfNeeded(self.TEMP_DATA_PATH_NAME, is_folder=True)
         return a_priori, a_posteriori
 
     @staticmethod
@@ -269,6 +278,13 @@ class Routine(SimultaneousAlphaBeta):
                 addition += "_1"
         pd.DataFrame(data, columns=column_titles).to_csv(file, index=False)
         file.close()
+
+    def _removeTempFileIfNeeded(self, file_path: str, is_folder: bool=False):
+        if not self._mustKeepTempFiles:
+            if not is_folder:
+                os.remove(file_path)
+            else:
+                os.rmdir(file_path)
 
 
 class RoutineBuilder:
