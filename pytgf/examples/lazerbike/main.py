@@ -73,7 +73,7 @@ def add_controller(main_loop: MainLoop, player_class, player_number: int, player
     player_info = get_player_info(player_number)
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
-    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace, initial_direction=initial_direction),
+    main_loop.addUnit(Bike(speed, player_number, max_trace=-1, initial_direction=initial_direction),
                       linker, start_pos, initial_direction, team=player_team)
 
 
