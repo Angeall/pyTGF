@@ -41,11 +41,11 @@ class InvalidPlayerNumberException(BaseException):
 
 
 class TraceSprite(UnitSprite):
-    def __init__(self, player_number: int):
+    def __init__(self, player_number: int, graphics: bool=True):
         if not 1 <= player_number <= 4:
             raise InvalidPlayerNumberException("Cannot create Player " + str(player_number))
         self._playerNumber = str(player_number)
-        super().__init__()
+        super().__init__(graphics=graphics)
 
     @property
     def imageRelativePath(self) -> str:
@@ -79,7 +79,7 @@ class TraceSprite(UnitSprite):
 
 
 class Trace(Particle):
-    def __init__(self, player_number: int):
-        super().__init__(sprite=TraceSprite(player_number))
+    def __init__(self, player_number: int, graphics: bool=True):
+        super().__init__(sprite=TraceSprite(player_number, graphics=graphics))
         self.playerNumber = player_number
 

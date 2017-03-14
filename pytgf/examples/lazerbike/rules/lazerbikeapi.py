@@ -76,7 +76,7 @@ class LazerBikeAPI(API):
             current_tile: The current tile on which the unit is placed on
         """
         tile_to_place_trace = previous_tile
-        trace = Trace(unit.playerNumber)
+        trace = Trace(unit.playerNumber, graphics=self.game.board.graphics is not None)
         if self.game.board.graphics is not None:
             self._resizeTrace(trace, self.game.board)
             trace.moveTo(tile_to_place_trace.center)

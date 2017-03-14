@@ -17,17 +17,23 @@ class UnitSprite(pygame.sprite.Sprite, metaclass=ABCMeta):
     Abstract definition of a unit's sprite.
     """
 
-    def __init__(self):
+    def __init__(self, graphics: bool=True):
         """
         Instantiates the sprite
+
+        Args:
+            graphics: True if this sprite must be drawn, False for testing and simulation purpose
         """
         super().__init__()
         self.resFolder = os.path.join("res", "sprites")
-        location = os.path.join(os.curdir, self.imageRelativePath)
-        img = pygame.image.load_extended(location)  # type: pygame.Surface
+        img = None
+        self.rect = None
+        if graphics:
+            location = os.path.join(os.curdir, self.imageRelativePath)
+            img = pygame.image.load_extended(location)  # type: pygame.Surface
+            self.rect = img.get_rect()  # type: pygame.Rect
         # img = img.convert_alpha()
         self.image = img
-        self.rect = img.get_rect()  # type: pygame.Rect
 
     def rotate(self, angle: float) -> None:
         """

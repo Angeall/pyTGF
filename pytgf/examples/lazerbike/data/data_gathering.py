@@ -26,18 +26,19 @@ def gather_data():
     pygame.init()
     width = 720
     height = 480
-    lines = 3
-    columns = 3
+    lines = 20
+    columns = 20
     builder = Builder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
     board = builder.create()
+    board.graphics = None
     loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
-    b1 = Bike(200, 1, max_trace=-1)
+    b1 = Bike(200, 1, max_trace=-1, graphics=False)
     loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
                  team=1)
-    b2 = Bike(200, 2, max_trace=-1)
+    b2 = Bike(200, 2, max_trace=-1, graphics=False)
     loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (2, 2), GO_LEFT,
                  team=2)
 
@@ -61,7 +62,7 @@ def gather_data():
     gatherer = Gatherer(a_priori_components, a_posteriori_components)
     routine = Routine(gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
                       lambda api: tuple([100 * api.hasWon(player) for player in (1, 2)]),
-                      must_keep_temp_files=False, must_write_files=False)
+                      must_keep_temp_files=False, must_write_files=True)
     game_api = loop.api
     a_priori_data, a_posteriori_dict = routine.routine(1, game_api)
 
