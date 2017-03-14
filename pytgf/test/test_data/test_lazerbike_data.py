@@ -20,24 +20,24 @@ from pytgf.game.mainloop import MainLoop
 class TestLazerbikeData(unittest.TestCase):
 
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         pygame.init()
-        self.width = 720
-        self.height = 480
-        self.lines = 3
-        self.columns = 3
-        builder = Builder(self.width, self.height, self.lines, self.columns)
+        cls.width = 720
+        cls.height = 480
+        cls.lines = 3
+        cls.columns = 3
+        builder = Builder(cls.width, cls.height, cls.lines, cls.columns)
         builder.setBordersColor((0, 125, 125))
         builder.setBackgroundColor((25, 25, 25))
         builder.setTilesVisible(False)
         board = builder.create()  # type: Board
-        self.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
+        cls.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
         b1 = Bike(200, 1, max_trace=-1)
-        self.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
-                          team=1)
+        cls.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
+                         team=1)
         b2 = Bike(200, 2, max_trace=-1)
-        self.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (2, 2), GO_LEFT,
-                          team=2)
+        cls.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (2, 2), GO_LEFT,
+                         team=2)
 
         a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1],
                             lambda api: api.getCurrentDirection(1),
@@ -52,12 +52,12 @@ class TestLazerbikeData(unittest.TestCase):
             a_priori_components.append(Component(a_priori_methods[i], a_priori_title[i]))
         for i in range(len(a_posteriori_methods)):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
-        self.gatherer = Gatherer(a_priori_components, a_posteriori_components)
-        self.routine = Routine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                               lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
-                               must_keep_temp_files=False, must_write_files=False)
-        self.api = self.loop.api
-        self.a_priori_data, self.a_posteriori_dict = self.routine.routine(1, self.api)
+        cls.gatherer = Gatherer(a_priori_components, a_posteriori_components)
+        cls.routine = Routine(cls.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
+                              lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
+                              must_keep_temp_files=False, must_write_files=False)
+        cls.api = cls.loop.api
+        cls.a_priori_data, cls.a_posteriori_dict = cls.routine.routine(1, cls.api)
 
     def test_gathering_possibility_to_win_in_one_turn(self):
         found = False
