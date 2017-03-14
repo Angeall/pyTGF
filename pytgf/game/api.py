@@ -219,6 +219,25 @@ class API(metaclass=ABCMeta):
                 return not new_api.isPlayerAlive(player_number)
         return True
 
+    def getTileByteCode(self, i: int, j: int) -> int:
+        """
+        Get the byte code of a tile
+
+        Args:
+            i: The rox-index of the tile
+            j: The column-index of the tile
+
+        Returns:
+            The code representing the tile (i, j) in the board
+        """
+        tile = self.game.board.getTileById((i, j))
+        byte_code = 0
+        if tile.deadly:
+            byte_code += 1
+        if tile.walkable:
+            byte_code += 2
+        return byte_code
+
     def copy(self):
         return type(self)(self.game.copy())
 
