@@ -229,12 +229,17 @@ class API(metaclass=ABCMeta):
 
         Returns:
             The code representing the tile (i, j) in the board
+
+                - 0 = walkable non-deadly
+                - 1 = walkable deadly
+                - 2 = non-walkable, non-deadly
+                - 3 = non-walkable, deadly
         """
         tile = self.game.board.getTileById((i, j))
         byte_code = 0
         if tile.deadly:
             byte_code += 1
-        if tile.walkable:
+        if not tile.walkable:
             byte_code += 2
         return byte_code
 
