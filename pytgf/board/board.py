@@ -82,6 +82,9 @@ class Board:
 
         Returns: The Tile struct located at the given identifier
         """
+        i, j = identifier
+        if i < 0 or j < 0:
+            return self.OUT_OF_BOARD_TILE
         try:
             return self._tiles[identifier[0]][identifier[1]]
         except IndexError:
