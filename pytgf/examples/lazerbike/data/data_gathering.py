@@ -36,10 +36,10 @@ def gather_data():
     board.graphics = None
     loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
     b1 = Bike(200, 1, max_trace=-1, graphics=False)
-    loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
+    loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (2, 2), GO_RIGHT,
                  team=1)
     b2 = Bike(200, 2, max_trace=-1, graphics=False)
-    loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (2, 2), GO_LEFT,
+    loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (17, 17), GO_LEFT,
                  team=2)
 
     a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1],
@@ -47,9 +47,10 @@ def gather_data():
                         lambda api: api.getPlayerLocation(2)[0], lambda api: api.getPlayerLocation(2)[1],
                         lambda api: api.getCurrentDirection(2)]
     a_priori_title = ["location_x", "location_y", "direction", "opponent_x", "opponent_y", "opponent_direction"]
-    for i in range(board.lines):
-        for j in range(board.columns):
-            a_priori_methods.append(lambda api: api.getTileByteCode(i, j))
+    for i in range(-1,  board.lines + 1):
+        for j in range(-1, board.columns + 1):
+            cur_id = (i, j)
+            a_priori_methods.append(lambda api, tile_id=cur_id: api.getTileByteCode(tile_id))
             a_priori_title.append("(" + str(i) + ", " + str(j) + ")")
     a_posteriori_methods = [lambda api: 1000 if api.hasWon(1) else 0]
     a_posteriori_titles = ["final_points"]

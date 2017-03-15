@@ -219,13 +219,12 @@ class API(metaclass=ABCMeta):
                 return not new_api.isPlayerAlive(player_number)
         return True
 
-    def getTileByteCode(self, i: int, j: int) -> int:
+    def getTileByteCode(self, tile_id: tuple) -> int:
         """
         Get the byte code of a tile
 
         Args:
-            i: The rox-index of the tile
-            j: The column-index of the tile
+            tile_id: The row and column-index of the tile (e.g. (x, y))
 
         Returns:
             The code representing the tile (i, j) in the board
@@ -235,6 +234,7 @@ class API(metaclass=ABCMeta):
                 - 2 = non-walkable, non-deadly
                 - 3 = non-walkable, deadly
         """
+        i, j = tile_id
         tile = self.game.board.getTileById((i, j))
         byte_code = 0
         if tile.deadly:

@@ -53,36 +53,29 @@ class LazerBikeAPI(API):
                                   units_location_dict=self.game.unitsLocation)
         raise UnfeasibleMoveException("The event couldn't create a valid move")
 
-    def _resizeTrace(self, trace, current_tile: Tile) -> None:
+    def getTileByteCode(self, tile_id: tuple) -> int:
         """
-        Resize the trace so that it does not exceed the tile's size
+        Get the byte code of a tile
 
         Args:
-            trace: The trace to resize
-            current_tile: The
-        """
-        if self.game.board.graphics is not None:
-            width = int(round(self.game.board.graphics.sideLength / 2))
-            height = int(round(self.game.board.graphics.sideLength / 2))
-            trace.sprite.size(width, height)
+            tile_id: The row and column-index of the tile (e.g. (x, y))
 
-    def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile) -> None:
-        """
-        Let a trace on the previous tile explored by the bike.
+        Returns:
+            The code representing the tile (i, j) in the board
 
-        Args:
-            unit: The unit that moved from a tile to another
-            previous_tile: The previous tile on which the unit was placed on
-            current_tile: The current tile on which the unit is placed on
+                - 0 = walkable non-deadly
+                - 1 = walkable deadly
+                - 2 = non-walkable, non-deadly
+                - 3 = non-walkable, deadly
         """
-        tile_to_place_trace = previous_tile
-        trace = Trace(unit.playerNumber, graphics=self.game.board.graphics is not None)
-        if self.game.board.graphics is not None:
-            self._resizeTrace(trace, self.game.board)
-            trace.moveTo(tile_to_place_trace.center)
-        self._previousTraces[unit] = trace
-        self.game.addUnitToTile(tile_to_place_trace.identifier, trace)
-        unit.addParticle(trace)
+        i, j = tile_id
+        tile = self.game.board.getTileById((i, j))
+        byte_code = 0
+        if tile.deadly or len(self.game.getTileOccupants((i, j))) > 0:
+            byte_code += 1
+        if not tile.walkable:
+            byte_code += 2
+        return byte_code
 
     def isWall(self, tile_id: TileIdentifier) -> bool:
         """
@@ -177,3 +170,34 @@ class LazerBikeAPI(API):
         Returns: The current direction of the player (0: right, 1: top, 2: left, 3: bottom)
         """
         return self.game.getUnitForNumber(player_number).currentAction
+
+    def _resizeTrace(self, trace, current_tile: Tile) -> None:
+        """
+        Resize the trace so that it does not exceed the tile's size
+
+        Args:
+            trace: The trace to resize
+            current_tile: The
+        """
+        if self.game.board.graphics is not None:
+            width = int(round(self.game.board.graphics.sideLength / 2))
+            height = int(round(self.game.board.graphics.sideLength / 2))
+            trace.sprite.size(width, height)
+
+    def _letTraceOnPreviousTile(self, unit: Bike, previous_tile: Tile, current_tile: Tile) -> None:
+        """
+        Let a trace on the previous tile explored by the bike.
+
+        Args:
+            unit: The unit that moved from a tile to another
+            previous_tile: The previous tile on which the unit was placed on
+            current_tile: The current tile on which the unit is placed on
+        """
+        tile_to_place_trace = previous_tile
+        trace = Trace(unit.playerNumber, graphics=self.game.board.graphics is not None)
+        if self.game.board.graphics is not None:
+            self._resizeTrace(trace, self.game.board)
+            trace.moveTo(tile_to_place_trace.center)
+        self._previousTraces[unit] = trace
+        self.game.addUnitToTile(tile_to_place_trace.identifier, trace)
+        unit.addParticle(trace)
