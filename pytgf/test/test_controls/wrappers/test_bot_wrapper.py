@@ -1,5 +1,5 @@
 import unittest
-from typing import Tuple, List, NewType
+from typing import Tuple, List
 
 from multiprocess.connection import Pipe
 
@@ -8,7 +8,7 @@ from pytgf.characters.moves import MoveDescriptor
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
-    PipeConnection = NewType("PipeConnection", object)
+    PipeConnection = object
 
 from pytgf.board import Builder
 from pytgf.characters.moves import Path

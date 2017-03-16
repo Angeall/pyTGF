@@ -5,7 +5,7 @@ and the bot controllers handling
 
 import time
 from queue import Queue, Empty
-from typing import Dict, Optional, NewType
+from typing import Dict, Optional
 from typing import Tuple
 from typing import Union
 
@@ -15,7 +15,7 @@ from multiprocess.connection import Pipe
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
-    PipeConnection = NewType("PipeConnection", object)
+    PipeConnection = object
 from pathos.pools import ProcessPool as Pool
 from pygame.constants import DOUBLEBUF, MOUSEBUTTONDOWN, MOUSEBUTTONUP, K_ESCAPE, KEYDOWN, QUIT
 
