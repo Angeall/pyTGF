@@ -1,5 +1,9 @@
+from typing import Optional
+
 from pytgf.board import Board
+from pytgf.board import TileIdentifier
 from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Particle
 from pytgf.controls.events import KeyboardEvent
 from pytgf.examples.sokoban.units.box import Box
 from pytgf.game import Core
@@ -21,7 +25,8 @@ class SokobanGame(Core):
         self._endingUnit = ending_unit  # type: MovingUnit
         self._winningTiles = winning_tiles
 
-    def _collidePlayers(self, player1, player2, frontal: bool = False):
+    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, tile_id: TileIdentifier, frontal: bool = False,
+                        particle: Optional[Particle]=None):
         """
         Checks if the player1 is colliding with the invisible player
 

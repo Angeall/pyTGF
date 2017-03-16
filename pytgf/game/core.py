@@ -4,7 +4,7 @@ File containing the definition of a Game.
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-from typing import Dict, List, Union, Tuple, Callable
+from typing import Dict, List, Union, Tuple, Callable, Optional
 
 from pytgf.board import Board, Tile
 from pytgf.board import TileIdentifier
@@ -126,7 +126,7 @@ class Core(metaclass=ABCMeta):
             self._removeUnitFromTile(unit)
         else:
             if self._tileHasTwoOrMoreOccupants(tile_id):
-                self._handleCollision(unit, self.tilesOccupants[tile_id])
+                self._handleCollision(unit, self.tilesOccupants[tile_id], tile_id)
             for unit in self.tilesOccupants[tile_id]:
                 if not unit.isAlive():
                     self.tilesOccupants[tile_id].remove(unit)
@@ -285,26 +285,26 @@ class Core(metaclass=ABCMeta):
 
     # -------------------- PROTECTED METHODS -------------------- #
 
-    def _handleCollision(self, unit: MovingUnit, other_units: List[Particle]) -> None:
+    def _handleCollision(self, unit: MovingUnit, particles: List[Particle], tile_id: TileIdentifier) -> None:
         """
         Handles a collision between a unit and other units
 
         Args:
             unit: The moving unit
-            other_units: The other units that are on the same tile than the moving unit
+            particles: The other units that are on the same tile than the moving unit
         """
-        for other_unit in other_units:
-            if not (unit is other_unit):
-                if other_unit in self.unitsLocation.keys():
-                    self._collidePlayers(unit, other_unit, frontal=True)
-                else:  # If the other unit is a Particle
+        for particle in particles:
+            if not (unit is particle):
+                if particle not in self.unitsLocation.keys():  # If the other unit is a Particle
                     other_player = None
                     for player in self.unitsLocation.keys():  # type: MovingUnit
-                        if player.hasParticle(other_unit):
+                        if player.hasParticle(particle):
                             other_player = player
                             break
                     if other_player is not None:  # If we found the player to which belongs the colliding particle
-                        self._collidePlayers(unit, other_player)
+                        self._collidePlayers(unit, other_player, tile_id, particle=particle)
+                else:
+                    self._collidePlayers(unit, particle, tile_id, frontal=True)
 
     def _tileHasTwoOrMoreOccupants(self, tile_id: TileIdentifier) -> bool:
         """
@@ -346,7 +346,8 @@ class Core(metaclass=ABCMeta):
         return False
 
     @abstractmethod
-    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, frontal: bool = False):
+    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, tile_id: TileIdentifier, frontal: bool = False,
+                        particle: Optional[Particle]=None):
         """
         Makes what it has to be done when the first given player collides with a particle of the second given player
         (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
@@ -356,6 +357,10 @@ class Core(metaclass=ABCMeta):
             player1: The first given player
             player2: The second given player
             frontal: If true, the collision is frontal and kills the two players
+            tile_id: The identifier of the tile on which the collision took place.
+            particle:
+                The particle (belonging to player 2) which caused the collision.
+                Can be None is no particle caused the collision
         """
         same_team = self.belongsToSameTeam(player1, player2)
         suicide = player1 is player2

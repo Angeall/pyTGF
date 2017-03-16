@@ -19,15 +19,18 @@ class Particle:
     A Particle is something than can be placed on a tile of the game. It can be killed, drawn and moved.
     """
 
-    def __init__(self, sprite: Optional[UnitSprite]=None, nb_lives: int=1):
+    def __init__(self, sprite: Optional[UnitSprite]=None, nb_lives: int=1, player_number: int=-1):
         """
         Instantiates a particle unit in the game
+
         Args:
             sprite: The sprite to draw on the board (can be None if the Particle must not be drawn)
             nb_lives: The number of lives this unit has before it dies
+            player_number: The number representing the player that owns this particle
         """
         self._nbLives = nb_lives
         self.sprite = sprite  # type: UnitSprite
+        self.playerNumber = player_number
         self._isAlive = True
         self._drawable = None
 
@@ -40,6 +43,7 @@ class Particle:
     def setNbLives(self, nb_lives: int) -> None:
         """
         Sets the given number of lives of the particle
+
         Args:
             nb_lives: The number of lives to set to the particle
         """
@@ -68,6 +72,7 @@ class Particle:
     def draw(self, surface: pygame.Surface) -> None:
         """
         Draws the particle on the given surface
+
         Args:
             surface: The surface the particle will be drawn on
         """
@@ -79,6 +84,7 @@ class Particle:
     def moveTo(self, destination: Coordinates) -> None:
         """
         Move the center of the unit to the position
+
         Args:
             destination: The pixel on which the unit will be drawn.
         """
