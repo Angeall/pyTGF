@@ -4,14 +4,14 @@ File containing the definition of an abstract ControllerWrapper, linking the gam
 
 from abc import ABCMeta, abstractmethod
 from queue import Empty
-from typing import Any, NewType
+from typing import Any
 
 import pygame
 
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
-    PipeConnection = NewType("PipeConnection", object)
+    PipeConnection = object
 
 from pytgf.controls.controllers.controller import Controller
 from pytgf.controls.events.event import Event
