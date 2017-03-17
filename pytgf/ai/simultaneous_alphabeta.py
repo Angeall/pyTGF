@@ -23,7 +23,7 @@ class SimultaneousAlphaBeta:
     """
 
     def __init__(self, eval_fct: Callable[[API], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
-                 max_depth: int=6):
+                 max_depth: int=6, turn_by_turn: bool=False):
         """
 
         Args:
@@ -47,6 +47,7 @@ class SimultaneousAlphaBeta:
         self.actions = {}  # Will retain the best action for a given state (will speed up the tree search)
         self.playerNumber = -1
         self.copyTime = 0
+        self.turnByTurn = turn_by_turn
 
     # -------------------- PUBLIC METHODS -------------------- #
 
@@ -116,7 +117,12 @@ class SimultaneousAlphaBeta:
         actions_combinations = self._generateMovesCombinations(state)
         actions_combinations_scores = {}  # type: Dict[float, Tuple[Dict[int, MoveDescriptor], API]]
         for actions in actions_combinations:
-            min_value, min_actions, new_end_state, min_game_state = self._minValue(state, actions, alpha, beta, depth)
+            intermediate_state = state
+            if self.turnByTurn:
+                # Already simulating the move of our player as it is turn by turn
+                intermediate_state = state.simulateMove(self.playerNumber, actions[0][self.playerNumber])
+            min_value, min_actions, new_end_state, min_game_state = self._minValue(intermediate_state, actions, alpha,
+                                                                                   beta, depth)
             end_state = self._evaluateEndState(end_state, new_end_state)
             actions_combinations_scores[min_value] = min_actions, min_game_state
             if self._mustCutOff and min_value >= beta:  # Cutoff
@@ -195,6 +201,10 @@ class SimultaneousAlphaBeta:
         end_state = (False, 0, False)
         new_game_state = None
         for combination in actions:
+            simulation_combination = combination
+            if self.turnByTurn:
+                # Only keeps the moves that are not done by the player
+                simulation_combination = {key: val for (key, val) in combination.items() if key != self.playerNumber}
             feasible_moves, new_game_state = state.simulateMoves(combination)
             if feasible_moves and new_game_state is not None:
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)

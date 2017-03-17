@@ -43,7 +43,7 @@ class Core(metaclass=ABCMeta):
     """
     The Game contains a Board, containing Tiles, but also Units, placed on Tiles
     """
-    def __init__(self, board: Board):
+    def __init__(self, board: Board, turn_by_turn: bool=False):
         """
         Creates a new Game using the given board
 
@@ -56,6 +56,9 @@ class Core(metaclass=ABCMeta):
         self._finished = False
         self.winningPlayers = None
         self.winningTeam = None
+        self.turnByTurn = turn_by_turn
+        self.playersOrder = []
+        self.currentPlayerIndex = 0
         self.teams = {}  # type: Dict[int, List[MovingUnit]]
         self.unitsTeam = {}  # type: Dict[MovingUnit, int]
         self.players = {}  # type: Dict[int, MovingUnit]
@@ -75,6 +78,7 @@ class Core(metaclass=ABCMeta):
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
+        self.playersOrder.append(unit.playerNumber)
         self.addUnitToTile(origin_tile_id, unit)
         self.players[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
@@ -111,25 +115,26 @@ class Core(metaclass=ABCMeta):
                 If this method is used illegally (when the unit is not effectively placed on the tile corresponding to
                 the given tile_id).
         """
-        if unit not in self.unitsLocation:
-            raise UnknownUnitException("The game is trying to be updated using an unknown unit")
-        if tile_id != self.unitsLocation[unit]:
-            if unit.isAlive():
-                error_msg = "The game is trying to be updated using a unit that is placed on the tile %s instead of %s"\
-                                % (str(self.unitsLocation[unit]), str(tile_id))
-                raise InconsistentGameStateException(error_msg)
+        if not self._finished:
+            if unit not in self.unitsLocation:
+                raise UnknownUnitException("The game is trying to be updated using an unknown unit")
+            if tile_id != self.unitsLocation[unit]:
+                if unit.isAlive():
+                    error_msg = "The game is being updated using a unit that is placed on the tile %s instead of %s"\
+                                    % (str(self.unitsLocation[unit]), str(tile_id))
+                    raise InconsistentGameStateException(error_msg)
+                else:
+                    return
+            self.addUnitToTile(tile_id, unit)
+            if self.board.getTileById(tile_id).deadly:
+                unit.kill()
+                self._removeUnitFromTile(unit)
             else:
-                return
-        self.addUnitToTile(tile_id, unit)
-        if self.board.getTileById(tile_id).deadly:
-            unit.kill()
-            self._removeUnitFromTile(unit)
-        else:
-            if self._tileHasTwoOrMoreOccupants(tile_id):
-                self._handleCollision(unit, self.tilesOccupants[tile_id], tile_id)
-            for unit in self.tilesOccupants[tile_id]:
-                if not unit.isAlive():
-                    self.tilesOccupants[tile_id].remove(unit)
+                if self._tileHasTwoOrMoreOccupants(tile_id):
+                    self._handleCollision(unit, self.tilesOccupants[tile_id], tile_id)
+                for unit in self.tilesOccupants[tile_id]:
+                    if not unit.isAlive():
+                        self.tilesOccupants[tile_id].remove(unit)
 
     def copy(self) -> 'Core':
         """

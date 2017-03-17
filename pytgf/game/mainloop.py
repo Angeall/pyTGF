@@ -315,6 +315,7 @@ class MainLoop:
                     just_started, move_completed, tile_id = current_move.performNextMove()
                     if move_completed:  # A new tile has been reached by the movement
                         self.game.updateGameState(unit, tile_id)
+                        self.game.currentPlayerIndex = (self.game.currentPlayerIndex + 1) % len(self.game.playersOrder)
                     elif just_started:
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
@@ -331,7 +332,7 @@ class MainLoop:
                 current_move.stop(cancel_post_action=True)
             return False
 
-    def _getNextMoveForUnitIfAvailable(self, unit: MovingUnit) -> Path:
+    def _getNextMoveForUnitIfAvailable(self, unit: MovingUnit) -> Union[Path, None]:
         """
         Checks if a move is available for the given controller, and if so, returns it
 
@@ -340,6 +341,8 @@ class MainLoop:
 
         Returns: The next move if it is available, and None otherwise
         """
+        if self.game.turnByTurn and not unit.playerNumber == self.game.playersOrder[self.game.currentPlayerIndex]:
+            return None  # Sorry, not your turn to play !
         moves = self._unitsMoves[unit]
         current_move = moves[0]  # type: Path
         if current_move is None or current_move.finished():
