@@ -3,6 +3,7 @@ Contains the definition of a routine to gather daata
 """
 import os
 import random
+from typing import Any
 from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 import numpy as np
@@ -41,9 +42,8 @@ class Routine(SimultaneousAlphaBeta):
         self._aPrioriDescriptions = [component.description for component in self._gatherer.aPrioriComponents]
         self._aPosterioriDescriptions = [component.description for component in self._gatherer.aPosterioriComponents]
         self._aPosterioriDataVectors = {}  # type: Dict[ObjID, Dict[MoveDescriptor, List]]
-        self._concludedStates = []  # type: List[ObjID]
+        self._concludedStates = {}  # type: Dict[ObjID, Any]
         self._tempFileIDs = []  # type: List[str]
-        self._test = {}
 
     def routine(self, player_number: int, state: API) -> Tuple[pd.DataFrame, Dict[MoveDescriptor, pd.DataFrame]]:
         """
@@ -95,20 +95,26 @@ class Routine(SimultaneousAlphaBeta):
         finished = state.isFinished()
         # STOCKING A PRIORI DATA AND INIT A POSTERIORI DATA STRUCTURE
         if not finished:
+            while state.id in self._concludedStates or state.id in self._aPrioriDataVectors:
+                state.id += 1
             data = self._gatherer.getAPrioriData(state)
-            self._test[id(state)] = state
-            self._aPrioriDataVectors[id(state)] = data
-            self._aPosterioriDataVectors[id(state)] = {action: [] for action in self._possibleMoves}
+            self._aPrioriDataVectors[state.id] = data
+            self._aPosterioriDataVectors[state.id] = {action: [] for action in self._possibleMoves}
+            data = None
         # SEARCHING MAX VALUE
         ret_val = super()._maxValue(state, alpha, beta, depth)
+        id_state = state.id
+        state = []
+        del state
         # WE COMPLETE THE A POSTERIORI MOVES IF A MOVE WAS UNFEASIBLE
         if not finished:
-            for action, lst in self._aPosterioriDataVectors[id(state)].items():
+            for action, lst in self._aPosterioriDataVectors[id_state].items():
                 if len(lst) == 0:
                     data = [np.nan for _ in range(self._nbAPosterioriComponent)]
-                    self._aPosterioriDataVectors[id(state)][action] = data
+                    self._aPosterioriDataVectors[id_state][action] = data
+            data = None
             # AS WE FINISHED TO SEARCH THE MAX, WE CAN MARK THIS STATE AS "CONCLUDED"
-            self._concludedStates.append(id(state))
+            self._concludedStates[id_state] = True
             # IF NEEDED, WE WRITE INTO A FILE THE CURRENT PROGRESSION
             if len(self._concludedStates) > MAX_TEMP_VECTORS:
                 self._writeToTempFile()
@@ -120,13 +126,14 @@ class Routine(SimultaneousAlphaBeta):
         # SEARCHING MIN VALUE
         value, best_actions, end_state, new_game_state = super()._minValue(state, actions,
                                                                            alpha, beta, depth)  # Simulate the actions
+        id_state = state.id
+        state = []
+        del state
         # AS WE FINISHED SEARCHING, WE CAN STORE THE A POSTERIORI DATA
-        a_posteriori_data = self._gatherer.getAPosterioriData(new_game_state)
         final_state = self._computeFinalStateScore(depth, end_state)  # Storing whether this move led to a winning state
+        a_posteriori_data = self._gatherer.getAPosterioriData(new_game_state)
         a_posteriori_data.extend(final_state)
-        a_posteriori_dict = self._aPosterioriDataVectors[id(state)]
-        a_posteriori_list = a_posteriori_dict[player_move_descriptor]
-        a_posteriori_list.extend(a_posteriori_data)
+        self._aPosterioriDataVectors[id_state][player_move_descriptor].extend(a_posteriori_data)
         return value, best_actions, end_state, new_game_state
 
     @staticmethod
@@ -157,6 +164,7 @@ class Routine(SimultaneousAlphaBeta):
         Writes the data stocked in the data structures in temporary files to save the current progress
         """
         a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates]
+
         if len(a_priori_vectors) > 0:
             a_posteriori_vectors_dicts = {action: [self._aPosterioriDataVectors[state_id][action]
                                                    for state_id in self._concludedStates]
@@ -170,15 +178,19 @@ class Routine(SimultaneousAlphaBeta):
             self._tempFileIDs.append(file_id)
             self._writeToCsv(a_priori_vectors, self._aPrioriTitles, self._getDataFileName(file_id),
                              self.TEMP_DATA_PATH_NAME)
+            data_vectors = None
             for action, data_vectors in a_posteriori_vectors_dicts.items():
                 data_vectors = np.array(data_vectors)
                 data_vectors = data_vectors.reshape((len(data_vectors), len(data_vectors[0])))
                 self._writeToCsv(data_vectors, self._aPosterioriTitles, self._getTargetFileName(file_id, action),
                                  self.TEMP_DATA_PATH_NAME)
+            del a_priori_vectors
+            del a_posteriori_vectors_dicts
+            del data_vectors
         for state_id in self._concludedStates:
             del self._aPrioriDataVectors[state_id]
             del self._aPosterioriDataVectors[state_id]
-        self._concludedStates = []
+        self._concludedStates = {}
 
     @staticmethod
     def _getDataFileName(file_id: str) -> str:

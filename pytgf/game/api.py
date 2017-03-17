@@ -26,6 +26,7 @@ class API(metaclass=ABCMeta):
             game: The game that will be used in this API
         """
         self.game = game
+        self.id = id(self)
 
     # -------------------- PUBLIC METHODS -------------------- #
 
