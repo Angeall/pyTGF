@@ -30,8 +30,9 @@ class Connect4(Core):
                         particle: Optional[Particle]=None):
         assert particle is not None
         if isinstance(player2, Bottom) and isinstance(player1, Disc):
+            i, j = tile_id
             # TODO: need to find the location of the collision... Problem : player and not particle...
-            self.unitsLocation[tile_id] = player1
+            self.tilesOccupants[tile_id] = player1
             if self._checkWin():
                 for player_number, player_unit in self.players.items():
                     if player_number is not player1.playerNumber:
