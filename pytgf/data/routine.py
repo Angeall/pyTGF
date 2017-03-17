@@ -42,6 +42,7 @@ class Routine(SimultaneousAlphaBeta):
         self._aPrioriDescriptions = [component.description for component in self._gatherer.aPrioriComponents]
         self._aPosterioriDescriptions = [component.description for component in self._gatherer.aPosterioriComponents]
         self._aPosterioriDataVectors = {}  # type: Dict[ObjID, Dict[MoveDescriptor, List]]
+        self._writtenFiles = 0
         self._concludedStates = {}  # type: Dict[ObjID, Any]
         self._tempFileIDs = []  # type: List[str]
 
@@ -163,6 +164,8 @@ class Routine(SimultaneousAlphaBeta):
         """
         Writes the data stocked in the data structures in temporary files to save the current progress
         """
+        self._writtenFiles += MAX_TEMP_VECTORS
+        print(self._writtenFiles)
         a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates]
 
         if len(a_priori_vectors) > 0:
