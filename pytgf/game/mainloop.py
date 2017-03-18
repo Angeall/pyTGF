@@ -42,7 +42,7 @@ class MainLoop:
     Defines the logical loop of a game, running MAX_FPS times per second, sending the inputs to the HumanControllerWrapper, and the
     game updates to the BotControllerWrappers.
     """
-    def __init__(self, api: API):
+    def __init__(self, api: API, turn_by_turn: bool=False):
         """
         Instantiates the logical loop
 
@@ -52,6 +52,9 @@ class MainLoop:
         self.api = api
         self.game = api.game
         self.game.addCustomMoveFunc = self._addCustomMove
+        self._turnByTurn = turn_by_turn
+        self._playersOrder = []
+        self._currentPlayerIndex = 0
         self._screen = None
         self._state = CONTINUE  # The game must go on at start
 
@@ -117,6 +120,7 @@ class MainLoop:
             initial_action: The initial action of the unit
             team: The number of the team this player is in (-1 = no team)
         """
+        self._playersOrder.append(unit.playerNumber)
         self.game.addUnit(unit, team, tile_id)
         self._addControllerWrapper(linker, unit)
         self._unitsMoves[unit] = (None, Queue())
@@ -315,7 +319,7 @@ class MainLoop:
                     just_started, move_completed, tile_id = current_move.performNextMove()
                     if move_completed:  # A new tile has been reached by the movement
                         self.game.updateGameState(unit, tile_id)
-                        self.game.currentPlayerIndex = (self.game.currentPlayerIndex + 1) % len(self.game.playersOrder)
+                        self._currentPlayerIndex = (self._currentPlayerIndex + 1) % len(self._playersOrder)
                     elif just_started:
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
@@ -341,7 +345,7 @@ class MainLoop:
 
         Returns: The next move if it is available, and None otherwise
         """
-        if self.game.turnByTurn and not unit.playerNumber == self.game.playersOrder[self.game.currentPlayerIndex]:
+        if self._turnByTurn and not unit.playerNumber == self._playersOrder[self._currentPlayerIndex]:
             return None  # Sorry, not your turn to play !
         moves = self._unitsMoves[unit]
         current_move = moves[0]  # type: Path

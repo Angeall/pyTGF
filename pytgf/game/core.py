@@ -43,7 +43,7 @@ class Core(metaclass=ABCMeta):
     """
     The Game contains a Board, containing Tiles, but also Units, placed on Tiles
     """
-    def __init__(self, board: Board, turn_by_turn: bool=False):
+    def __init__(self, board: Board):
         """
         Creates a new Game using the given board
 
@@ -56,9 +56,6 @@ class Core(metaclass=ABCMeta):
         self._finished = False
         self.winningPlayers = None
         self.winningTeam = None
-        self.turnByTurn = turn_by_turn
-        self.playersOrder = []
-        self.currentPlayerIndex = 0
         self.teams = {}  # type: Dict[int, List[MovingUnit]]
         self.unitsTeam = {}  # type: Dict[MovingUnit, int]
         self.players = {}  # type: Dict[int, MovingUnit]
@@ -78,7 +75,6 @@ class Core(metaclass=ABCMeta):
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
         """
-        self.playersOrder.append(unit.playerNumber)
         self.addUnitToTile(origin_tile_id, unit)
         self.players[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
