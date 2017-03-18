@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 import numpy as np
 
@@ -9,14 +9,14 @@ from pytgf.characters.units import Particle
 from pytgf.examples.connect4.units.bottom import Bottom
 from pytgf.examples.connect4.units.disc import Disc
 from pytgf.game import Core
-from pytgf.game.core import InconsistentGameStateException
 
 
 class Connect4(Core):
 
     def __init__(self, board: Board):
         super().__init__(board)
-        self._simplifiedBoard = np.zeros((6, 7))  # Init with an empty board
+        # Init with an empty board
+        self._simplifiedBoard = np.zeros((6, 7))  # type: np.ndarray
 
     @property
     def _teamKillAllowed(self) -> bool:
@@ -30,23 +30,24 @@ class Connect4(Core):
                         particle: Optional[Particle]=None):
         assert particle is not None
         if isinstance(player2, Bottom) and isinstance(player1, Disc):
+            team_number = self.unitsTeam[player1]
+            self.tilesOccupants[tile_id] = [player1]
             i, j = tile_id
-            # TODO: need to find the location of the collision... Problem : player and not particle...
-            self.tilesOccupants[tile_id] = player1
-            if self._checkWin():
-                for player_number, player_unit in self.players.items():
-                    if player_number is not player1.playerNumber:
+            self._simplifiedBoard[i][j] = team_number  # Updating the simplified board
+            self.tilesOccupants[(i, j-1)] = [particle]  # We put the bottom of the line on the upper case
+            particle.kill()
+
+            if self._checkWin(i, j, team_number):
+                team = self.teams[team_number]
+                for _, player_unit in self.players.items():
+                    if player_unit not in team:
                         player_unit.kill()
 
-    def _checkWin(self) -> True:
-        # TODO: Use _computeTerminalStateLocally
-        return False
-
-    def _computeTerminalStateLocally(self, line, column, player_number: int):
+    def _checkWin(self, line: int, column: int, team_number: int) -> bool:
         """
         :param line: The line of the last played disc
         :param column: The column of the last played disc
-        :param color: The color of the last disc played
+        :param team_number: The number representing the team of the player that played the last disc
         :return: a tuple containing three booleans : (red_won, green_won, draw).
                  red_won, green_won is True if there is 4 discs of that color in a row
                  and draw is True if there is a draw
@@ -62,7 +63,7 @@ class Connect4(Core):
             j = 4
             while j <= len(row) and not finished:
                 slack = row[i:j]
-                if (slack == player_number).all():
+                if (slack == team_number).all():
                     finished = True
                     break
                 i += 1
@@ -71,31 +72,23 @@ class Connect4(Core):
                 break
         return finished
 
-    def _enumerateLocalRows(self, line, column):
+    def _enumerateLocalRows(self, line: int, column: int) -> List[np.ndarray]:
         """
         :param line: the line of the last disc placed
         :param column: the column of the last disc placed
         :return: a list of rows in which the disc in (line, column) could have changed
         """
-        # TODO: self.board is to transform into "self.simplifiedBoard" which is a np.ndarray of 1 and 2s (player nums)
         rows = []
-        board = np.zeros((6, 7), np.uint8)
-        for i in range(self.board.lines):
-            for j in range(self.board.columns):
-                occupants = self.getTileOccupants((i, j))
-                if len(occupants) > 0:
-                    if len(occupants) > 1:
-                        raise InconsistentGameStateException("Tile (%d, %d) has more than one occupant" % (i, j))
-                    board[i][j] = occupants[0].playerNumber
+
         # Diagonals
-        inverted_board = np.fliplr(board)
-        rows.append(self.board.diagonal(column - line))
+        inverted_board = np.fliplr(self._simplifiedBoard)
+        rows.append(self._simplifiedBoard.diagonal(column - line))
         rows.append(inverted_board.diagonal(6 - column - line))
 
         # Line
-        rows.append(self.board[line])
+        rows.append(self._simplifiedBoard[line])
 
         # Column
-        rows.append(self.board[:, column][line:])
+        rows.append(self._simplifiedBoard[:, column][line:])
 
         return rows
