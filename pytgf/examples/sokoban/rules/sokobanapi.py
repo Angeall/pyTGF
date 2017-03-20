@@ -35,7 +35,7 @@ class SokobanAPI(API):
                             moves.append(ShortMove(unit, current_tile, next_tile, MAX_FPS,
                                                    units_location=self.game.unitsLocation))
                             current_tile = next_tile
-                        return ListPath(moves, step_pre_action=self._pushBoxIfNeeded)
+                        return ListPath(unit, moves, step_pre_action=self._pushBoxIfNeeded)
                 except UnreachableDestination:
                     pass
         raise pytgf.game.UnfeasibleMoveException()
@@ -58,8 +58,8 @@ class SokobanAPI(API):
                 if self.game.board.graphics is not None:
                     self.game.board.graphics.setInternalColor(FULL_HOLE_COLOR, box_next_tile_id[0], box_next_tile_id[1])
             event = box_next_tile_id
-            self.game.addCustomMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, MAX_FPS / 2,
-                                                             units_location=self.game.unitsLocation)]),
+            self.game.addCustomMove(box, ListPath(box, [ShortMove(box, current_tile, box_next_tile, MAX_FPS / 2,
+                                                  units_location=self.game.unitsLocation)]),
                                     event)
 
     def _checkIfBoxInTheWay(self, source_tile: Tile, next_tile_ids: list) -> list:

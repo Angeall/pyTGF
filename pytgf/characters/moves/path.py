@@ -7,6 +7,7 @@ from typing import Optional, Callable, Tuple, Union
 from pytgf.board import Tile
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves.shortmove import ShortMove
+from pytgf.characters.units import MovingUnit
 
 __author__ = 'Anthony Rouneau'
 
@@ -17,7 +18,8 @@ class Path(metaclass=ABCMeta):
     and at the beginning or the end of a step in the path. When there is no move left in the path, the path ends.
     """
 
-    def __init__(self, pre_action: Optional[Callable[[], None]]=None, post_action: Optional[Callable[[], None]]=None,
+    def __init__(self, unit: MovingUnit, pre_action: Optional[Callable[[], None]]=None,
+                 post_action: Optional[Callable[[], None]]=None,
                  step_pre_action: Optional[Callable[[Tile, Tile], None]]=None,
                  step_post_action: Optional[Callable[[Tile, Tile], None]]=None, max_moves: int=-1):
         """
@@ -36,6 +38,7 @@ class Path(metaclass=ABCMeta):
         self.stopTriggered = False
         self.stopped = False
         self.completed = False
+        self.unit = unit
         self._currentMove = None  # type: ShortMove
         self._preAction = pre_action
         self._postAction = post_action

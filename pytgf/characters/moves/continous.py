@@ -43,9 +43,8 @@ class ContinuousPath(Path):
                 and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
             max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
         """
-        super().__init__(pre_action=pre_action, post_action=post_action, step_pre_action=step_pre_action,
+        super().__init__(unit, pre_action=pre_action, post_action=post_action, step_pre_action=step_pre_action,
                          step_post_action=step_post_action, max_moves=max_moves)
-        self.unit = unit
         self.sourceTile = None
         self.nextTileFunc = next_tile_func
         self.sourceTileFunc = source_tile_func

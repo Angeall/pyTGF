@@ -28,7 +28,7 @@ class TestListPath(unittest.TestCase):
         move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location=unit_loc)
         move2 = ShortMove(unit, destination_tile, source_tile, fps=60, units_location=unit_loc)
 
-        path = ListPath([move, move2])
+        path = ListPath(unit, [move, move2])
         for _ in range(60):
             path.performNextMove()
         self.assertTrue(unit_loc[unit] is destination_tile.identifier)
@@ -51,7 +51,7 @@ class TestListPath(unittest.TestCase):
         # Distance separating the two tiles is 30 pixels
         move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location={unit: source_tile.identifier})
 
-        path = ListPath([move])
+        path = ListPath(unit, [move])
         path.complete()
         self.assertTrue(path.completed)
 
@@ -67,7 +67,7 @@ class TestListPath(unittest.TestCase):
         move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location=unit_loc)
         move2 = ShortMove(unit, destination_tile, source_tile, fps=60, units_location=unit_loc)
 
-        path = ListPath([move, move2])
+        path = ListPath(unit, [move, move2])
         for _ in range(59):
             path.performNextMove()
         path.stop()
@@ -93,7 +93,7 @@ class TestListPath(unittest.TestCase):
         post_action_touchable = Touchable()
         pre_step_action_touchable = Touchable()
         post_step_action_touchable = Touchable()
-        path = ListPath([move, move2],
+        path = ListPath(unit, [move, move2],
                         pre_action=lambda: pre_action_touchable.touch(),
                         post_action=lambda: post_action_touchable.touch(),
                         step_pre_action=lambda: pre_step_action_touchable.touch(),

@@ -7,7 +7,7 @@ from typing import List, Optional, Callable
 from pytgf.board import Tile
 from pytgf.characters.moves.path import Path
 from pytgf.characters.moves.shortmove import ShortMove
-
+from pytgf.characters.units import MovingUnit
 
 __author__ = 'Anthony Rouneau'
 
@@ -17,7 +17,7 @@ class ListPath(Path):
     Class defining a path made of a list os ShortMoves. When the path reaches the end of that list,
     the path is considered as finished
     """
-    def __init__(self, move_list: List[ShortMove], pre_action: Optional[Callable[[], None]]=None,
+    def __init__(self, unit: MovingUnit, move_list: List[ShortMove], pre_action: Optional[Callable[[], None]]=None,
                  post_action: Optional[Callable[[], None]]=None,
                  step_pre_action: Optional[Callable[[Tile, Tile], None]]=None,
                  step_post_action: Optional[Callable[[Tile, Tile], None]]=None, max_moves: int=-1):
@@ -34,7 +34,7 @@ class ListPath(Path):
                 and an unfulfilled "current_tile" parameter, which will be filled with the new current tile)
             max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
         """
-        super().__init__(pre_action, post_action, step_pre_action, step_post_action, max_moves=max_moves)
+        super().__init__(unit, pre_action, post_action, step_pre_action, step_post_action, max_moves=max_moves)
         self.list = move_list
         self.index = 0
 

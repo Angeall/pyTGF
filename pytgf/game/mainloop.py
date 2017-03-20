@@ -287,11 +287,12 @@ class MainLoop:
                 if self._getUnitFromControllerWrapper(linker) is unit:
                     unit_linker = linker
             if unit_linker is not None:
-                if self._otherMoves[unit] is not None:
-                    moved = self._handleMoveForUnit(unit, self._otherMoves[unit], unit_linker)
+                move = self._otherMoves[unit]
+                if move is not None:
+                    moved = self._handleMoveForUnit(move.unit, move, unit_linker)
                     if moved:
-                        moved_units.append(unit)
-                    if self._otherMoves[unit].finished():
+                        moved_units.append(move.unit)
+                    if move.finished():
                         self._otherMoves[unit] = None
 
         for linker in self.linkers:  # type: ControllerWrapper
@@ -301,7 +302,8 @@ class MainLoop:
                     self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
                     self._killSent[unit] = True
                 current_move = self._getNextMoveForUnitIfAvailable(unit)
-                self._handleMoveForUnit(unit, current_move, linker)
+                if current_move is not None:
+                    self._handleMoveForUnit(current_move.unit, current_move, linker)
         self.game.checkIfFinished()
 
     def _handleMoveForUnit(self, unit: MovingUnit, current_move: Path, linker: ControllerWrapper):
