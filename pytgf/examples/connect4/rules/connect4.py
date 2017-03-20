@@ -11,7 +11,7 @@ from pytgf.examples.connect4.units.disc import Disc
 from pytgf.game import Core
 
 
-class Connect4(Core):
+class Connect4Core(Core):
 
     def __init__(self, board: Board):
         super().__init__(board)

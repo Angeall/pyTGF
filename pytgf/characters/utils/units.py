@@ -11,7 +11,7 @@ def resize_unit(unit: Particle, board: Board) -> None:
         unit: The unit to resize
         board: The board on which the tile of the unit is located
     """
-    if board.graphics is not None and unit.sprite.rect is not None:
+    if board.graphics is not None and unit.sprite is not None and unit.sprite.rect is not None:
         multiply_ratio = board.graphics.sideLength / max(unit.sprite.rect.height, unit.sprite.rect.width)
         hypotenuse = get_hypotenuse_length(unit.sprite.rect.height * multiply_ratio,
                                            unit.sprite.rect.width * multiply_ratio)
