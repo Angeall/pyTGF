@@ -328,7 +328,8 @@ class RoutineBuilder:
         """
         self._components.append(Component(methods, title, description, reduce_function))
 
-    def create(self) -> Routine:
+    def create(self, possible_moves: Tuple[MoveDescriptor, ...],
+               eval_fct: Callable[[API], Tuple[Union[int, float], ...]]) -> Routine:
         """
         Raises:
             ValueError: If no component was added to this builder, it cannot create a routine, and hence crash
@@ -338,4 +339,4 @@ class RoutineBuilder:
         if len(self._components) == 0:
             raise ValueError("Cannot create a routine with 0 component")
         gatherer = Gatherer(self._components)
-        return Routine(gatherer)
+        return Routine(gatherer, possible_moves, eval_fct)
