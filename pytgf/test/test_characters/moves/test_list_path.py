@@ -94,10 +94,10 @@ class TestListPath(unittest.TestCase):
         pre_step_action_touchable = Touchable()
         post_step_action_touchable = Touchable()
         path = ListPath(unit, [move, move2],
-                        pre_action=lambda: pre_action_touchable.touch(),
-                        post_action=lambda: post_action_touchable.touch(),
-                        step_pre_action=lambda: pre_step_action_touchable.touch(),
-                        step_post_action=lambda: post_step_action_touchable.touch())
+                        pre_action=pre_action_touchable.touch,
+                        post_action=post_action_touchable.touch,
+                        step_pre_action=pre_step_action_touchable.touch,
+                        step_post_action=post_step_action_touchable.touch)
         path.performNextMove()
         self.assertTrue(pre_action_touchable.touched)
         self.assertEqual(pre_step_action_touchable.touchCount, 1)

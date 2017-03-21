@@ -92,10 +92,10 @@ class TestContinuousPath(unittest.TestCase):
         unit_tile = source_tile
         next_tile = destination_tile
         path = ContinuousPath(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60,
-                              pre_action=lambda: pre_action_touchable.touch(),
-                              post_action=lambda: post_action_touchable.touch(),
-                              step_pre_action=lambda: pre_step_action_touchable.touch(),
-                              step_post_action=lambda: post_step_action_touchable.touch(),
+                              pre_action=pre_action_touchable.touch,
+                              post_action=post_action_touchable.touch,
+                              step_pre_action=pre_step_action_touchable.touch,
+                              step_post_action=post_step_action_touchable.touch,
                               units_location_dict=unit_loc)
         path.performNextMove()
         self.assertTrue(pre_action_touchable.touched)

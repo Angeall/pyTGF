@@ -12,17 +12,16 @@ from pytgf.examples.connect4.units import Bottom, Connect4Unit
 from pytgf.game.mainloop import MainLoop
 from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
-selection_frame = None
+selection_frame = None  # type: Frame
 main_frame = None
 
 
 def get_selection_frame() -> Frame:
-    global selection_frame
     return selection_frame
 
 
 def buildMainFrame(window: Tk, gui: GUI) -> Frame:
-    global selection_frame, main_frame
+    global main_frame
     builder = ButtonFrameBuilder("Connect4", window)
     builder.setTitleColor("#FF0000")
     builder.addButton(("Play", lambda: gui.goToFrame(get_selection_frame())))

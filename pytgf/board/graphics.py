@@ -276,13 +276,13 @@ class BoardGraphics:
         Returns: A matrix of tuples, containing a center for the tile, followed by the points of the tile's polygon
         """
         draw_matrix = []
-        for i in range(len(points)):
+        for i, point_line in enumerate(points):
             line = ()
-            for j in range(len(points[0])):
-                if len(points[i][j]) < 3:
+            for j, point_column in enumerate(point_line):
+                if len(point_column) < 3:
                     raise NotAPolygonError("A polygon is made of minimum 3 points")
-                assert self._isEquilateral(points[i][j])
-                line += (tuple(points[i][j]), )
+                assert self._isEquilateral(point_column)
+                line += (tuple(point_column), )
             draw_matrix.append(line)
         return draw_matrix
 

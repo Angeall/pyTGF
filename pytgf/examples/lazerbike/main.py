@@ -18,18 +18,17 @@ human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_COMMA, K_k, K_o, K_l),
                   (K_h, K_f, K_t, K_g)]
 
-selection_frame = None
+selection_frame = None  # type: Frame
 main_frame = None
 nb_human = 0
 
 
 def get_selection_frame() -> Frame:
-    global selection_frame
     return selection_frame
 
 
 def buildMainFrame(window: Tk, gui: GUI) -> Frame:
-    global selection_frame, main_frame
+    global main_frame
     builder = ButtonFrameBuilder("LazerBike", window)
     builder.setTitleColor("#FF0000")
     builder.addButton(("Play", lambda: gui.goToFrame(get_selection_frame())))

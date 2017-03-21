@@ -15,7 +15,7 @@ from pytgf.game import API
 
 class SokobanAPI(API):
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1, force: bool=False) -> Path:
-        if type(move_descriptor) == tuple and len(move_descriptor) == 2:
+        if isinstance(move_descriptor, tuple) and len(move_descriptor) == 2:
             destination_tile = self.game.board.getTileById(move_descriptor)
             if destination_tile.walkable:
                 source_tile = self.game.board.getTileById(self.game.getTileForUnit(unit).identifier)

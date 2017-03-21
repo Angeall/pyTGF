@@ -19,7 +19,7 @@ class Connect4API(API):
 
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
                                 force: bool = False) -> Path:
-        if type(move_descriptor) == int:
+        if isinstance(move_descriptor, int):
             occupants = self.game.getTileOccupants((0, move_descriptor))
             if len(occupants) == 0 or isinstance(occupants[0], Bottom):  # Column not full
                 team_number = self.game.unitsTeam[unit]
