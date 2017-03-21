@@ -60,6 +60,7 @@ class Core(metaclass=ABCMeta):
         self.teams = {}  # type: Dict[int, List[MovingUnit]]
         self.unitsTeam = {}  # type: Dict[MovingUnit, int]
         self.players = {}  # type: Dict[int, MovingUnit]
+        self.controlledPlayers = {}  # type: Dict[int, MovingUnit]
         self.unitsLocation = {}   # type: Dict[Particle, tuple]
         self._previousUnitsLocation = {}   # type: Dict[Particle, tuple]
         self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
@@ -67,7 +68,8 @@ class Core(metaclass=ABCMeta):
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def addUnit(self, unit: MovingUnit, team_number: int, origin_tile_id: TileIdentifier) -> None:
+    def addUnit(self, unit: MovingUnit, team_number: int, origin_tile_id: TileIdentifier,
+                controlled: bool=True) -> None:
         """
         Adds a unit to the game
 
@@ -75,9 +77,12 @@ class Core(metaclass=ABCMeta):
             unit: The unit to add
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
+            controlled: True if this unit is controlled by a bot or a human
         """
         self.addUnitToTile(origin_tile_id, unit)
         self.players[unit.playerNumber] = unit
+        if controlled:
+            self.controlledPlayers[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
         resize_unit(unit, self.board)
         if team_number in self.teams.keys():
@@ -171,7 +176,7 @@ class Core(metaclass=ABCMeta):
         winning_team = None
         for team_number, team_players in self.teams.items():
             for unit in team_players:
-                if unit.isAlive():
+                if unit.isAlive() and unit.playerNumber in self.controlledPlayers:
                     teams_alive += 1
                     team_units = team_players
                     winning_team = team_number
@@ -184,7 +189,7 @@ class Core(metaclass=ABCMeta):
                 self.winningPlayers = ()
                 self.winningTeam = None
             else:
-                self.winningPlayers = tuple(team_units)
+                self.winningPlayers = tuple([unit for unit in team_units if unit.playerNumber in self.controlledPlayers])
                 self.winningTeam = winning_team
             return True
 

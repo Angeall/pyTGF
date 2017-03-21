@@ -124,6 +124,9 @@ class Routine(SimultaneousAlphaBeta):
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
         player_move_descriptor = actions[0][self.playerNumber]
+        new_actions = np.zeros((len(self._playerMapping), 1))
+        new_actions -= 1
+
         # SEARCHING MIN VALUE
         value, best_actions, end_state, new_game_state = super()._minValue(state, actions,
                                                                            alpha, beta, depth)  # Simulate the actions

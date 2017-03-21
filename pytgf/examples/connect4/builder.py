@@ -45,5 +45,5 @@ def create_game(selected_classes: dict, width: int, height: int, graphics: bool=
         player_classes[player_number - 1] = player_class
     add_controller(main_loop, player_classes)
     for i in range(7):
-        game.addUnit(Bottom(1000 + i), game.BOTTOM_TEAM_NUMBER, (5, i))
+        game.addUnit(Bottom(1000 + i), game.BOTTOM_TEAM_NUMBER, (5, i), controlled=False)
     return main_loop

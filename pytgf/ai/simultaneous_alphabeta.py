@@ -7,6 +7,9 @@ import itertools
 import random
 from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
+import numpy as np
+import pandas as pd
+
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.game import API
 
@@ -48,6 +51,9 @@ class SimultaneousAlphaBeta:
         self.playerNumber = -1
         self.copyTime = 0
         self.turnByTurn = turn_by_turn
+        self._currentMoveSequence = None
+        self._moveSequences = pd.DataFrame()
+        self._playerMapping = {}
 
     # -------------------- PUBLIC METHODS -------------------- #
 
@@ -58,6 +64,11 @@ class SimultaneousAlphaBeta:
         :type state: API
         :return: the best action among the possible ones
         """
+        self._currentMoveSequence = np.ndarray((state.getNumberOfAlivePlayers(), 0))
+        ordered_list = state.getPlayerNumbers().copy()
+        ordered_list.sort()
+        self._playerMapping = {i: play_num for i, play_num in enumerate(ordered_list)}
+
         self.playerNumber = player_number
         if self.actions.get(state) is not None:
             _, actions = self.actions[state]
@@ -205,8 +216,9 @@ class SimultaneousAlphaBeta:
             if self.turnByTurn:
                 # Only keeps the moves that are not done by the player
                 simulation_combination = {key: val for (key, val) in combination.items() if key != self.playerNumber}
-            feasible_moves, new_game_state = state.simulateMoves(combination)
+            feasible_moves, new_game_state = state.simulateMoves(simulation_combination)
             if feasible_moves and new_game_state is not None:
+                # TODO: Save action sequence into attributes
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:

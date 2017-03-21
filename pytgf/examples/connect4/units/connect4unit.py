@@ -4,4 +4,9 @@ __author__ = "Anthony Rouneau"
 
 
 class Connect4Unit(MovingUnit):
-    pass
+    def __init__(self, player_number: int):
+        super().__init__(player_number)
+        self.lastColumnPlayed = -1
+
+    def setLastColumnPlayed(self, last_column_played: int):
+        self.lastColumnPlayed = last_column_played

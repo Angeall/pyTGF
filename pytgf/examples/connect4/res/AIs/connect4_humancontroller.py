@@ -41,6 +41,7 @@ class HumanPlayer(Connect4Player, Human):
         """
         if (self.playerNumber == 1 and mouse_event.mouseState[0]) or \
                 (self.playerNumber == 2 and mouse_event.mouseState[2]):
-            return mouse_event.tileId[1]  # The column number of the clicked tile
+            if mouse_event.tileId is not None:
+                return mouse_event.tileId[1]  # The column number of the clicked tile
 
 

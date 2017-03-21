@@ -115,7 +115,7 @@ class API(metaclass=ABCMeta):
         """
         Returns: The list of the number of each player, sorted !
         """
-        players = list(self.game.players.keys())
+        players = list(self.game.controlledPlayers.keys())
         players.sort()
         return players
 
@@ -130,7 +130,7 @@ class API(metaclass=ABCMeta):
         Returns: The number of alive player in the game
         """
         alive_units = 0
-        for unit in self.game.players.values():
+        for unit in self.game.controlledPlayers.values():
             if unit.isAlive():
                 alive_units += 1
         return alive_units
@@ -146,7 +146,7 @@ class API(metaclass=ABCMeta):
 
         Returns: The list of all the feasible moves among the possible ones
         """
-        if not self.game.players[player_number].isAlive():  # If the unit is dead, no move is feasible for it
+        if not self.game.controlledPlayers[player_number].isAlive():  # If the unit is dead, no move is feasible for it
             return []
         feasible_moves = []
         for move in possible_moves:
