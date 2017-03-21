@@ -2,7 +2,6 @@
 File containing the definition of a bot controller.
 """
 
-import traceback
 from abc import ABCMeta, abstractmethod
 from queue import Queue
 from typing import List, Any
@@ -81,15 +80,12 @@ class Bot(Controller, metaclass=ABCMeta):
         """
         move_interesting = False
         for event in events:  # type: BotEvent
-            try:
-                succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor)
-                if not succeeded:
-                    print("error in move... for player %s and descriptor %s" %
-                          (str(event.playerNumber), str(event.moveDescriptor)))
+            succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor)
+            if not succeeded:
+                print("error in move... for player %s and descriptor %s" %
+                      (str(event.playerNumber), str(event.moveDescriptor)))
 
-                move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
-            except:  # Too broad so that AI developer can amend of unexpected bug without crashing its AI
-                traceback.print_exc()
+            move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
         if move_interesting:
             selected_move = self._selectNewMove(self.gameState)
             if self._isMoveAllowed(selected_move):
