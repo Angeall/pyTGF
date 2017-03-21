@@ -1,15 +1,10 @@
 from tkinter import Tk
 from tkinter.ttk import Frame, Label, Button
-from typing import List
 
 import pygame
 
-from pytgf.board import Builder
-from pytgf.controls.controllers import Bot, Human
-from pytgf.examples.connect4.controllers import Connect4BotControllerWrapper, Connect4HumanControllerWrapper, Connect4Player
-from pytgf.examples.connect4.rules import Connect4Core, Connect4API
-from pytgf.examples.connect4.units import Bottom, Connect4Unit
-from pytgf.game.mainloop import MainLoop
+from pytgf.examples.connect4.builder import create_game
+from pytgf.examples.connect4.controllers import Connect4Player
 from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
 selection_frame = None  # type: Frame
@@ -41,21 +36,6 @@ def buildSelectionFrame(window: Tk, gui: GUI) -> Frame:
     return selection_frame
 
 
-def add_controller(main_loop: MainLoop, player_classes: List):
-    assert len(player_classes) == 2
-    for i, player_class in enumerate(player_classes):
-        player_number = i + 1
-        if issubclass(player_class, Bot):
-            linker = Connect4BotControllerWrapper(player_class(player_number))
-        elif issubclass(player_class, Human):
-            linker = Connect4HumanControllerWrapper(player_class(player_number))
-        else:
-            raise TypeError("The type of the player (\'%s\') must either be a Bot or a Human subclass."
-                            % (str(player_class)))
-        main_loop.addUnit(Connect4Unit(player_number), linker, main_loop.game.board.OUT_OF_BOARD_TILE.identifier,
-                          team=player_number)
-
-
 def end_popup(string_result):
     popup = Tk()
     popup.title('Game finished')
@@ -70,24 +50,7 @@ def end_popup(string_result):
 def launch_game(gui: GUI, player_info: tuple):
     gui.quit()
     pygame.init()
-    width = 768
-    height = 768
-    lines = 6
-    columns = 7
-    builder = Builder(width, height, lines, columns)
-    builder.setBordersColor((0, 0, 0))
-    builder.setTilesVisible(True)
-    board = builder.create()
-
-    game = Connect4Core(board)
-    main_loop = MainLoop(Connect4API(game), turn_by_turn=True)
-    player_classes = [None, None]
-    for player_number, player_class in player_info[0].items():
-        player_classes[player_number-1] = player_class
-    add_controller(main_loop, player_classes)
-    for i in range(7):
-        game.addUnit(Bottom(1000 + i), game.BOTTOM_TEAM_NUMBER, (5, i))
-
+    main_loop = create_game(player_info[0], 768, 768, True)
     result = main_loop.run()
     if result is None:
         return
