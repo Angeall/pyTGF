@@ -12,6 +12,7 @@ from pytgf.game import Core
 
 
 class Connect4Core(Core):
+    BOTTOM_TEAM_NUMBER = -42
 
     def __init__(self, board: Board):
         super().__init__(board)
@@ -28,15 +29,15 @@ class Connect4Core(Core):
 
     def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, tile_id: TileIdentifier, frontal: bool = False,
                         particle: Optional[Particle]=None):
-        assert particle is not None
         if isinstance(player2, Bottom) and isinstance(player1, Disc):
             team_number = self.unitsTeam[player1]
             self.tilesOccupants[tile_id] = [player1]
             i, j = tile_id
             self._simplifiedBoard[i][j] = team_number  # Updating the simplified board
-            self.tilesOccupants[(i, j-1)] = [particle]  # We put the bottom of the line on the upper case
-            particle.kill()
-
+            self.tilesOccupants[(i-1, j)] = [player2]  # We put the bottom of the line on the upper case
+            self.unitsLocation[player2] = (i-1, j)
+            if particle is not None:
+                particle.kill()
             if self._checkWin(i, j, team_number):
                 team = self.teams[team_number]
                 for _, player_unit in self.players.items():

@@ -39,7 +39,8 @@ class HumanPlayer(Connect4Player, Human):
         Args:
             mouse_event: The mouse event received
         """
-        if mouse_event.mouseState[self.playerNumber-1]:
+        if (self.playerNumber == 1 and mouse_event.mouseState[0]) or \
+                (self.playerNumber == 2 and mouse_event.mouseState[2]):
             return mouse_event.tileId[1]  # The column number of the clicked tile
 
 

@@ -153,8 +153,13 @@ class MainLoop:
             if self._screen is None:
                 raise pygame.error("No Video device")
             self.game.board.draw(self._screen)
+            drawn_units = []
             for unit in self.linkers.values():
                 if unit.isAlive():
+                    unit.draw(self._screen)
+                    drawn_units.append(unit)
+            for unit in self.game.unitsLocation:
+                if unit.isAlive() and not unit in drawn_units:
                     unit.draw(self._screen)
             pygame.display.flip()
         except pygame.error:  # No video device
@@ -216,19 +221,20 @@ class MainLoop:
         Args:
             unit: The unit for which cancel the movements
         """
-        move_tuple = self._unitsMoves[unit]
-        fifo = move_tuple[1]  # type: Queue
-        last_move = move_tuple[0]  # type: Path
-        new_fifo = Queue()
-        if last_move is not None:
-            last_move.stop()
-        while True:
-            try:
-                move = fifo.get_nowait()
-                del self._movesEvent[move]
-            except Empty:
-                break
-        self._unitsMoves[unit] = (last_move, new_fifo)
+        if unit in self._unitsMoves:
+            move_tuple = self._unitsMoves[unit]
+            fifo = move_tuple[1]  # type: Queue
+            last_move = move_tuple[0]  # type: Path
+            new_fifo = Queue()
+            if last_move is not None:
+                last_move.stop()
+            while True:
+                try:
+                    move = fifo.get_nowait()
+                    del self._movesEvent[move]
+                except Empty:
+                    break
+            self._unitsMoves[unit] = (last_move, new_fifo)
 
     def _dispatchInputToHumanControllers(self, input_key) -> None:
         """
@@ -269,11 +275,13 @@ class MainLoop:
         """
         Gets event from the controllers and dispatch them to the right method
         """
-        for linker in self.linkersConnection:
+        for linker in self.linkersConnection:  # type: ControllerWrapper
             pipe_conn = self._getPipeConnection(linker)
             if pipe_conn.poll():
                 move = pipe_conn.recv()
-                self._handleEvent(self.linkers[linker], move)
+                if not self._turnByTurn or linker.controller.playerNumber == \
+                        self._playersOrder[self._currentPlayerIndex]:
+                    self._handleEvent(self.linkers[linker], move)
 
     def _handlePendingMoves(self) -> None:
         """
@@ -321,7 +329,6 @@ class MainLoop:
                     just_started, move_completed, tile_id = current_move.performNextMove()
                     if move_completed:  # A new tile has been reached by the movement
                         self.game.updateGameState(unit, tile_id)
-                        self._currentPlayerIndex = (self._currentPlayerIndex + 1) % len(self._playersOrder)
                     elif just_started:
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True
@@ -347,14 +354,15 @@ class MainLoop:
 
         Returns: The next move if it is available, and None otherwise
         """
-        if self._turnByTurn and not unit.playerNumber == self._playersOrder[self._currentPlayerIndex]:
-            return None  # Sorry, not your turn to play !
+        # if self._turnByTurn and not unit.playerNumber == self._playersOrder[self._currentPlayerIndex]:
+        #     return None  # Sorry, not your turn to play !
         moves = self._unitsMoves[unit]
         current_move = moves[0]  # type: Path
         if current_move is None or current_move.finished():
             try:
                 if current_move is not None:
                     if isinstance(current_move, Path):
+                        self._currentPlayerIndex = (self._currentPlayerIndex + 1) % len(self.linkers)
                         del self._movesEvent[current_move]
                 move = moves[1].get_nowait()  # type: Path
                 self._unitsMoves[unit] = (move, moves[1])

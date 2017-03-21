@@ -12,7 +12,6 @@ from pytgf.examples.connect4.units import Bottom, Connect4Unit
 from pytgf.game.mainloop import MainLoop
 from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
-
 selection_frame = None
 main_frame = None
 
@@ -74,20 +73,21 @@ def launch_game(gui: GUI, player_info: tuple):
     pygame.init()
     width = 768
     height = 768
-    lines = 7
+    lines = 6
     columns = 7
     builder = Builder(width, height, lines, columns)
-    builder.setBordersColor((0, 125, 125))
-    builder.setBackgroundColor((25, 25, 25))
-    builder.setTilesVisible(False)
+    builder.setBordersColor((0, 0, 0))
+    builder.setTilesVisible(True)
     board = builder.create()
 
     game = Connect4Core(board)
-    main_loop = MainLoop(Connect4API(game))
+    main_loop = MainLoop(Connect4API(game), turn_by_turn=True)
     player_classes = [None, None]
     for player_number, player_class in player_info[0].items():
         player_classes[player_number-1] = player_class
     add_controller(main_loop, player_classes)
+    for i in range(7):
+        game.addUnit(Bottom(1000 + i), game.BOTTOM_TEAM_NUMBER, (5, i))
 
     result = main_loop.run()
     if result is None:

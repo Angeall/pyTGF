@@ -12,6 +12,7 @@ from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.moves import Path
 from pytgf.characters.units import MovingUnit
 from pytgf.characters.units import Particle
+from pytgf.characters.utils.units import resize_unit
 from pytgf.controls.events import KeyboardEvent, MouseEvent
 from pytgf.utils.geom import Coordinates
 
@@ -78,6 +79,7 @@ class Core(metaclass=ABCMeta):
         self.addUnitToTile(origin_tile_id, unit)
         self.players[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
+        resize_unit(unit, self.board)
         if team_number in self.teams.keys():
             self.teams[team_number].append(unit)
         else:
