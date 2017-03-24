@@ -4,6 +4,7 @@ from typing import Tuple, List
 from multiprocess.connection import Pipe
 
 from pytgf.characters.moves import MoveDescriptor
+from pytgf.characters.units import Particle
 
 try:
     from multiprocess.connection import PipeConnection
@@ -30,6 +31,12 @@ class ExampleBotControllerWrapper(BotControllerWrapper):
 
 
 class ExampleAPI(API):
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        pass
+
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        pass
+
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
                                 force: bool = False) -> Path:
         raise UnfeasibleMoveException()
@@ -60,7 +67,7 @@ class ExampleGame(Core):
     def _suicideAllowed(self) -> bool:
         return False
 
-    def _collidePlayers(self, player1, player2, frontal: bool = False):
+    def _collidePlayers(self, player1, player2, tile_id, frontal: bool = False, particle: Particle=None):
         pass
 
 
