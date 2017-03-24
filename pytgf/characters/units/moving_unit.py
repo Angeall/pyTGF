@@ -30,4 +30,7 @@ class MovingUnit(Unit):
         super().__init__(sprite, max_particles, nb_lives=nb_lives, surviving_particles=surviving_particles)
         self.playerNumber = player_number
         self.speed = speed
-        self.currentAction = None
+        self.lastAction = None
+
+    def setLastAction(self, last_action: int):
+        self.lastAction = last_action

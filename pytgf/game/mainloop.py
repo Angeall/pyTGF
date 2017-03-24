@@ -107,8 +107,8 @@ class MainLoop:
         self._prepared = False
         return self.game.winningPlayers
 
-    def addUnit(self, unit: MovingUnit, linker: ControllerWrapper, tile_id: TileIdentifier, initial_action: Path=None,
-                team: int=-1) -> None:
+    def addUnit(self, unit: MovingUnit, linker: ControllerWrapper, tile_id: TileIdentifier,
+                initial_action: MoveDescriptor=None, team: int=-1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
         to the the given tile id and controlled by the given controller
@@ -128,7 +128,7 @@ class MainLoop:
         resize_unit(unit, self.game.board)
         unit.moveTo(tile.center)
         if initial_action is not None:
-            unit.currentAction = initial_action
+            unit.setLastAction(initial_action)
             self._handleEvent(unit, initial_action)
 
     def pause(self) -> None:

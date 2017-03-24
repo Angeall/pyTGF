@@ -13,6 +13,14 @@ from pytgf.game.core import Core, UnfeasibleMoveException
 __author__ = 'Anthony Rouneau'
 
 
+class DeadPlayerException(Exception):
+    pass
+
+
+class NoMovementException(Exception):
+    pass
+
+
 class API(metaclass=ABCMeta):
     """
     A class defining a basic API so a controller can get information on the current state of the game,
@@ -91,7 +99,7 @@ class API(metaclass=ABCMeta):
         try:
             move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=max_moves, force=force)
             new_tile_id = move.complete()
-            unit.currentAction = move_descriptor
+            unit.lastAction = move_descriptor
             self.game.updateGameState(unit, new_tile_id)
         except UnfeasibleMoveException:
             return False
@@ -246,6 +254,78 @@ class API(metaclass=ABCMeta):
 
     def copy(self):
         return type(self)(self.game.copy())
+
+    def encodeMove(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        """
+        Encode a move to be performed (hence, this API must be in a state where the move represented by the descriptor
+        has not yet been performed !)
+
+        Args:
+            player_number: The number representing the player that could perform the move
+            move_descriptor: The descriptor of the move to be performed by the given player
+
+        Returns:
+            -1 if the player hasn't played yet, -2 if the player is dead,
+            or a positive integer that represents the given move descriptor
+        """
+        if not self.isPlayerAlive(player_number):
+            return -2
+        if self.game.getUnitForNumber(player_number).lastAction is None:
+            return -1
+        return self._encodeMoveIntoPositiveNumber(player_number, move_descriptor)
+
+    @abstractmethod
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        """
+        Encode a move to be performed (hence, this API must be in a state where the move represented by the descriptor
+        has not yet been performed !)
+
+        Args:
+            player_number: The number representing the player that could perform the move
+            move_descriptor: The descriptor of the move to be performed by the given player
+
+        Returns: A positive integer that represents the move descriptor
+        """
+        pass
+
+    def decodeMove(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        """
+        Decode the given encoded move into a correct move descriptor.
+
+        Args:
+            player_number: The number representing the player that could perform the move.
+            encoded_move: The integer representing an encoded move (to be decoded..)
+
+        Returns:
+            The decoded move, hence a correct move descriptor for the given player
+            (does not check if the move is feasible).
+
+        Raises:
+            DeadPlayerException:
+                If the encoded move is -2, it means that the player was dead when trying to encode the move.
+            NoMoveException:
+                If the encoded move is -1, it means that the player had't played yet when encoding the last move
+        """
+        if encoded_move == -2:
+            raise DeadPlayerException()
+        if encoded_move == -1:
+            raise NoMovementException()
+        return self._decodeMoveFromPositiveNumber(player_number, encoded_move)
+
+    @abstractmethod
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        """
+        Decode the given encoded move into a correct move descriptor.
+
+        Args:
+            player_number: The number representing the player that could perform the move.
+            encoded_move: The positive integer representing an encoded move (to be decoded..)
+
+        Returns:
+            The decoded move, hence a correct move descriptor for the given player
+            (does not check if the move is feasible).
+        """
+        pass
 
     @abstractmethod
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int=-1,

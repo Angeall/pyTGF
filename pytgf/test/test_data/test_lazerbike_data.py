@@ -55,7 +55,7 @@ class TestLazerbikeData(unittest.TestCase):
         cls.gatherer = Gatherer(a_priori_components, a_posteriori_components)
         cls.routine = Routine(cls.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
                               lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
-                              must_keep_temp_files=False, must_write_files=False)
+                              must_keep_temp_files=True, must_write_files=True)
         cls.api = cls.loop.api
         cls.a_priori_data, cls.a_posteriori_dict = cls.routine.routine(1, cls.api)
 

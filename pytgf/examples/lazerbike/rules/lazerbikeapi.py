@@ -6,6 +6,7 @@ from typing import List
 
 from pytgf.board import Tile, TileIdentifier
 from pytgf.characters.moves import ContinuousPath
+from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.moves import Path
 from pytgf.examples.lazerbike.gamedata import MAX_FPS, GO_DOWN, GO_RIGHT, GO_UP, GO_LEFT
 from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeCore
@@ -29,19 +30,19 @@ class LazerBikeAPI(API):
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys() or force
         if move_descriptor == GO_RIGHT:
-            if initial_move or (unit.currentAction != GO_LEFT):
+            if initial_move or (unit.lastAction != GO_LEFT):
                 pre_action = partial(unit.turn, GO_RIGHT)
                 fct = self.game.getRightTile
         elif move_descriptor == GO_LEFT:
-            if initial_move or (unit.currentAction != GO_RIGHT):
+            if initial_move or (unit.lastAction != GO_RIGHT):
                 pre_action = partial(unit.turn, GO_LEFT)
                 fct = self.game.getLeftTile
         elif move_descriptor == GO_DOWN:
-            if initial_move or (unit.currentAction != GO_UP):
+            if initial_move or (unit.lastAction != GO_UP):
                 pre_action = partial(unit.turn, GO_DOWN)
                 fct = self.game.getBottomTile
         elif move_descriptor == GO_UP:
-            if initial_move or (unit.currentAction != GO_DOWN):
+            if initial_move or (unit.lastAction != GO_DOWN):
                 pre_action = partial(unit.turn, GO_UP)
                 fct = self.game.getTopTile
         if fct is not None:
@@ -52,6 +53,50 @@ class LazerBikeAPI(API):
                                                                                 unit=unit),
                                   units_location_dict=self.game.unitsLocation)
         raise UnfeasibleMoveException("The event couldn't create a valid move")
+
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        """
+        Encode a move to be performed (hence, this API must be in a state where the move represented by the descriptor
+        has not yet been performed !)
+
+        Args:
+            player_number: The number representing the player that could perform the move
+            move_descriptor: The descriptor of the move to be performed by the given player
+
+        Returns:
+
+            - -1 if the move makes it turn right, relatively to its current direction
+            - 0 if the move makes it go straight, relatively to its current direction
+            - +1 if the move makes it turn left, relatively to its current direction
+            - -1000 if the move makes it turn back (illegal move...)
+        """
+        diff = move_descriptor - self.getCurrentDirection(player_number)
+        if abs(diff) == 2:
+            return -1000
+        if diff == 3:
+            return -1
+        if diff == -3:
+            return 1
+        return diff
+
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        """
+        Decode the given encoded move to be performed by the given player into a move that can be directly
+        understood by the game core.
+
+        Args:
+            player_number: The number representing the player that will perform the move
+            encoded_move: The move that has been encoded into a relative move (between -1 and 1)
+
+        Returns: The decoded move (absolute move, between 0 and 3)
+
+        """
+        new_move = self.getCurrentDirection(player_number) + encoded_move
+        if new_move < 0:
+            new_move += 4
+        elif new_move > 3:
+            new_move -= 4
+        return new_move
 
     def getTileByteCode(self, tile_id: tuple) -> int:
         """
@@ -169,7 +214,7 @@ class LazerBikeAPI(API):
 
         Returns: The current direction of the player (0: right, 1: top, 2: left, 3: bottom)
         """
-        return self.game.getUnitForNumber(player_number).currentAction
+        return self.game.getUnitForNumber(player_number).lastAction
 
     def _resizeTrace(self, trace, current_tile: Tile) -> None:
         """

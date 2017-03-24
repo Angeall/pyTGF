@@ -4,6 +4,7 @@ from pytgf.board import Tile
 from pytgf.board import pathfinder
 from pytgf.board.pathfinder import UnreachableDestination
 from pytgf.characters.moves import ListPath
+from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.moves import Path
 from pytgf.characters.moves import ShortMove
 from pytgf.characters.units import MovingUnit
@@ -39,6 +40,14 @@ class SokobanAPI(API):
                 except UnreachableDestination:
                     pass
         raise pytgf.game.UnfeasibleMoveException()
+
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        return move_descriptor[0] + (move_descriptor[1] << 16)
+
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        y = encoded_move >> 16
+        x = encoded_move - (y << 16)
+        return x, y
 
     def _pushBoxIfNeeded(self, previous_tile: Tile, current_tile: Tile):
         box = None

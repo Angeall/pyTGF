@@ -26,7 +26,7 @@ class SimultaneousAlphaBeta:
     """
 
     def __init__(self, eval_fct: Callable[[API], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
-                 max_depth: int=6, turn_by_turn: bool=False):
+                 max_depth: int=6, turn_by_turn: bool=False, must_save_actions_sequences: bool=False):
         """
 
         Args:
@@ -41,6 +41,7 @@ class SimultaneousAlphaBeta:
             possible_actions: The tuple of possible actions accepted in the game for all players
             max_depth: the maximum depth of the tree the algorithm can explore
         """
+        self._mustSaveActionsSequences = must_save_actions_sequences
         self.eval = eval_fct
         self.maxDepth = max_depth
         if self.maxDepth == -1:  # If there is no maximum depth...
@@ -51,8 +52,8 @@ class SimultaneousAlphaBeta:
         self.playerNumber = -1
         self.copyTime = 0
         self.turnByTurn = turn_by_turn
-        self._currentMoveSequence = None
-        self._moveSequences = pd.DataFrame()
+        self._currentMoveSequence = None  # type: np.ndarray
+        self._actionsSequences = pd.DataFrame()
         self._playerMapping = {}
 
     # -------------------- PUBLIC METHODS -------------------- #
@@ -67,7 +68,7 @@ class SimultaneousAlphaBeta:
         self._currentMoveSequence = np.ndarray((state.getNumberOfAlivePlayers(), 0))
         ordered_list = state.getPlayerNumbers().copy()
         ordered_list.sort()
-        self._playerMapping = {i: play_num for i, play_num in enumerate(ordered_list)}
+        self._playerMapping = {play_num: i for i, play_num in enumerate(ordered_list)}
 
         self.playerNumber = player_number
         if self.actions.get(state) is not None:
@@ -117,6 +118,7 @@ class SimultaneousAlphaBeta:
             return score, None, (False, depth-1, False), state
         # Check if the game state is final
         elif state.isFinished():
+            self._saveActionsSequence(state)
             return self._getTeamScore(state, self.eval(state)), None, (True, depth-1, state.hasWon(self.playerNumber)),\
                    state
 
@@ -218,8 +220,9 @@ class SimultaneousAlphaBeta:
                 simulation_combination = {key: val for (key, val) in combination.items() if key != self.playerNumber}
             feasible_moves, new_game_state = state.simulateMoves(simulation_combination)
             if feasible_moves and new_game_state is not None:
-                # TODO: Save action sequence into attributes
+                self._registerCurrentActions(combination, state)
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
+                self._deleteLastActions()
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
@@ -232,6 +235,41 @@ class SimultaneousAlphaBeta:
                 beta = min(beta, value)
         min_actions = random.choice(equal_min_choices)
         return min_value, min_actions, end_state, new_game_state
+
+    def _registerCurrentActions(self, actions: Dict[int, MoveDescriptor], state: API):
+        """
+        Register the given moves as the current moves
+
+        Args:
+            actions: The current moves done by the players
+            state: The state representing the game before the moves are performed
+        """
+        if self._mustSaveActionsSequences:
+            self._currentMoveSequence = np.hstack((self._currentMoveSequence,
+                                                   self._getActionsList(actions, state)))
+
+    def _deleteLastActions(self):
+        """
+        Unregister the last actions that were saved
+        """
+        if self._mustSaveActionsSequences:
+            self._currentMoveSequence = self._currentMoveSequence[:, :-1]
+
+    def _getActionsList(self, actions: Dict[int, MoveDescriptor], state: API) -> np.ndarray:
+        """
+
+        Args:
+            actions: The dict linking the actions with the players
+            state: The state representing the game before the moves are performed
+
+        Returns: A vertical vector of moves, which can be horizontally stacked with another matrix
+
+        """
+        actions_list = np.zeros((len(self._playerMapping), 1))
+        actions_list -= 2  # -2 = player is dead => we first assume that every player is dead
+        for player_number, move_descriptor in actions.items():
+            actions_list[self._playerMapping[player_number]] = state.encodeMove(player_number, move_descriptor)
+        return actions_list
 
     def _getTeamScore(self, state: API, players_score: Tuple[int, ...]) -> float:
         """
@@ -308,3 +346,20 @@ class SimultaneousAlphaBeta:
         """
         possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
         return possible_moves_for_player
+
+    def _saveActionsSequence(self, state: API):
+        """
+        Adds the current move sequences to the others
+
+        Args:
+            state: The state that is the result of the last move in the sequence
+        """
+        if self._mustSaveActionsSequences:
+            has_won = np.zeros((len(self._playerMapping), 1))
+            for player_number in state.getPlayerNumbers():
+                if state.hasWon(player_number):
+                    has_won[self._playerMapping[player_number]] = 1
+            actions_sequence = np.hstack((has_won, self._currentMoveSequence))
+            self._actionsSequences = self._actionsSequences.append(pd.DataFrame(actions_sequence))
+
+

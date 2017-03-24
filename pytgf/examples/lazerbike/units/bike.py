@@ -30,12 +30,11 @@ class Bike(MovingUnit):
                          speed=speed, surviving_particles=True)
         default_player_number += 1
         self.playerNumber = player_number
-        self.currentAction = 0  # The initial position of the sprite is towards right
+        self.lastAction = initial_direction
         self.turn(initial_direction)
 
     def turn(self, direction: int):
-        angle = (direction - self.currentAction) * 90
-        self.currentAction = direction
+        angle = (direction - self.lastAction) * 90
         self.sprite.rotate(angle)
 
 

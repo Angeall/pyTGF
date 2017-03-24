@@ -38,7 +38,13 @@ class Connect4API(API):
 
     def updateMove(self, unit: Connect4Unit, column_played: int):
         self.numberOfDiscPlayed += 1
-        unit.setLastColumnPlayed(column_played)
+        unit.setLastAction(column_played)
+
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        return move_descriptor
+
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        return encoded_move
 
     def createMoveForDescriptor(self, unit: Connect4Unit, move_descriptor: MoveDescriptor, max_moves: int = -1,
                                 force: bool = False) -> Path:

@@ -20,8 +20,9 @@ __author__ = "Anthony Rouneau"
 ObjID = int
 
 
-MAX_TEMP_VECTORS = 100
+MAX_TEMP_VECTORS = 1000
 COLLECTED_DATA_PATH_NAME = "collected_data"
+ACTIONS_SEQUENCES_PATH_NAME = "actions_sequences"
 
 
 class Routine(SimultaneousAlphaBeta):
@@ -45,6 +46,7 @@ class Routine(SimultaneousAlphaBeta):
         self._writtenFiles = 0
         self._concludedStates = {}  # type: Dict[ObjID, Any]
         self._tempFileIDs = []  # type: List[str]
+        self._mustSaveActionsSequences = True
 
     def routine(self, player_number: int, state: API) -> Tuple[pd.DataFrame, Dict[MoveDescriptor, pd.DataFrame]]:
         """
@@ -182,14 +184,21 @@ class Routine(SimultaneousAlphaBeta):
 
             file_id = str(random.randint(0, 1000))
             self._tempFileIDs.append(file_id)
-            self._writeToCsv(a_priori_vectors, self._aPrioriTitles, self._getDataFileName(file_id),
-                             self.TEMP_DATA_PATH_NAME)
+            self._writeToCsv(a_priori_vectors, self._getDataFileName(file_id),
+                             self.TEMP_DATA_PATH_NAME, self._aPrioriTitles)
             data_vectors = None
             for action, data_vectors in a_posteriori_vectors_dicts.items():
                 data_vectors = np.array(data_vectors)
                 data_vectors = data_vectors.reshape((len(data_vectors), len(data_vectors[0])))
-                self._writeToCsv(data_vectors, self._aPosterioriTitles, self._getTargetFileName(file_id, action),
-                                 self.TEMP_DATA_PATH_NAME)
+                self._writeToCsv(data_vectors, self._getTargetFileName(file_id, action),
+                                 self.TEMP_DATA_PATH_NAME, self._aPosterioriTitles)
+
+            self._createDirectoryIfNeeded(ACTIONS_SEQUENCES_PATH_NAME)
+
+            self._writeToCsv(self._actionsSequences, "seq" + str(id(self._actionsSequences)),
+                             ACTIONS_SEQUENCES_PATH_NAME)
+            self._actionsSequences = []
+
             del a_priori_vectors
             del a_posteriori_vectors_dicts
             del data_vectors
@@ -255,10 +264,11 @@ class Routine(SimultaneousAlphaBeta):
                 self._removeTempFileIfNeeded(target_file_path) # The temporary file is no longer needed
             self._removeTempFileIfNeeded(data_file_path)  # The temporary file is no longer needed
         if self._mustWriteFiles:
-            self._writeToCsv(a_priori, self._aPrioriTitles, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME)
+            self._writeToCsv(a_priori, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME,
+                             self._aPrioriTitles)
             for action in a_posteriori:
-                self._writeToCsv(a_posteriori[action], self._aPosterioriTitles,
-                                 self._getTargetFileName(str(id(self)), action), COLLECTED_DATA_PATH_NAME)
+                self._writeToCsv(a_posteriori[action], self._getTargetFileName(str(id(self)), action),
+                                 COLLECTED_DATA_PATH_NAME, self._aPosterioriTitles)
         self._removeTempFileIfNeeded(self.TEMP_DATA_PATH_NAME, is_folder=True)
         return a_priori, a_posteriori
 
@@ -277,7 +287,7 @@ class Routine(SimultaneousAlphaBeta):
             pass
 
     @staticmethod
-    def _writeToCsv(data: np.ndarray, column_titles: List[str], file_name: str, path: str):
+    def _writeToCsv(data: np.ndarray, file_name: str, path: str, column_titles: List[str]=None):
         """
         Writes the given data into a CSV file
 
@@ -288,14 +298,21 @@ class Routine(SimultaneousAlphaBeta):
         """
         file_name = os.path.join(path, file_name)
         addition = ""
-        while True:
+        file = None
+        finished = False
+        while not finished:
             try:
                 file = open(file_name + addition + ".csv", "x")
-                break
+                if column_titles is not None:
+                    pd.DataFrame(data, columns=column_titles).to_csv(file, index=False)
+                else:
+                    pd.DataFrame(data).to_csv(file, index=False)
+                finished = True
             except FileExistsError:
-                addition += "_1"
-        pd.DataFrame(data, columns=column_titles).to_csv(file, index=False)
-        file.close()
+                addition += "1"
+            finally:
+                if file is not None:
+                    file.close()
 
     def _removeTempFileIfNeeded(self, file_path: str, is_folder: bool=False):
         if not self._mustKeepTempFiles:
