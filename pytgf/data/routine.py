@@ -197,7 +197,7 @@ class Routine(SimultaneousAlphaBeta):
 
             self._writeToCsv(self._actionsSequences, "seq" + str(id(self._actionsSequences)),
                              ACTIONS_SEQUENCES_PATH_NAME)
-            self._actionsSequences = []
+            self._actionsSequences = pd.DataFrame()
 
             del a_priori_vectors
             del a_posteriori_vectors_dicts
@@ -287,7 +287,7 @@ class Routine(SimultaneousAlphaBeta):
             pass
 
     @staticmethod
-    def _writeToCsv(data: np.ndarray, file_name: str, path: str, column_titles: List[str]=None):
+    def _writeToCsv(data: Union[np.ndarray, pd.DataFrame], file_name: str, path: str, column_titles: List[str]=None):
         """
         Writes the given data into a CSV file
 

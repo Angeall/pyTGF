@@ -34,7 +34,7 @@ class Connect4API(API):
         if self.game.isFinished():
             if not self.hasWon(player_number):
                 return -2
-        return self.game.getUnitForNumber(player_number).lastColumnPlayed
+        return self.game.getUnitForNumber(player_number).lastAction
 
     def updateMove(self, unit: Connect4Unit, column_played: int):
         self.numberOfDiscPlayed += 1
@@ -53,7 +53,11 @@ class Connect4API(API):
             if len(occupants) == 0 or isinstance(occupants[0], Bottom):  # Column not full
                 team_number = self.game.unitsTeam[unit]
                 self.discNumber += 1
-                disc = Disc(self.discNumber, self.game.unitsTeam[unit], speed=self.game.board.graphics.size[1] * 2)
+                speed = 50
+                has_graphics = self.game.board.graphics is not None
+                if has_graphics:
+                    speed = self.game.board.graphics.size[1] * 2
+                disc = Disc(self.discNumber, self.game.unitsTeam[unit], speed=speed, graphics=has_graphics)
                 self.game.addUnit(disc, team_number=team_number, origin_tile_id=(0, move_descriptor), controlled=False)
                 if len(occupants) == 0 or not isinstance(occupants[0], Bottom):
                     path_list = []
