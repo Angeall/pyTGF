@@ -30,8 +30,10 @@ class Bike(MovingUnit):
                          speed=speed, surviving_particles=True)
         default_player_number += 1
         self.playerNumber = player_number
+        self.lastAction = 0
+        if initial_direction != 0:
+            self.turn(initial_direction)
         self.lastAction = initial_direction
-        self.turn(initial_direction)
 
     def turn(self, direction: int):
         angle = (direction - self.lastAction) * 90

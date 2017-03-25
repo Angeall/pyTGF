@@ -5,12 +5,12 @@ and the bot controllers handling
 
 import time
 from queue import Queue, Empty
-from typing import Dict, Optional
-from typing import Tuple
-from typing import Union
 
 import pygame
 from multiprocess.connection import Pipe
+from typing import Dict, Optional
+from typing import Tuple
+from typing import Union
 
 try:
     from multiprocess.connection import PipeConnection
@@ -329,6 +329,7 @@ class MainLoop:
                     just_started, move_completed, tile_id = current_move.performNextMove()
                     if move_completed:  # A new tile has been reached by the movement
                         self.game.updateGameState(unit, tile_id)
+                        unit.lastAction = self._movesEvent[current_move]
                     elif just_started:
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True

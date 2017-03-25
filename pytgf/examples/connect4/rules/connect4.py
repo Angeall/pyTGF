@@ -1,6 +1,5 @@
-from typing import Optional, List
-
 import numpy as np
+from typing import Optional, List
 
 from pytgf.board import Board
 from pytgf.board import TileIdentifier
@@ -38,8 +37,12 @@ class Connect4Core(Core):
             self.unitsLocation[player2] = (i-1, j)
             if particle is not None:
                 particle.kill()
+            team = None
             if self._checkWin(i, j, team_number):
                 team = self.teams[team_number]
+            elif self._checkFinished():
+                team = []
+            if team is not None:
                 for _, player_unit in self.players.items():
                     if player_unit not in team:
                         player_unit.kill()
@@ -49,10 +52,7 @@ class Connect4Core(Core):
         :param line: The line of the last played disc
         :param column: The column of the last played disc
         :param team_number: The number representing the team of the player that played the last disc
-        :return: a tuple containing three booleans : (red_won, green_won, draw).
-                 red_won, green_won is True if there is 4 discs of that color in a row
-                 and draw is True if there is a draw
-        :rtype: tuple
+        :return: True if the game is finished
 
         Assume that the game was not terminal before the disc at (line, column) was placed.
         Check if the game is terminated due to the (line, column) disc.
@@ -93,3 +93,6 @@ class Connect4Core(Core):
         rows.append(self._simplifiedBoard[:, column][line:])
 
         return rows
+
+    def _checkFinished(self):
+        return 0 not in self._simplifiedBoard

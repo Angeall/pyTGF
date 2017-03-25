@@ -6,7 +6,8 @@ from pygame.locals import *
 
 from pytgf.board import Builder
 from pytgf.controls.controllers import Bot, Human
-from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper, LazerBikePlayer
+from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper, \
+    LazerBikePlayer
 from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
 from pytgf.examples.lazerbike.rules import LazerBikeCore, LazerBikeAPI
 from pytgf.examples.lazerbike.units.bike import Bike
@@ -100,7 +101,7 @@ def launch_game(gui: GUI, player_info: tuple):
     builder.setTilesVisible(False)
     board = builder.create()
 
-    speed = 0.5*board.graphics.sideLength
+    speed = 0.25*board.graphics.sideLength
     game = LazerBikeCore(board)
     main_loop = MainLoop(LazerBikeAPI(game))
     player_classes = player_info[0]

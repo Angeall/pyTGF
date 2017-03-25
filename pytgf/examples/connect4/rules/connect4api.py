@@ -58,7 +58,6 @@ class Connect4API(API):
                 if has_graphics:
                     speed = self.game.board.graphics.size[1] * 2
                 disc = Disc(self.discNumber, self.game.unitsTeam[unit], speed=speed, graphics=has_graphics)
-                self.game.addUnit(disc, team_number=team_number, origin_tile_id=(0, move_descriptor), controlled=False)
                 if len(occupants) == 0 or not isinstance(occupants[0], Bottom):
                     path_list = []
                     for i in range(1, 6):
@@ -70,11 +69,17 @@ class Connect4API(API):
                                                      self.game.board.getTileById((i, j)), MAX_FPS,
                                                      self.game.unitsLocation)
                                            for i, j in path_list],
+                                    pre_action= lambda: self.game.addUnit(disc, team_number=team_number,
+                                                                          origin_tile_id=(0, move_descriptor),
+                                                                          controlled=False),
                                     post_action=lambda: self.updateMove(unit, move_descriptor))
                 else:
                     path = ListPath(disc, [ShortMove(disc, self.game.board.getTileById((0, move_descriptor)),
                                                      self.game.board.getTileById((0, move_descriptor)), MAX_FPS,
                                                      self.game.unitsLocation)],
+                                    pre_action=self.game.addUnit(disc, team_number=team_number,
+                                                                          origin_tile_id=(0, move_descriptor),
+                                                                          controlled=False),
                                     post_action=lambda: self.updateMove(unit, move_descriptor))
                 return path
         raise UnfeasibleMoveException("The move " + str(move_descriptor) + " is unfeasible...")

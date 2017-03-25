@@ -3,11 +3,11 @@ Contains the definition of a routine to gather daata
 """
 import os
 import random
-from typing import Any
-from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
+from typing import Any
+from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 from pytgf.ai import SimultaneousAlphaBeta
 from pytgf.ai.simultaneous_alphabeta import Value, EndState
@@ -132,9 +132,11 @@ class Routine(SimultaneousAlphaBeta):
         # SEARCHING MIN VALUE
         value, best_actions, end_state, new_game_state = super()._minValue(state, actions,
                                                                            alpha, beta, depth)  # Simulate the actions
+
         id_state = state.id
         state = []
         del state
+
         # AS WE FINISHED SEARCHING, WE CAN STORE THE A POSTERIORI DATA
         final_state = self._computeFinalStateScore(depth, end_state)  # Storing whether this move led to a winning state
         a_posteriori_data = self._gatherer.getAPosterioriData(new_game_state)

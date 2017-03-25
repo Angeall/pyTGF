@@ -5,10 +5,10 @@ for all the players
 
 import itertools
 import random
-from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 import numpy as np
 import pandas as pd
+from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.game import API
@@ -133,7 +133,10 @@ class SimultaneousAlphaBeta:
             intermediate_state = state
             if self.turnByTurn:
                 # Already simulating the move of our player as it is turn by turn
-                intermediate_state = state.simulateMove(self.playerNumber, actions[0][self.playerNumber])
+                feasible_move, intermediate_state = state.simulateMove(self.playerNumber, actions[0][self.playerNumber])
+                if not feasible_move:
+                    continue
+                intermediate_state.id = state.id
             min_value, min_actions, new_end_state, min_game_state = self._minValue(intermediate_state, actions, alpha,
                                                                                    beta, depth)
             end_state = self._evaluateEndState(end_state, new_end_state)
@@ -210,7 +213,7 @@ class SimultaneousAlphaBeta:
               - The API that represents the game after the best move
         """
         min_value = float('inf')
-        equal_min_choices = []  # type: List[Dict[int, MoveDescriptor]]
+        equal_min_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API]]
         end_state = (False, 0, False)
         new_game_state = None
         for combination in actions:
@@ -220,20 +223,21 @@ class SimultaneousAlphaBeta:
                 simulation_combination = {key: val for (key, val) in combination.items() if key != self.playerNumber}
             feasible_moves, new_game_state = state.simulateMoves(simulation_combination)
             if feasible_moves and new_game_state is not None:
-                self._registerCurrentActions(combination, state)
+                self._registerCurrentActions(combination, new_game_state)
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
                 self._deleteLastActions()
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
-                    equal_min_choices = [combination]
+                    equal_min_choices = [(combination, new_game_state)]
                 elif value == min_value:
-                    equal_min_choices.append(combination)
+                    equal_min_choices.append((combination, new_game_state))
                 if self._mustCutOff and value <= alpha:  # Cutoff because we are in a min situation
-                    best_combination = random.choice(equal_min_choices)
+                    best_combination, new_game_state = random.choice(equal_min_choices)
                     return value, best_combination, end_state, new_game_state
                 beta = min(beta, value)
-        min_actions = random.choice(equal_min_choices)
+
+        min_actions, new_game_state = random.choice(equal_min_choices)
         return min_value, min_actions, end_state, new_game_state
 
     def _registerCurrentActions(self, actions: Dict[int, MoveDescriptor], state: API):
@@ -328,7 +332,7 @@ class SimultaneousAlphaBeta:
         Returns: A list containing couples [player_number, move_descriptor]
         """
         moves = []
-        for player_number in [player for player in players if state.game.players[player].isAlive()]:
+        for player_number in [player for player in players if state.game.controlledPlayers[player].isAlive()]:
             possible_moves_for_player = self._getPossibleMovesForPlayer(player_number, state)
             moves.append(itertools.product([player_number],
                                            possible_moves_for_player))

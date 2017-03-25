@@ -52,13 +52,9 @@ class API(metaclass=ABCMeta):
         Returns:
             A copy of this GameState in which the move have been applied (if it is possible)
         """
-        feasible_move, move = self._generateMove(player_number, wanted_move)
-        if feasible_move:
-            new_game_state = self.copy();
-            new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
-            return feasible_move, new_game_state
-        else:
-            return False, None
+        new_game_state = self.copy()
+        feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
+        return feasible_move, new_game_state if feasible_move else None
 
     def simulateMoves(self, player_moves: Dict[int, MoveDescriptor], max_moves: int=1) \
             -> Tuple[bool, Union['API', None]]:
@@ -73,16 +69,11 @@ class API(metaclass=ABCMeta):
             - A boolean -- True if all the moves succeeded, False otherwise
             - A copy of this GameState in which the moves have been applied (if a move is unfeasible, returns None).
         """
-        moves = []
-        for player_number, wanted_move in player_moves.items():
-            feasible_move, move = self._generateMove(player_number, wanted_move)
-            if not feasible_move:
-                print(self.getPlayerLocation(player_number), self.getCurrentDirection(player_number), wanted_move)
-                return False, None
-            moves.append(move)
         new_game_state = self.copy()
         for player_number, wanted_move in player_moves.items():
-            new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
+            feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
+            if not feasible_move:
+                return False, None
         return True, new_game_state
 
     def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool=False, max_moves: int=1) \
@@ -269,8 +260,8 @@ class API(metaclass=ABCMeta):
             -1 if the player hasn't played yet, -2 if the player is dead,
             or a positive integer that represents the given move descriptor
         """
-        if not self.isPlayerAlive(player_number):
-            return -2
+        # if not self.isPlayerAlive(player_number):
+        #     return -2
         if self.game.getUnitForNumber(player_number).lastAction is None:
             return -1
         return self._encodeMoveIntoPositiveNumber(player_number, move_descriptor)
@@ -366,7 +357,7 @@ class API(metaclass=ABCMeta):
         """
         unit = self.game.players[player_number]
         try:
-            move = self.createMoveForDescriptor(unit, wanted_move, max_moves=1)
+            move = self.createMoveForDescriptor(unit, wanted_move, max_moves=-1)
             return True, move
         except UnfeasibleMoveException:
             return False, None

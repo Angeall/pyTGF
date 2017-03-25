@@ -1,7 +1,7 @@
 import random
-from typing import Union
 
 import pygame
+from typing import Union
 
 from pytgf.controls.controllers import Passive
 from pytgf.data.component import Component
@@ -39,6 +39,7 @@ def gather_data():
     routine = Routine(gatherer, possible_moves,
                       lambda api: tuple([100 * api.hasWon(player) for player in (1, 2)]),
                       must_keep_temp_files=True, must_write_files=True)
+    routine.turnByTurn = True
     game_api = loop.api
     a_priori_data, a_posteriori_dict = routine.routine(1, game_api)
 
