@@ -2,6 +2,7 @@
 File containing the definition of a basic API to interact with a game from a controller
 """
 from abc import ABCMeta, abstractmethod
+
 from typing import Tuple, Dict, Union, List
 
 from pytgf.board import TileIdentifier
@@ -100,7 +101,7 @@ class API(metaclass=ABCMeta):
             move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=max_moves, force=force)
             new_tile_id = move.complete()
             unit.lastAction = move_descriptor
-            self.game.updateGameState(unit, new_tile_id)
+            self.game.updateGameState(move.unit, new_tile_id)
         except UnfeasibleMoveException:
             return False
         except IllegalMove:
