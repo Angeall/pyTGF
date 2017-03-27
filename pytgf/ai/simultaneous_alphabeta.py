@@ -5,10 +5,10 @@ for all the players
 
 import itertools
 import random
+from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 import numpy as np
 import pandas as pd
-from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.game import API
@@ -55,6 +55,7 @@ class SimultaneousAlphaBeta:
         self._currentMoveSequence = None  # type: np.ndarray
         self._actionsSequences = pd.DataFrame()
         self._playerMapping = {}
+        self._currentlyTestedAction = None
 
     # -------------------- PUBLIC METHODS -------------------- #
 
@@ -128,9 +129,12 @@ class SimultaneousAlphaBeta:
         end_state = (False, 0, False)
         # Explore every possible actions from this point
         actions_combinations = self._generateMovesCombinations(state)
+        random.shuffle(actions_combinations)
         actions_combinations_scores = {}  # type: Dict[float, Tuple[Dict[int, MoveDescriptor], API]]
         for actions in actions_combinations:
             intermediate_state = state
+            if depth == 0:
+                self._currentlyTestedAction = actions[0][self.playerNumber]
             if self.turnByTurn:
                 # Already simulating the move of our player as it is turn by turn
                 feasible_move, intermediate_state = state.simulateMove(self.playerNumber, actions[0][self.playerNumber])

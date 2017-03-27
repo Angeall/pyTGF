@@ -3,11 +3,11 @@ Contains the definition of a routine to gather daata
 """
 import os
 import random
+from typing import Any
+from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
-from typing import Any
-from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 from pytgf.ai import SimultaneousAlphaBeta
 from pytgf.ai.simultaneous_alphabeta import Value, EndState
@@ -20,7 +20,7 @@ __author__ = "Anthony Rouneau"
 ObjID = int
 
 
-MAX_TEMP_VECTORS = 1000
+MAX_TEMP_VECTORS = 100
 COLLECTED_DATA_PATH_NAME = "collected_data"
 ACTIONS_SEQUENCES_PATH_NAME = "actions_sequences"
 
@@ -172,7 +172,7 @@ class Routine(SimultaneousAlphaBeta):
         Writes the data stocked in the data structures in temporary files to save the current progress
         """
         self._writtenFiles += MAX_TEMP_VECTORS
-        print(self._writtenFiles)
+        print(self._currentlyTestedAction, "--", self._writtenFiles)
         a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates]
 
         if len(a_priori_vectors) > 0:
