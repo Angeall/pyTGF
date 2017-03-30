@@ -5,10 +5,10 @@ for all the players
 
 import itertools
 import random
-from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 import numpy as np
 import pandas as pd
+from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.game import API
@@ -353,6 +353,7 @@ class SimultaneousAlphaBeta:
         Returns: A list of move descriptors possible for the given player and API
         """
         possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
+        random.shuffle(possible_moves_for_player)
         return possible_moves_for_player
 
     def _saveActionsSequence(self, state: API):

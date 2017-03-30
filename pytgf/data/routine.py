@@ -3,11 +3,11 @@ Contains the definition of a routine to gather daata
 """
 import os
 import random
-from typing import Any
-from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
+from typing import Any
+from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
 from pytgf.ai import SimultaneousAlphaBeta
 from pytgf.ai.simultaneous_alphabeta import Value, EndState
@@ -20,7 +20,7 @@ __author__ = "Anthony Rouneau"
 ObjID = int
 
 
-MAX_TEMP_VECTORS = 10000
+MAX_TEMP_VECTORS = 100
 COLLECTED_DATA_PATH_NAME = "collected_data"
 ACTIONS_SEQUENCES_PATH_NAME = "actions_sequences"
 
