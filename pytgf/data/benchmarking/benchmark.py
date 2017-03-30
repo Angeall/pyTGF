@@ -1,7 +1,7 @@
 from typing import List
 
 from pytgf.board import Builder
-from pytgf.controls.controllers import Controller
+from pytgf.controls.controllers import Bot
 from pytgf.controls.events import BotEvent
 from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_LEFT
 from pytgf.examples.lazerbike.rules import LazerBikeAPI, LazerBikeCore
@@ -13,7 +13,7 @@ __author__ = "Anthony Rouneau"
 
 
 class Benchmark:
-    def __init__(self, starting_api: API, controllers: List[Controller], turn_by_turn: bool=False):
+    def __init__(self, starting_api: API, controllers: List[Bot], turn_by_turn: bool=False):
         """
         Creates a benchmark object which can be used to confront multiple controllers
         
@@ -30,8 +30,10 @@ class Benchmark:
     def benchmark(self, nb_games: int):
         for i in range(nb_games):
             starting_copy = self._startingApi.copy()
+
             while not starting_copy.isFinished():
                 for controller in self._controllers:
+                    controller.gameState = starting_copy.game
                     controller.reactToEvents([BotEvent(other_controller.playerNumber,
                                                        starting_copy.game.getUnitForNumber(
                                                            other_controller.playerNumber).lastAction)
@@ -71,9 +73,9 @@ if __name__ == "__main__":
     b2 = Bike(200, 2, max_trace=-1, graphics=False)
     b2.turn(GO_LEFT)
     api.game.addUnit(b2, 2, (17, 17))
+    api.performMove(1, GO_RIGHT)
+    api.performMove(2, GO_LEFT)
     controllers = [RandomBot(1), RandomBot(2)]
-    controllers[0].gameState = api.game
-    controllers[1].gameState = api.game
     benchmark = Benchmark(api, controllers)
     print(benchmark.benchmark(5))
 
