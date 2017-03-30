@@ -20,7 +20,7 @@ __author__ = "Anthony Rouneau"
 ObjID = int
 
 
-MAX_TEMP_VECTORS = 100
+MAX_TEMP_VECTORS = 10000
 COLLECTED_DATA_PATH_NAME = "collected_data"
 ACTIONS_SEQUENCES_PATH_NAME = "actions_sequences"
 
