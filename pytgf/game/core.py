@@ -4,6 +4,7 @@ File containing the definition of a Game.
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
+
 from typing import Dict, List, Union, Tuple, Callable, Optional
 
 from pytgf.board import Board, Tile
@@ -105,13 +106,14 @@ class Core(metaclass=ABCMeta):
         """
         return self._finished
 
-    def updateGameState(self, unit: MovingUnit, tile_id: TileIdentifier) -> None:
+    def updateGameState(self, unit: MovingUnit, tile_id: TileIdentifier, move_descriptor: MoveDescriptor) -> None:
         """
         Change the unit's tile and checks for collisions
 
         Args:
             unit: The unit that triggered the update
             tile_id: The new tile id on which the unit has been recently placed on.
+            move_descriptor: The descriptor of the move that led to this update
 
         Raises:
              InconsistentGameStateException:
@@ -128,6 +130,7 @@ class Core(metaclass=ABCMeta):
                     raise InconsistentGameStateException(error_msg)
                 else:
                     return
+            unit.lastAction = move_descriptor
             self.addUnitToTile(tile_id, unit)
             if self.board.getTileById(tile_id).deadly:
                 unit.kill()

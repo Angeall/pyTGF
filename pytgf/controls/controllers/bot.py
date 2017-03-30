@@ -4,6 +4,7 @@ File containing the definition of a bot controller.
 
 from abc import ABCMeta, abstractmethod
 from queue import Queue
+
 from typing import List, Any
 
 from pytgf.characters.moves import MoveDescriptor
@@ -90,6 +91,8 @@ class Bot(Controller, metaclass=ABCMeta):
             selected_move = self._selectNewMove(self.gameState)
             if self._isMoveAllowed(selected_move):
                 self.moves.put(selected_move)
+            else:
+                print("chose not allowed move: ", selected_move)
 
     def sendMessageToTeammate(self, teammate_number: int, message: TeammateMessage) -> None:
         """

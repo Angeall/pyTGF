@@ -33,10 +33,10 @@ class Bike(MovingUnit):
         self.lastAction = 0
         if initial_direction != 0:
             self.turn(initial_direction)
-        self.lastAction = initial_direction
 
     def turn(self, direction: int):
         angle = (direction - self.lastAction) * 90
         self.sprite.rotate(angle)
+        self.lastAction = direction
 
 

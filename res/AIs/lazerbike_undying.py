@@ -2,11 +2,13 @@
 File containing the definition of an undying AI, its goal is not to die.
 """
 import time
+
 from typing import Tuple
 
 from pytgf.ai import SimultaneousAlphaBeta
 from pytgf.characters.moves import MoveDescriptor
-from pytgf.examples.lazerbike.control import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT, LazerBikeBotPlayer
+from pytgf.examples.lazerbike.control import LazerBikeBotPlayer
+from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT
 from pytgf.game import API
 
 

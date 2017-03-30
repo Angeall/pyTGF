@@ -328,8 +328,7 @@ class MainLoop:
                 try:
                     just_started, move_completed, tile_id = current_move.performNextMove()
                     if move_completed:  # A new tile has been reached by the movement
-                        self.game.updateGameState(unit, tile_id)
-                        unit.lastAction = self._movesEvent[current_move]
+                        self.game.updateGameState(unit, tile_id, self._movesEvent[current_move])
                     elif just_started:
                         self._informBotOnPerformedMove(unit.playerNumber, current_move)
                     return True

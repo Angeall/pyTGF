@@ -27,6 +27,7 @@ class API(metaclass=ABCMeta):
     A class defining a basic API so a controller can get information on the current state of the game,
     and simulate new moves in it.
     """
+
     def __init__(self, game: Core):
         """
         Instantiates the API
@@ -39,7 +40,7 @@ class API(metaclass=ABCMeta):
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor, max_moves: int=1) \
+    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor, max_moves: int = 1) \
             -> Tuple[bool, Union['API', None]]:
         """
         Simulates the move by creating a new GameState
@@ -56,7 +57,7 @@ class API(metaclass=ABCMeta):
         feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
         return feasible_move, new_game_state if feasible_move else None
 
-    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor], max_moves: int=1) \
+    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor], max_moves: int = 1) \
             -> Tuple[bool, Union['API', None]]:
         """
         Simulates the given moves for the key players
@@ -72,12 +73,14 @@ class API(metaclass=ABCMeta):
         new_game_state = self.copy()
         for player_number, wanted_move in player_moves.items():
             feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
+
             if not feasible_move:
                 return False, None
+        self.game.checkIfFinished()
         return True, new_game_state
 
-    def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool=False, max_moves: int=1) \
-            -> bool:
+    def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool = False,
+                    max_moves: int = 1, turn_by_turn: bool=False) -> bool:
         """
         Performs the move inside this GameState
 
@@ -86,13 +89,15 @@ class API(metaclass=ABCMeta):
             move_descriptor: The move to perform (either a Path or a move descriptor)
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
             max_moves: The maximum number of short moves to perform in case of a path or continuous move.
+            turn_by_turn: If True, the game will check if it has ended after each move
         """
-        unit = self.game.getUnitForNumber(player_number) # type: MovingUnit
+        unit = self.game.getUnitForNumber(player_number)  # type: MovingUnit
         try:
             move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=max_moves, force=force)
             new_tile_id = move.complete()
-            unit.lastAction = move_descriptor
-            self.game.updateGameState(move.unit, new_tile_id)
+            self.game.updateGameState(move.unit, new_tile_id, move_descriptor)
+            if turn_by_turn:
+                self.game.checkIfFinished()
         except UnfeasibleMoveException:
             return False
         except IllegalMove:
@@ -204,7 +209,7 @@ class API(metaclass=ABCMeta):
         """
         return self.game.board.getNeighboursIdentifier(tile_id)
 
-    def isMoveDeadly(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) -> bool:
+    def isMoveDeadly(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int = 1) -> bool:
         """
 
         Args:
@@ -320,8 +325,8 @@ class API(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int=-1,
-                                force: bool=False) -> Path:
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+                                force: bool = False) -> Path:
         """
         Creates a move following the given event coming from the given unit
 
