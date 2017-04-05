@@ -78,14 +78,15 @@ class Connect4API(API):
                                                      self.game.board.getTileById((0, move_descriptor)), MAX_FPS,
                                                      self.game.unitsLocation)],
                                     pre_action=self.game.addUnit(disc, team_number=team_number,
-                                                                          origin_tile_id=(0, move_descriptor),
-                                                                          controlled=False),
+                                                                 origin_tile_id=(0, move_descriptor),
+                                                                 controlled=False),
                                     post_action=lambda: self.updateMove(unit, move_descriptor))
                 return path
         raise UnfeasibleMoveException("The move " + str(move_descriptor) + " is unfeasible...")
 
     def getTileByteCode(self, tile_id: tuple) -> int:
-        if len(self.game.getTileOccupants(tile_id)) == 0:
+        occupants = self.game.getTileOccupants(tile_id)
+        if len(occupants) == 0 or (len(occupants) == 1 and isinstance(occupants[0], Bottom)):
             return 0
         else:
             return self.game.unitsTeam[self.game.getTileOccupants(tile_id)[0]]

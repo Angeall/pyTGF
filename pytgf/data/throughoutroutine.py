@@ -25,28 +25,40 @@ COLLECTED_DATA_PATH_NAME = "collected_data"
 ACTIONS_SEQUENCES_PATH_NAME = "actions_sequences"
 
 
-class Routine(SimultaneousAlphaBeta):
+class ThroughoutRoutine(SimultaneousAlphaBeta):
     def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
                  eval_fct: Callable[[API], Tuple[Value, ...]], max_depth: int = -1, must_write_files: bool=True,
-                 must_keep_temp_files: bool=False):
+                 must_keep_temp_files: bool=False, max_end_states: int=-1):
         super().__init__(eval_fct, possible_moves, max_depth)
         self.TEMP_DATA_PATH_NAME = os.path.join(COLLECTED_DATA_PATH_NAME, "temp" + str(id(self)))
         self._gatherer = gatherer
         self._mustKeepTempFiles = must_keep_temp_files
         self._mustWriteFiles = must_write_files
         self._possibleMoves = tuple(possible_moves)
-        self._aPrioriDataVectors = {}  # type: Dict[ObjID, np.ndarray]
         self._aPrioriTitles = [component.title for component in self._gatherer.aPrioriComponents]
         self._aPosterioriTitles = [component.title for component in self._gatherer.aPosterioriComponents]
         self._aPosterioriTitles.extend(["leads_to_win", "nb_turn_till_end"])
         self._nbAPosterioriComponent = len(self._gatherer.aPosterioriComponents) + 2
         self._aPrioriDescriptions = [component.description for component in self._gatherer.aPrioriComponents]
         self._aPosterioriDescriptions = [component.description for component in self._gatherer.aPosterioriComponents]
+        self._aPrioriDataVectors = {}  # type: Dict[ObjID, np.ndarray]
         self._aPosterioriDataVectors = {}  # type: Dict[ObjID, Dict[MoveDescriptor, List]]
-        self._writtenFiles = 0
         self._concludedStates = {}  # type: Dict[ObjID, Any]
         self._tempFileIDs = []  # type: List[str]
+        self._nbStates = 0
+        self._writtenFiles = 0
         self._mustSaveActionsSequences = True
+        self._maxEndStates = max_end_states
+        if max_end_states == -1:
+            self._maxEndStates = float('inf')
+
+    def _resetValues(self):
+        self._aPrioriDataVectors = {}  # type: Dict[ObjID, np.ndarray]
+        self._aPosterioriDataVectors = {}  # type: Dict[ObjID, Dict[MoveDescriptor, List]]
+        self._concludedStates = {}  # type: Dict[ObjID, Any]
+        self._tempFileIDs = []  # type: List[str]
+        self._nbStates = 0
+        self._writtenFiles = 0
 
     def routine(self, player_number: int, state: API) -> Tuple[pd.DataFrame, Dict[MoveDescriptor, pd.DataFrame]]:
         """
@@ -94,9 +106,12 @@ class Routine(SimultaneousAlphaBeta):
         return False
 
     def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None]]:
         finished = state.isFinished()
         # STOCKING A PRIORI DATA AND INIT A POSTERIORI DATA STRUCTURE
+        if self._nbStates >= self._maxEndStates:  # We reached the limit
+            return self._getTeamScore(state, self.eval(state)), None, \
+                   (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
         if not finished:
             while state.id in self._concludedStates or state.id in self._aPrioriDataVectors:
                 state.id += 1
@@ -104,11 +119,14 @@ class Routine(SimultaneousAlphaBeta):
             self._aPrioriDataVectors[state.id] = data
             self._aPosterioriDataVectors[state.id] = {action: [] for action in self._possibleMoves}
             data = None
+        else:
+            self._nbStates += 1
         # SEARCHING MAX VALUE
         ret_val = super()._maxValue(state, alpha, beta, depth)
         id_state = state.id
         state = []
         del state
+
         # WE COMPLETE THE A POSTERIORI MOVES IF A MOVE WAS UNFEASIBLE
         if not finished:
             for action, lst in self._aPosterioriDataVectors[id_state].items():
@@ -175,7 +193,8 @@ class Routine(SimultaneousAlphaBeta):
         """
         self._writtenFiles += MAX_TEMP_VECTORS
         print(self._currentlyTestedAction, "--", self._writtenFiles)
-        a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates]
+        a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates
+                            if state_id in self._aPosterioriDataVectors]
 
         if len(a_priori_vectors) > 0:
             a_posteriori_vectors_dicts = {action: [self._aPosterioriDataVectors[state_id][action]
@@ -198,10 +217,10 @@ class Routine(SimultaneousAlphaBeta):
                                  self.TEMP_DATA_PATH_NAME, self._aPosterioriTitles)
 
             self._createDirectoryIfNeeded(ACTIONS_SEQUENCES_PATH_NAME)
-
-            self._writeToCsv(self._actionsSequences, "seq" + str(id(self._actionsSequences)),
-                             ACTIONS_SEQUENCES_PATH_NAME)
-            self._actionsSequences = pd.DataFrame()
+            if self._mustWriteFiles:
+                self._writeToCsv(self._actionsSequences, "seq" + str(id(self._actionsSequences)),
+                                 ACTIONS_SEQUENCES_PATH_NAME)
+                self._actionsSequences = pd.DataFrame()
 
             del a_priori_vectors
             del a_posteriori_vectors_dicts
@@ -265,7 +284,7 @@ class Routine(SimultaneousAlphaBeta):
                     a_posteriori[action] = target_data
                 else:
                     a_posteriori[action] = a_posteriori[action].append(target_data, ignore_index=True)
-                self._removeTempFileIfNeeded(target_file_path) # The temporary file is no longer needed
+                self._removeTempFileIfNeeded(target_file_path)  # The temporary file is no longer needed
             self._removeTempFileIfNeeded(data_file_path)  # The temporary file is no longer needed
         if self._mustWriteFiles:
             self._writeToCsv(a_priori, self._getDataFileName(str(id(self))), COLLECTED_DATA_PATH_NAME,
@@ -353,7 +372,7 @@ class RoutineBuilder:
         self._components.append(Component(methods, title, description, reduce_function))
 
     def create(self, possible_moves: Tuple[MoveDescriptor, ...],
-               eval_fct: Callable[[API], Tuple[Union[int, float], ...]]) -> Routine:
+               eval_fct: Callable[[API], Tuple[Union[int, float], ...]]) -> ThroughoutRoutine:
         """
         Raises:
             ValueError: If no component was added to this builder, it cannot create a routine, and hence crash
@@ -363,4 +382,4 @@ class RoutineBuilder:
         if len(self._components) == 0:
             raise ValueError("Cannot create a routine with 0 component")
         gatherer = Gatherer(self._components)
-        return Routine(gatherer, possible_moves, eval_fct)
+        return ThroughoutRoutine(gatherer, possible_moves, eval_fct)

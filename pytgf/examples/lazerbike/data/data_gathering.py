@@ -1,13 +1,13 @@
 import random
-from typing import Union
 
 import pygame
+from pytgf.data.routine import ThroughoutRoutine
+from typing import Union
 
 from pytgf.board import Builder
 from pytgf.controls.controllers import Passive
 from pytgf.data.component import Component
 from pytgf.data.gatherer import Gatherer
-from pytgf.data.routine import Routine
 from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper
 from pytgf.examples.lazerbike.gamedata import GO_LEFT, GO_UP, GO_RIGHT, GO_DOWN
 from pytgf.examples.lazerbike.rules import LazerBikeAPI
@@ -61,9 +61,9 @@ def gather_data():
     for i in range(len(a_posteriori_methods)):
         a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
     gatherer = Gatherer(a_priori_components, a_posteriori_components)
-    routine = Routine(gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                      lambda api: tuple([100 * api.hasWon(player) for player in (1, 2)]),
-                      must_keep_temp_files=True, must_write_files=True)
+    routine = ThroughoutRoutine(gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
+                                lambda api: tuple([100 * api.hasWon(player) for player in (1, 2)]),
+                                must_keep_temp_files=True, must_write_files=True)
     game_api = loop.api
     a_priori_data, a_posteriori_dict = routine.routine(1, game_api)
 

@@ -55,6 +55,7 @@ class SimultaneousAlphaBeta:
         self._currentMoveSequence = None  # type: np.ndarray
         self._actionsSequences = pd.DataFrame()
         self._playerMapping = {}
+        self._prepared = False
         self._currentlyTestedAction = None
 
     # -------------------- PUBLIC METHODS -------------------- #
@@ -66,21 +67,27 @@ class SimultaneousAlphaBeta:
         :type state: API
         :return: the best action among the possible ones
         """
-        self._currentMoveSequence = np.ndarray((state.getNumberOfAlivePlayers(), 0))
-        ordered_list = state.getPlayerNumbers().copy()
-        ordered_list.sort()
-        self._playerMapping = {play_num: i for i, play_num in enumerate(ordered_list)}
-
-        self.playerNumber = player_number
+        if not self._prepared:
+            self._prepare(player_number, state)
         if self.actions.get(state) is not None:
             _, actions = self.actions[state]
         else:
             _, actions, _, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
         self.playerNumber = None
+        self._prepared = False
         if actions is not None:
             return actions[player_number]
         else:
             return random.choice(self.possibleActions)
+
+    def _prepare(self, player_number, state):
+        self._actionsSequences = pd.DataFrame()
+        self._currentMoveSequence = np.ndarray((state.getNumberOfAlivePlayers(), 0))
+        ordered_list = state.getPlayerNumbers().copy()
+        ordered_list.sort()
+        self._playerMapping = {play_num: i for i, play_num in enumerate(ordered_list)}
+        self.playerNumber = player_number
+        self._prepared = True
 
     # -------------------- PROTECTED METHODS -------------------- #
 
