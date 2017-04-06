@@ -22,6 +22,14 @@ class NoMovementException(Exception):
     pass
 
 
+class NotTurnByTurnException(Exception):
+    pass
+
+
+class NotYourTurnException(Exception):
+    pass
+
+
 class API(metaclass=ABCMeta):
     """
     A class defining a basic API so a controller can get information on the current state of the game,
@@ -40,7 +48,7 @@ class API(metaclass=ABCMeta):
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor, max_moves: int = 1) \
+    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor, max_moves: int = 1, force: bool=False) \
             -> Tuple[bool, Union['API', None]]:
         """
         Simulates the move by creating a new GameState
@@ -54,7 +62,7 @@ class API(metaclass=ABCMeta):
             A copy of this GameState in which the move have been applied (if it is possible)
         """
         new_game_state = self.copy()
-        feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
+        feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves, force=force)
         return feasible_move, new_game_state if feasible_move else None
 
     def simulateMoves(self, player_moves: Dict[int, MoveDescriptor], max_moves: int = 1) \
@@ -70,8 +78,12 @@ class API(metaclass=ABCMeta):
             - A boolean -- True if all the moves succeeded, False otherwise
             - A copy of this GameState in which the moves have been applied (if a move is unfeasible, returns None).
         """
+        moves = []
+        for pl_num in self.game.playersOrder:
+            if pl_num in player_moves:
+                moves.append((pl_num, player_moves[pl_num]))
         new_game_state = self.copy()
-        for player_number, wanted_move in player_moves.items():
+        for player_number, wanted_move in moves:
             feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
 
             if not feasible_move:
@@ -80,7 +92,7 @@ class API(metaclass=ABCMeta):
         return True, new_game_state
 
     def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool = False,
-                    max_moves: int = 1, turn_by_turn: bool=False) -> bool:
+                    max_moves: int = 1) -> bool:
         """
         Performs the move inside this GameState
 
@@ -89,14 +101,17 @@ class API(metaclass=ABCMeta):
             move_descriptor: The move to perform (either a Path or a move descriptor)
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
             max_moves: The maximum number of short moves to perform in case of a path or continuous move.
-            turn_by_turn: If True, the game will check if it has ended after each move
         """
+        if not force and self.isTurnByTurn() and player_number != self.getCurrentPlayer():
+            raise NotYourTurnException("The move is performed by player " + str(player_number) + " while the current "
+                                       "player is " + str(self.getCurrentPlayer()))
         unit = self.game.getUnitForNumber(player_number)  # type: MovingUnit
         try:
             move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=max_moves, force=force)
             new_tile_id = move.complete()
             self.game.updateGameState(move.unit, new_tile_id, move_descriptor)
-            if turn_by_turn:
+            if self.isTurnByTurn():
+                self.switchToNextPlayer()
                 self.game.checkIfFinished()
         except UnfeasibleMoveException:
             return False
@@ -209,6 +224,23 @@ class API(metaclass=ABCMeta):
         """
         return self.game.board.getNeighboursIdentifier(tile_id)
 
+    def isMoveDeadlyOrWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) \
+            -> Tuple[bool, bool]:
+        """
+        
+        Args:
+            player_number: The player that will perform the move
+            move_descriptor: The descriptor of the move to perform
+            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
+
+        Returns: A couple of booleans containing: (is_move_deadly, is_move_winning)
+        """
+        if self.isPlayerAlive(player_number):
+            succeeded, new_api = self.simulateMove(player_number, move_descriptor, max_moves, force=True)
+            if succeeded:
+                return not new_api.isPlayerAlive(player_number), new_api.hasWon(player_number)
+        return True, False
+
     def isMoveDeadly(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int = 1) -> bool:
         """
 
@@ -219,11 +251,19 @@ class API(metaclass=ABCMeta):
 
         Returns: True if the move kills the unit in the simulation
         """
-        if self.isPlayerAlive(player_number):
-            succeeded, new_api = self.simulateMove(player_number, move_descriptor, max_moves)
-            if succeeded:
-                return not new_api.isPlayerAlive(player_number)
-        return True
+        return self.isMoveDeadlyOrWinning(player_number, move_descriptor, max_moves)[0]
+
+    def isMoveWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) -> bool:
+        """
+
+        Args:
+            player_number: The player that will perform the move
+            move_descriptor: The descriptor of the move to perform
+            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
+
+        Returns: True if the move makes the given player win the game
+        """
+        return self.isMoveDeadlyOrWinning(player_number, move_descriptor, max_moves)[1]
 
     def getTileByteCode(self, tile_id: tuple) -> int:
         """
@@ -271,20 +311,6 @@ class API(metaclass=ABCMeta):
             return -1
         return self._encodeMoveIntoPositiveNumber(player_number, move_descriptor)
 
-    @abstractmethod
-    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
-        """
-        Encode a move to be performed (hence, this API must be in a state where the move represented by the descriptor
-        has not yet been performed !)
-
-        Args:
-            player_number: The number representing the player that could perform the move
-            move_descriptor: The descriptor of the move to be performed by the given player
-
-        Returns: A positive integer that represents the move descriptor
-        """
-        pass
-
     def decodeMove(self, player_number: int, encoded_move: int) -> MoveDescriptor:
         """
         Decode the given encoded move into a correct move descriptor.
@@ -309,20 +335,53 @@ class API(metaclass=ABCMeta):
             raise NoMovementException()
         return self._decodeMoveFromPositiveNumber(player_number, encoded_move)
 
-    @abstractmethod
-    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+    def isTurnByTurn(self) -> bool:
         """
-        Decode the given encoded move into a correct move descriptor.
+        Returns: True if the game is turn-based
+        """
+        return self.game.turnByTurn
 
+    def isCurrentPlayer(self, player_number: int) -> bool:
+        """
+        [!] Only has sense if this is a turn by turn game
+        
         Args:
-            player_number: The number representing the player that could perform the move.
-            encoded_move: The positive integer representing an encoded move (to be decoded..)
+            player_number: The number representing the player 
 
-        Returns:
-            The decoded move, hence a correct move descriptor for the given player
-            (does not check if the move is feasible).
+        Returns: True if the given player is the current player in the turn by turn game 
         """
-        pass
+        self._checkTurnByTurn()
+        return self.getCurrentPlayer() == player_number
+
+    def getCurrentPlayer(self) -> int:
+        """
+        [!] Only has sense if this is a turn by turn game
+        
+        Returns: The number representing the current player
+        """
+        self._checkTurnByTurn()
+        return self.game.playersOrder[self.game.currentPlayerIndex]
+
+    def switchToNextPlayer(self):
+        """
+        [!] Only has sense if this is a turn by turn game
+        
+        Returns: The number representing the current player
+        """
+        self._checkTurnByTurn()
+        self.game.currentPlayerIndex = self._getNextPlayerIndex()
+
+    def getNextPlayer(self, offset: int=1) -> int:
+        """
+        [!] Only has sense if this is a turn by turn game
+        Get the number of the next player (the player that plays after "offset" turns)
+        
+        Args:
+            offset: The number of turns that must be played before the returned player can play 
+
+        Returns: The number of the player that will play in "offset" turns
+        """
+        return self.game.playersOrder[self._getNextPlayerIndex(offset)]
 
     @abstractmethod
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
@@ -366,3 +425,57 @@ class API(metaclass=ABCMeta):
             return True, move
         except UnfeasibleMoveException:
             return False, None
+
+    def _checkTurnByTurn(self):
+        if not self.isTurnByTurn():
+            raise NotTurnByTurnException("The game is not turn by turn, and the last called method can only be used in "
+                                         "a turn-based game")
+
+    def _getNextPlayerIndex(self, offset: int=1) -> int:
+        """
+        [!] Only has sense if this is a turn by turn game
+        Get the index (to be matched witht the playersOrder list) of the next player (
+        the player that plays after "offset" turns)
+        
+        Args:
+            offset: The number of turns that must be played before the returned player can play 
+
+        Returns: The index of the player that will play in "offset" turns
+        """
+        self._checkTurnByTurn()
+        next_player_index = (self.game.currentPlayerIndex + offset) % len(self.game.playersOrder)
+        next_player_number = self.game.playersOrder[next_player_index]
+        while not self.isFinished() and not self.isPlayerAlive(next_player_number):
+            next_player_index = (next_player_number + 1) % len(self.game.playersOrder)
+            next_player_number = self.game.playersOrder[next_player_index]
+        return next_player_index
+
+    @abstractmethod
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        """
+        Decode the given encoded move into a correct move descriptor.
+
+        Args:
+            player_number: The number representing the player that could perform the move.
+            encoded_move: The positive integer representing an encoded move (to be decoded..)
+
+        Returns:
+            The decoded move, hence a correct move descriptor for the given player
+            (does not check if the move is feasible).
+        """
+        pass
+
+
+    @abstractmethod
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        """
+        Encode a move to be performed (hence, this API must be in a state where the move represented by the descriptor
+        has not yet been performed !)
+
+        Args:
+            player_number: The number representing the player that could perform the move
+            move_descriptor: The descriptor of the move to be performed by the given player
+
+        Returns: A positive integer that represents the move descriptor
+        """
+        pass

@@ -4,9 +4,11 @@ File containing the definition of an abstract ControllerWrapper, linking the gam
 
 from abc import ABCMeta, abstractmethod
 from queue import Empty
-from typing import Any
 
 import pygame
+from typing import Any
+
+from pytgf.controls.events.multiple import MultipleEvents
 
 try:
     from multiprocess.connection import PipeConnection
@@ -107,7 +109,11 @@ class ControllerWrapper(metaclass=ABCMeta):
         """
         events = []
         while self.mainPipe.poll():
-            events.append(self.mainPipe.recv())
+            event = self.mainPipe.recv()
+            if isinstance(event, MultipleEvents):
+                events.extend(event.events)
+            else:
+                events.append(event)
         if len(events) is not None:
             for event in events:
                 if not isinstance(event, self.typeOfEventFromGame):

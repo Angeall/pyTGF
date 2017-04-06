@@ -14,7 +14,7 @@ class Connect4Core(Core):
     BOTTOM_TEAM_NUMBER = -42
 
     def __init__(self, board: Board):
-        super().__init__(board)
+        super().__init__(board, turn_by_turn=True)
         # Init with an empty board
         self._simplifiedBoard = np.zeros((6, 7))  # type: np.ndarray
 

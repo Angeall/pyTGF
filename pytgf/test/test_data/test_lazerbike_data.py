@@ -84,6 +84,8 @@ class TestLazerbikeData(unittest.TestCase):
             self.assertListEqual(self.a_posteriori_dict[0].take((i,)).get_values().ravel().tolist(), [0., -1., 1.])
 
     def test_gathering_limited_number(self):
-        self.routine._maxEndStates = 2
+        self.routine = ThroughoutRoutine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
+                                         lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
+                                         must_keep_temp_files=False, must_write_files=False, max_end_states=2)
         self.a_priori_data, self.a_posteriori_dict = self.routine.routine(1, self.api)
         self.assertEqual(len(self.routine._actionsSequences), 2 * self.routine._maxEndStates)  # 2 players

@@ -21,10 +21,10 @@ class TestSokoban(unittest.TestCase):
         builder.setBordersColor((0, 0, 0))
         builder.setTilesVisible(True)
         self.loop = builder.createGame()  # type: MainLoop
-        self.linker = list(self.loop.linkers.keys())[0]
-        if isinstance(self.loop.linkers[self.linker], Box):
-            linkers_list = list(self.loop.linkers.keys())
-            self.linker = linkers_list[1]
+        self.wrapper = list(self.loop.wrappers.keys())[0]
+        if isinstance(self.loop.wrappers[self.wrapper], Box):
+            linkers_list = list(self.loop.wrappers.keys())
+            self.wrapper = linkers_list[1]
 
     def tearDown(self):
         if self.loop.executor is not None:
@@ -32,10 +32,10 @@ class TestSokoban(unittest.TestCase):
 
     def test_push_box_in_hole(self):
         self.loop._prepareLoop()
-        self.linker._sendActionToGame((2, 0))
-        self.linker._sendActionToGame((3, 2))
+        self.wrapper._sendActionToGame((2, 0))
+        self.wrapper._sendActionToGame((3, 2))
         pushed_box = None
-        for unit in self.loop.linkers.values():
+        for unit in self.loop.wrappers.values():
             if isinstance(unit, Box):
                 pushed_box = unit
         self.assertTrue(pushed_box is not None)
@@ -46,6 +46,6 @@ class TestSokoban(unittest.TestCase):
 
     def test_win(self):
         self.loop._prepareLoop()
-        self.linker._sendActionToGame((2, 0))
-        self.linker._sendActionToGame((3, 2))
+        self.wrapper._sendActionToGame((2, 0))
+        self.wrapper._sendActionToGame((3, 2))
         self.assertEqual(len(self.loop.run(60)), 1)

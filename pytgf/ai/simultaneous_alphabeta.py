@@ -201,7 +201,7 @@ class SimultaneousAlphaBeta:
         return current_end_state
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
+            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None]]:
         """
         Computes the possibilities of the other players, simulating the action of every players at the same time
 
@@ -247,7 +247,11 @@ class SimultaneousAlphaBeta:
                     best_combination, new_game_state = random.choice(equal_min_choices)
                     return value, best_combination, end_state, new_game_state
                 beta = min(beta, value)
-
+            else:
+                print("Unfeasible move:", combination, '\n' + str(state.game._simplifiedBoard))
+        # if len(equal_min_choices) == 0:  # No choice is good to take...
+        #     return self._getTeamScore(state, self.eval(state)), None, \
+        #            (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
         min_actions, new_game_state = random.choice(equal_min_choices)
         return min_value, min_actions, end_state, new_game_state
 
@@ -268,7 +272,9 @@ class SimultaneousAlphaBeta:
         Unregister the last actions that were saved
         """
         if self._mustSaveActionsSequences:
+            last = self._currentMoveSequence[:, -1]
             self._currentMoveSequence = self._currentMoveSequence[:, :-1]
+            return last
 
     def _getActionsList(self, actions: Dict[int, MoveDescriptor], state: API) -> np.ndarray:
         """
@@ -342,6 +348,7 @@ class SimultaneousAlphaBeta:
 
         Returns: A list containing couples [player_number, move_descriptor]
         """
+        # TODO: Modify so that the possible moves are computed in the right order for turn by turn games
         moves = []
         for player_number in [player for player in players if state.game.controlledPlayers[player].isAlive()]:
             possible_moves_for_player = self._getPossibleMovesForPlayer(player_number, state)

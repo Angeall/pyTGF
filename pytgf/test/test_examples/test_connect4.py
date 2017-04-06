@@ -10,7 +10,7 @@ from pytgf.examples.connect4.builder import create_game
 class TestConnect4(unittest.TestCase):
     def setUp(self):
         self.mainLoop = create_game({1: Passive, 2: Passive}, 360, 360)
-        wrappers = list(self.mainLoop.linkers.keys())  # type: List[ControllerWrapper]
+        wrappers = list(self.mainLoop.wrappers.keys())  # type: List[ControllerWrapper]
         self.playersWrappers = None  # type: Dict[int, ControllerWrapper]
         self.playersWrappers = {wrapper.controller.playerNumber: wrapper
                                 for wrapper in wrappers}
@@ -53,3 +53,6 @@ class TestConnect4(unittest.TestCase):
         self.mainLoop.api.performMove(1, 3, max_moves=-1)
         self.assertTrue(self.mainLoop.api.isFinished())
         self.assertTrue(self.mainLoop.api.hasWon(1))
+
+    def test_test(self):
+        pass

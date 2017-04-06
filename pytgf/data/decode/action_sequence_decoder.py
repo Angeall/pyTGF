@@ -31,7 +31,7 @@ class ActionSequenceDecoder(FileDecoder):
             players_actions_sequences = [list(data_frame.loc[i+offset][1:]) for offset in range(self._nbPlayers)]
             if not self._mustWin or player_has_won:
                 sequence = []
-                for k in range(data_frame.shape[1]):
+                for k in range(data_frame.shape[1]-1):
                     cur_actions = []
                     is_nan = False
                     for j in range(self._nbPlayers):

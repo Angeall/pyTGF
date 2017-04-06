@@ -180,12 +180,19 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         if player_number == self.playerNumber:
             return moves
         safe_moves = []
+        winning_moves = []
         for move in moves:
-            if not state.isMoveDeadly(player_number, move):
+            deadly, winning = state.isMoveDeadlyOrWinning(player_number, move)
+            if not deadly:
                 safe_moves.append(move)
-        if len(safe_moves) == 0:  # If all the moves are deadly
-            safe_moves.append(random.choice(moves))
-        return safe_moves
+            if winning:
+                winning_moves.append(move)
+        res = winning_moves if len(winning_moves) > 0 else safe_moves  # We only keep winning_moves if there are some
+        res2 = safe_moves
+        print(res, res2)
+        if len(res) == 0:  # If all the moves are deadly
+            res.append(random.choice(moves))  #
+        return res
 
     def _writeToTempFile(self):
         """
@@ -338,7 +345,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
                     file.close()
 
     def _removeTempFileIfNeeded(self, file_path: str, is_folder: bool=False):
-        if not self._mustKeepTempFiles:
+        if self._mustWriteFiles and not self._mustKeepTempFiles:
             if not is_folder:
                 os.remove(file_path)
             else:

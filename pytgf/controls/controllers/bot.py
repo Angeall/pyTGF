@@ -10,6 +10,7 @@ from typing import List, Any
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.controls.controllers.controller import Controller
 from pytgf.controls.events.bot import BotEvent
+from pytgf.controls.events.wake import WakeEvent
 from pytgf.game import Core, API
 
 __author__ = 'Anthony Rouneau'
@@ -81,12 +82,15 @@ class Bot(Controller, metaclass=ABCMeta):
         """
         move_interesting = False
         for event in events:  # type: BotEvent
-            succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor)
-            if not succeeded:
-                print("error in move... for player %s and descriptor %s" %
-                      (str(event.playerNumber), str(event.moveDescriptor)))
+            if not isinstance(event, WakeEvent):
+                succeeded = self.gameState.performMove(event.playerNumber, event.moveDescriptor)
+                if not succeeded:
+                    print("error in move... for player %s and descriptor %s" %
+                          (str(event.playerNumber), str(event.moveDescriptor)))
 
-            move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
+                move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
+            else:
+                move_interesting = True
         if move_interesting:
             selected_move = self._selectNewMove(self.gameState)
             if self._isMoveAllowed(selected_move):
