@@ -239,16 +239,12 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
                 to_keep.append(move)
         return to_keep
 
-
-
-
-
     def _writeToTempFile(self):
         """
         Writes the data stocked in the data structures in temporary files to save the current progress
         """
         self._writtenFiles += MAX_TEMP_VECTORS
-        print(self._currentlyTestedAction, "--", self._writtenFiles)
+        print(self._writtenFiles)
         a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates
                             if state_id in self._aPosterioriDataVectors]
 
@@ -381,7 +377,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         finished = False
         while not finished:
             try:
-                file = open(file_name + addition + ".csv", "x")
+                file = open(file_name + addition + ".csv", "a")
                 if column_titles is not None:
                     pd.DataFrame(data, columns=column_titles).to_csv(file, index=False)
                 else:

@@ -81,7 +81,6 @@ class SimultaneousAlphaBeta:
             return random.choice(self.possibleActions)
 
     def _prepare(self, player_number: int, state: API):
-        self._actionsSequences = pd.DataFrame()
         self._currentMoveSequence = np.ndarray((state.getNumberOfAlivePlayers(), 0))
         ordered_list = state.getPlayerNumbers().copy()
         ordered_list.sort()

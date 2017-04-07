@@ -25,12 +25,12 @@ class RandomRoutine(ThroughoutRoutine):
 
     def routine(self, player_number: int, state: API):
         for _ in range(self._nbRandomStates):
-            self._prepare(player_number, state)
             nb_moves = random.randint(0, self._maxNbSimulatedMoves)
             random_state = self.getRandomState(state.copy(), nb_moves,
                                                self._maxStepPerMoves)
             if random_state is not None:
                 self.alphaBetaSearching(player_number, random_state)
+                # print(self._actionsSequences)
             if self._totalNbStates >= MAX_TEMP_VECTORS:
                 self._writeToFinalFile()
                 self._resetValues()
