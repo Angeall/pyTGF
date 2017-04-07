@@ -86,7 +86,8 @@ class Connect4API(API):
 
     def getTileByteCode(self, tile_id: tuple) -> int:
         occupants = self.game.getTileOccupants(tile_id)
-        if len(occupants) == 0 or (len(occupants) == 1 and isinstance(occupants[0], Bottom)):
+        if len(occupants) == 0 or (len(occupants) > 0 and isinstance(occupants[0], Bottom)):
             return 0
         else:
-            return self.game.unitsTeam[self.game.getTileOccupants(tile_id)[0]]
+            team_number = self.game.unitsTeam[self.game.getTileOccupants(tile_id)[0]]
+            return team_number
