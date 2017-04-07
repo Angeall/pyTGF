@@ -47,7 +47,6 @@ class RandomRoutine(ThroughoutRoutine):
                 state.game.getUnitForNumber(player_number).lastAction = -1
         if state.isFinished():
             deleted_move = self._deleteLastActions()
-            print("deleted : ", deleted_move)
             return None
         elif nb_moves == 0:
             return state
