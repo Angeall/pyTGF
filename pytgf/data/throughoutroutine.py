@@ -151,8 +151,6 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
-        if depth == 0:
-            print("Current action:", self._currentlyTestedAction)
         player_move_descriptor = actions[0][self.playerNumber]
         new_actions = np.zeros((len(self._playerMapping), 1))
         new_actions -= 1
