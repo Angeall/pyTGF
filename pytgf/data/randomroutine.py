@@ -27,10 +27,8 @@ class RandomRoutine(ThroughoutRoutine):
         self._prepare(player_number, state)
         for _ in range(self._nbRandomStates):
             nb_moves = random.randint(0, self._maxNbSimulatedMoves)
-            print(nb_moves)
             random_state = self.getRandomState(state, nb_moves,
                                                self._maxStepPerMoves)
-            print(random_state.game._simplifiedBoard)
             super().routine(player_number, random_state)
 
     def getRandomState(self, state: API, nb_moves: int, max_moves_per_step: int=-1) -> Union[API, None]:
@@ -68,7 +66,6 @@ class RandomRoutine(ThroughoutRoutine):
                     new_state = None
                     continue
                 self._registerCurrentActions(moves, state)
-                print("registered : ", moves)
                 new_state = self.getRandomState(new_state, nb_moves - 1, max_moves_per_step)
             return new_state
 
