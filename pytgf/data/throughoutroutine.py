@@ -46,6 +46,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         self._concludedStates = {}  # type: Dict[ObjID, Any]
         self._tempFileIDs = []  # type: List[str]
         self._nbStates = 0
+        self._totalNbStates = 0
         self._writtenFiles = 0
         self._mustSaveActionsSequences = True
         self._maxEndStates = max_end_states
@@ -58,6 +59,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         self._concludedStates = {}  # type: Dict[ObjID, Any]
         self._tempFileIDs = []  # type: List[str]
         self._nbStates = 0
+        self._totalNbStates = 0
         self._writtenFiles = 0
 
     def routine(self, player_number: int, state: API) -> Tuple[pd.DataFrame, Dict[MoveDescriptor, pd.DataFrame]]:
@@ -74,6 +76,11 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         """
         self.alphaBetaSearching(player_number, state)
         return self._writeToFinalFile()
+
+    def alphaBetaSearching(self, player_number: int, state: API):
+        res = super().alphaBetaSearching(player_number, state)
+        self._nbStates = 0
+        return res
 
     @staticmethod
     def updateTargetVectors(current_target: np.ndarray, new_target: np.ndarray) -> np.ndarray:
@@ -121,6 +128,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
             data = None
         else:
             self._nbStates += 1
+            self._totalNbStates += 1
         # SEARCHING MAX VALUE
         ret_val = super()._maxValue(state, alpha, beta, depth)
         id_state = state.id

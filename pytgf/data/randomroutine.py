@@ -5,7 +5,7 @@ from typing import Tuple, Callable, Union
 from pytgf.ai.simultaneous_alphabeta import Value
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.data.gatherer import Gatherer
-from pytgf.data.throughoutroutine import ThroughoutRoutine
+from pytgf.data.throughoutroutine import ThroughoutRoutine, MAX_TEMP_VECTORS
 from pytgf.game import API
 
 __author__ = "Anthony Rouneau"
@@ -24,12 +24,16 @@ class RandomRoutine(ThroughoutRoutine):
         self._maxStepPerMoves = max_step_per_moves
 
     def routine(self, player_number: int, state: API):
-        self._prepare(player_number, state)
         for _ in range(self._nbRandomStates):
+            self._prepare(player_number, state)
             nb_moves = random.randint(0, self._maxNbSimulatedMoves)
-            random_state = self.getRandomState(state, nb_moves,
+            random_state = self.getRandomState(state.copy(), nb_moves,
                                                self._maxStepPerMoves)
-            super().routine(player_number, random_state)
+            if random_state is not None:
+                self.alphaBetaSearching(player_number, random_state)
+            if self._totalNbStates >= MAX_TEMP_VECTORS:
+                self._writeToFinalFile()
+                self._resetValues()
 
     def getRandomState(self, state: API, nb_moves: int, max_moves_per_step: int=-1) -> Union[API, None]:
         """
