@@ -177,22 +177,65 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
 
     def _getPossibleMovesForPlayer(self, player_number: int, state: API) -> List[MoveDescriptor]:
         moves = super()._getPossibleMovesForPlayer(player_number, state)
-        if player_number == self.playerNumber:
+        if self.turnByTurn or player_number == self.playerNumber:
             return moves
         safe_moves = []
-        winning_moves = []
         for move in moves:
-            deadly, winning = state.isMoveDeadlyOrWinning(player_number, move)
+            deadly = state.isMoveSuicidal(player_number, move)
             if not deadly:
                 safe_moves.append(move)
-            if winning:
-                winning_moves.append(move)
-        res = winning_moves if len(winning_moves) > 0 else safe_moves  # We only keep winning_moves if there are some
-        res2 = safe_moves
-        print(res, res2)
-        if len(res) == 0:  # If all the moves are deadly
-            res.append(random.choice(moves))  #
-        return res
+        if len(safe_moves) == 0:  # If all the moves are deadly
+            safe_moves.append(random.choice(moves))  #
+        return safe_moves
+
+    def _generateMovesList(self, state: API):
+        combinations = super()._generateMovesList(state)
+        if not self.turnByTurn:
+            return combinations
+        safe_moves = []
+        winning_moves = {}
+        for moves in combinations:
+            suicidal, winning = state.areMovesSuicidalOrWinning(moves)
+            if not np.array(list(suicidal.values())).any():
+                safe_moves.append(moves)
+                for player_number, player_won in winning.items():
+                    if player_won:
+                        if player_number not in winning_moves:
+                            winning_moves[player_number] = []
+                        winning_moves[player_number].append(moves)
+        if self.turnByTurn and len(winning_moves) > 0:
+            safe_moves = self._filterNonWinningSimilarMoves(state, winning_moves, safe_moves)
+        # if len(safe_moves) == 0:
+
+        return safe_moves
+
+    @staticmethod
+    def _filterNonWinningSimilarMoves(state: API, winning_moves: Dict[int, List[Dict[int, MoveDescriptor]]],
+                                      other_moves: List[Dict[int, MoveDescriptor]]) -> List[Dict[int, MoveDescriptor]]:
+        to_remove = []
+        other_sequences = state.convertIntoMoveSequence(other_moves)
+        for winning_player_number, moves in winning_moves.items():
+            order_of_player = state.getOrderOfPlayer(winning_player_number, force=True)
+            winning_sequences = {}
+            sequences = state.convertIntoMoveSequence(moves, force=True)
+            for winning_move in sequences:
+                pre_seq = tuple(winning_move[:order_of_player])
+                if pre_seq not in winning_sequences:
+                    winning_sequences[pre_seq] = []
+                winning_sequences[pre_seq].append(winning_move[order_of_player])
+            for i, other_sequence in enumerate(other_sequences):
+                pre_seq = tuple(other_sequence[:order_of_player])
+                if pre_seq in winning_sequences and other_sequence[order_of_player] not in winning_sequences[pre_seq]:
+                    to_remove.append(other_moves[i])
+        to_keep = []
+        for move in other_moves:
+            if move not in to_remove:
+                to_keep.append(move)
+        return to_keep
+
+
+
+
 
     def _writeToTempFile(self):
         """

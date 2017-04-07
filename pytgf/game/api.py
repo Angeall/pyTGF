@@ -224,7 +224,40 @@ class API(metaclass=ABCMeta):
         """
         return self.game.board.getNeighboursIdentifier(tile_id)
 
-    def isMoveDeadlyOrWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) \
+    def areMovesSuicidalOrWinning(self, move_descriptors: Dict[int, MoveDescriptor],
+                                  max_moves: int=1) -> Tuple[Dict[int, bool], Dict[int, bool]]:
+        """
+
+        Args:
+            move_descriptors: The descriptors of the moves to perform along with the number of the player performing it
+            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
+
+        Returns: 
+            A couple of dict, the first linking player numbers to a boolean indicating if the move is a suicidal move 
+             for that player, and the second linking player number to a boolean indicating if the move makes that
+             player win the game.
+        """
+        deadly = {}
+        winning = {}
+        api = self.copy()
+        for player_number in self.game.playersOrder:
+            player_deadly = False
+            player_winning = False
+            had_won = api.hasWon(player_number)
+            if api.isPlayerAlive(player_number):
+                succeeded, new_api = api.simulateMove(player_number, move_descriptors[player_number], max_moves)
+                if succeeded:
+                    api = new_api
+                    player_deadly = not api.isPlayerAlive(player_number)
+                    player_winning = not had_won and api.hasWon(player_number)
+                else:
+                    player_deadly = True
+            deadly[player_number] = player_deadly
+            winning[player_number] = player_winning
+
+        return deadly, winning
+
+    def isMoveSuicidalOrWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) \
             -> Tuple[bool, bool]:
         """
         
@@ -233,15 +266,15 @@ class API(metaclass=ABCMeta):
             move_descriptor: The descriptor of the move to perform
             max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
 
-        Returns: A couple of booleans containing: (is_move_deadly, is_move_winning)
+        Returns: A couple of booleans containing: (is_move_suicidal, is_move_winning)
         """
         if self.isPlayerAlive(player_number):
             succeeded, new_api = self.simulateMove(player_number, move_descriptor, max_moves, force=True)
             if succeeded:
                 return not new_api.isPlayerAlive(player_number), new_api.hasWon(player_number)
-        return True, False
+        return False, False
 
-    def isMoveDeadly(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int = 1) -> bool:
+    def isMoveSuicidal(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int = 1) -> bool:
         """
 
         Args:
@@ -251,7 +284,7 @@ class API(metaclass=ABCMeta):
 
         Returns: True if the move kills the unit in the simulation
         """
-        return self.isMoveDeadlyOrWinning(player_number, move_descriptor, max_moves)[0]
+        return self.isMoveSuicidalOrWinning(player_number, move_descriptor, max_moves)[0]
 
     def isMoveWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) -> bool:
         """
@@ -263,7 +296,7 @@ class API(metaclass=ABCMeta):
 
         Returns: True if the move makes the given player win the game
         """
-        return self.isMoveDeadlyOrWinning(player_number, move_descriptor, max_moves)[1]
+        return self.isMoveSuicidalOrWinning(player_number, move_descriptor, max_moves)[1]
 
     def getTileByteCode(self, tile_id: tuple) -> int:
         """
@@ -335,6 +368,18 @@ class API(metaclass=ABCMeta):
             raise NoMovementException()
         return self._decodeMoveFromPositiveNumber(player_number, encoded_move)
 
+    def getBoardByteCodes(self):
+        """
+        Returns: A tab containing the byte code of each tile of the board
+        """
+        tab = []
+        for i in range(self.game.board.lines):
+            tab_line = []
+            for j in range(self.game.board.columns):
+                tab_line.append(self.getTileByteCode((i, j)))
+            tab.append(tab_line)
+        return tab
+
     def isTurnByTurn(self) -> bool:
         """
         Returns: True if the game is turn-based
@@ -382,6 +427,53 @@ class API(metaclass=ABCMeta):
         Returns: The number of the player that will play in "offset" turns
         """
         return self.game.playersOrder[self._getNextPlayerIndex(offset)]
+
+    def convertIntoMoveSequence(self, move_combination: Union[Dict[int, MoveDescriptor],
+                                                              List[Dict[int, MoveDescriptor]]],
+                                force: bool=False) -> List[MoveDescriptor]:
+        """
+        [!] Only has sense if this is a turn by turn game
+        Convert a move combination into a move sequence
+
+        Args:
+            move_combination: The moves that are performed by the players
+            force: If True, the method can be used even if the game is not turn-based
+
+        Returns: A sequence of moves
+        """
+        if not force:
+            self._checkTurnByTurn()
+        if isinstance(move_combination, dict):
+            return [move_combination[player_number] for player_number in self.game.playersOrder
+                    if self.isPlayerAlive(player_number) and player_number in move_combination]
+        if isinstance(move_combination, list):
+            sequences = []
+            for move in move_combination:
+                sequences.append(self.convertIntoMoveSequence(move))
+            return sequences
+
+    def getOrderOfPlayer(self, player_number: int, force: bool=False) -> int:
+        """
+        [!] Only has sense if this is a turn by turn game
+        Gets the number of order of the given player
+
+        Args:
+            player_number: The number representing the player 
+            force: If True, the method can be used even if the game is not turn-based
+
+        Returns: The number of order amongst all alive players
+        """
+        if not force:
+            self._checkTurnByTurn()
+        order = 0
+        for other_player_number in self.game.playersOrder:
+            if other_player_number == player_number:
+                break
+            elif self.isPlayerAlive(other_player_number):
+                order += 1
+        if order > self.getNumberOfAlivePlayers():
+            raise AttributeError("The given player number was not found")
+        return order
 
     @abstractmethod
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,

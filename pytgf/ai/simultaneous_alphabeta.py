@@ -142,12 +142,6 @@ class SimultaneousAlphaBeta:
             intermediate_state = state
             if depth == 0:
                 self._currentlyTestedAction = actions[0][self.playerNumber]
-            if self.turnByTurn:
-                # Already simulating the move of our player as it is turn by turn
-                feasible_move, intermediate_state = state.simulateMove(self.playerNumber, actions[0][self.playerNumber])
-                if not feasible_move:
-                    continue
-                intermediate_state.id = state.id
             min_value, min_actions, new_end_state, min_game_state = self._minValue(intermediate_state, actions, alpha,
                                                                                    beta, depth)
             end_state = self._evaluateEndState(end_state, new_end_state)
@@ -229,9 +223,6 @@ class SimultaneousAlphaBeta:
         new_game_state = None
         for combination in actions:
             simulation_combination = combination
-            if self.turnByTurn:
-                # Only keeps the moves that are not done by the player
-                simulation_combination = {key: val for (key, val) in combination.items() if key != self.playerNumber}
             feasible_moves, new_game_state = state.simulateMoves(simulation_combination)
             if feasible_moves and new_game_state is not None:
                 self._registerCurrentActions(combination, new_game_state)
@@ -311,9 +302,34 @@ class SimultaneousAlphaBeta:
                 own_team_score += player_score
         return own_team_score
 
+    def _generateMovesList(self, state: API) -> List[Dict[int, MoveDescriptor]]:
+        """
+        Generates all the possible combinations of movements for the given state
+
+        Args:
+            state: The state for which the movements will be evaluated
+
+        Returns:
+            A list of dictionaries
+            (e.g. {1: 2, 2: 3} indicates that the player 1 chose the action "2" and the player 2 chose the action "3")
+        """
+        players = state.getPlayerNumbers()
+        moves = self._getPossibleMoves(players, state)
+        temp = itertools.product(*moves)
+        dicts = [dict(choices) for choices in temp]
+        if self.turnByTurn:
+            unfeasible = []
+            for moves in dicts:
+                succeeded, new_state = state.simulateMoves(moves, max_moves=-1)
+                if not succeeded:
+                    unfeasible.append(moves)
+            dicts = [dicts[i] for i in range(len(dicts)) if dicts[i] not in unfeasible]
+        return dicts
+
     def _generateMovesCombinations(self, state: API) -> List[List[Dict[int, MoveDescriptor]]]:
         """
-        Generates al the possible combinations of movements for the given state
+        Generates all the possible combinations of movements for the given state, and arrange them into a list of list 
+        structure
 
         Args:
             state: The state for which the movements will be evaluated
@@ -324,10 +340,7 @@ class SimultaneousAlphaBeta:
             The list contains lists, containing all the dictionaries containing the same actions for the player
             concerned in this alpha beta. (e.g. [[{1: 2, 2: 3}, {1: 2, 2: 1}] , [{1: 3, 2: 3}, {1: 3, 2: 2}]])
         """
-        players = state.getPlayerNumbers()
-        moves = self._getPossibleMoves(players, state)
-        temp = itertools.product(*moves)
-        dicts = [dict(choices) for choices in temp]
+        dicts = self._generateMovesList(state)
         order_dicts = {}
         for dico in dicts:
             if self.playerNumber in dico:
