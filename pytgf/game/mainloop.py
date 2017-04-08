@@ -304,7 +304,7 @@ class MainLoop:
 
         completed_moves = {}  # type: Dict[Unit, Tuple[TileIdentifier, MoveDescriptor]]
         just_started = {}  # type: Dict[int, MoveDescriptor]
-        illegal_moves = {}  # type: Dict[Unit, ControllerWrapper]
+        illegal_moves = []  # type: List[MovingUnit]
         impossible_moves = {}  # type: List[MovingUnit]
 
         self._handleOtherMoves(completed_moves, illegal_moves, impossible_moves, just_started, moved_units)
@@ -320,9 +320,9 @@ class MainLoop:
                 self._sendEventsToNextPlayer()
             else:
                 self._informBotOnPerformedMove(player_number, move_descriptor)
-        for unit, linker in illegal_moves:
+        for unit in illegal_moves:
             self.game.unitsLocation[unit] = self.game.board.OUT_OF_BOARD_TILE.identifier
-            self._killUnit(unit, linker)
+            self._killUnit(unit, self._getWrapperFromPlayerNumber(unit.playerNumber))
             # self.game.checkIfFinished()
             self._cancelCurrentMoves(unit)
         for unit in impossible_moves:
@@ -338,9 +338,9 @@ class MainLoop:
                     self._killSent[unit] = True
                 current_move = self._getNextMoveForUnitIfAvailable(unit)
                 if current_move is not None:
-                    move_state, tile_id = self._performNextStepOfMove(current_move.unit, current_move)
+                    move_state = self._performNextStepOfMove(current_move.unit, current_move)
                     self._fillMoveStructures(completed_moves, just_started, illegal_moves, impossible_moves,
-                                             current_move, move_state, tile_id)
+                                             current_move, move_state)
 
     def _handleOtherMoves(self, completed_moves, illegal_moves, impossible_moves, just_started, moved_units):
         for unit in self._otherMoves:  # type: MovingUnit
@@ -351,23 +351,38 @@ class MainLoop:
             if unit_linker is not None:
                 move = self._otherMoves[unit]
                 if move is not None:
-                    move_state, tile_id = self._performNextStepOfMove(move.unit, move)
+                    move_state = self._performNextStepOfMove(move.unit, move)
                     if move_state != MOVE_FAILED:
                         moved_units.append(move.unit)
                     if move.finished():
                         self._otherMoves[unit] = None
                     self._fillMoveStructures(completed_moves, just_started, illegal_moves, impossible_moves, move,
-                                             move_state, tile_id)
+                                             move_state)
 
     def _fillMoveStructures(self, completed_moves: Dict[Unit, Tuple[TileIdentifier, MoveDescriptor]],
-                            just_started: Dict[int, MoveDescriptor], illegal_moves: Dict[Unit, ControllerWrapper],
-                            impossible_moves: List[Unit], move: Path, move_state: int, tile_id: TileIdentifier):
+                            just_started: Dict[int, MoveDescriptor], illegal_moves: List[Unit],
+                            impossible_moves: List[Unit], move: Path, move_state: int):
+        """
+        Takes a move's state and the data structures of the performed moves in this iteration an fill them
+         following the state's value
+         
+        Args:
+            completed_moves: The dict containing the units that completed a move along with their new tile_id 
+            just_started: 
+                The dict containing the number of the units that started a move, 
+                along with the descriptor of the started move
+            illegal_moves: The list containing all the units that performed an illegal move this iteration  
+            impossible_moves: The list containing all the units that performed an impossible move this iteration  
+            move: The performed move
+            move_state: The state of the performed move
+            tile_id: The new tile id if the move was completed or None
+        """
         if move_state == MOVE_COMPLETED:
-            completed_moves[move.unit] = (tile_id,  self._moveDescriptors[move])
+            completed_moves[move.unit] = (move.reachedTileIdentifier,  self._moveDescriptors[move])
         elif move_state == MOVE_JUST_STARTED:
             just_started[move.unit.playerNumber] = self._moveDescriptors[move]
         elif move_state == MOVE_ILLEGAL:
-            illegal_moves[move.unit] = self._getWrapperFromPlayerNumber(move.unit.playerNumber)
+            illegal_moves.append(move.unit)
         elif move_state == MOVE_IMPOSSIBLE:
             impossible_moves.append(move.unit)
 
@@ -382,37 +397,36 @@ class MainLoop:
         for wrapper in self._messagesToSend:
             self._messagesToSend[wrapper].append(BotEvent(moved_unit_number, move_descriptor))
 
-    def _performNextStepOfMove(self, unit: MovingUnit, current_move: Path) -> Tuple[int, Union[TileIdentifier, None]]:
+    @staticmethod
+    def _performNextStepOfMove(unit: MovingUnit, current_move: Path) -> int:
         """
         Perform the next step of the given move on the given unit
 
         Args:
             unit: The unit that performs the move
             current_move: The current move to perform
-            linker: The linker that controls this move (can be None if the move is not linked with a controller)
         
         Returns:
             A couple of booleans. The first indicating that the move has been completed and the second indicating that
             the move has just started
         """
-        tile_id = None
         if unit.isAlive():
             if current_move is not None:
                 try:
                     just_started, move_completed, tile_id = current_move.performNextMove()
                     if move_completed:  # A new tile has been reached by the movement
-                        return MOVE_COMPLETED, tile_id
+                        return MOVE_COMPLETED
                     elif just_started:
-                        return MOVE_JUST_STARTED, tile_id
-                    return MOVE_IN_PROGRESS, tile_id
+                        return MOVE_JUST_STARTED
+                    return MOVE_IN_PROGRESS
                 except IllegalMove:
-                    return MOVE_ILLEGAL, tile_id
+                    return MOVE_ILLEGAL
                 except ImpossibleMove:
-                    return MOVE_IMPOSSIBLE, tile_id
+                    return MOVE_IMPOSSIBLE
         else:
             if current_move is not None:
                 current_move.stop(cancel_post_action=True)
-        return MOVE_FAILED, tile_id
+        return MOVE_FAILED
 
     def _getNextMoveForUnitIfAvailable(self, unit: MovingUnit) -> Union[Path, None]:
         """

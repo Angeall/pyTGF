@@ -2,6 +2,7 @@
 File containing the abstract definition of a Path. While the path has a next move, it continues.
 """
 from abc import ABCMeta, abstractmethod
+
 from typing import Optional, Callable, Tuple, Union
 
 from pytgf.board import Tile
@@ -38,6 +39,7 @@ class Path(metaclass=ABCMeta):
         self.stopTriggered = False
         self.stopped = False
         self.completed = False
+        self.reachedTileIdentifier = None
         self.unit = unit
         self._currentMove = None  # type: ShortMove
         self._preAction = pre_action
@@ -96,6 +98,7 @@ class Path(metaclass=ABCMeta):
                         new_tile_id = self._newMoveTileId
                     if move_performed:
                         new_tile_id = self._handleStepFinished()
+                        self.reachedTileIdentifier = new_tile_id
                         next_step_got, next_destination_tile_id = self._getNextStepIfNeeded()
                         self._newMoveStarted = next_step_got
                         self._newMoveTileId = next_destination_tile_id
