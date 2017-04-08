@@ -6,7 +6,7 @@ import pygame
 from pytgf.board import Builder, Board
 from pytgf.controls.controllers import Passive
 from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper
-from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_DOWN
+from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_DOWN, GO_LEFT
 from pytgf.examples.lazerbike.rules import LazerBikeAPI
 from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeCore
 from pytgf.examples.lazerbike.units.bike import Bike
@@ -47,6 +47,13 @@ class TestLazerbike(unittest.TestCase):
         self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotControllerWrapper(Passive(1)), (15, 25), GO_DOWN,
                           team=1)
         self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotControllerWrapper(Passive(2)), (30, 25), GO_UP,
+                          team=2)
+        self.assertEqual(len(self.loop.run()), 0)
+
+    def test_draw_against_wall(self):
+        self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotControllerWrapper(Passive(1)), (15, 10), GO_LEFT,
+                          team=1)
+        self.loop.addUnit(Bike(200, 2, max_trace=-1), LazerBikeBotControllerWrapper(Passive(2)), (30, 10), GO_LEFT,
                           team=2)
         self.assertEqual(len(self.loop.run()), 0)
 
