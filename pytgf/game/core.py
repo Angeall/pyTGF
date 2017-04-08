@@ -291,7 +291,8 @@ class Core(metaclass=ABCMeta):
             self.unitsLocation[unit] = new_tile_id
         if unit in self._previousUnitsLocation:
             old_tile_id = self._previousUnitsLocation[unit]
-            self.tilesOccupants[old_tile_id].remove(unit)
+            if unit in self.tilesOccupants[old_tile_id]:
+                self.tilesOccupants[old_tile_id].remove(unit)
             if len(self.tilesOccupants[old_tile_id]) == 0:
                 del self.tilesOccupants[old_tile_id]
         self._previousUnitsLocation[unit] = new_tile_id
