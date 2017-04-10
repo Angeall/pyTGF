@@ -249,15 +249,12 @@ class API(metaclass=ABCMeta):
                 succeeded, new_api = api.simulateMove(player_number, move_descriptors[player_number], max_moves)
                 if succeeded:
                     api = new_api
-                    api.game.checkIfFinished()
                     player_deadly = not api.isPlayerAlive(player_number)
                     player_winning = not had_won and api.hasWon(player_number)
                 else:
                     player_deadly = True
             suicidal[player_number] = player_deadly
             winning[player_number] = player_winning
-        print(move_descriptors, '\n', api.game._simplifiedBoard, "\n", suicidal, winning, "\n")
-
         return suicidal, winning
 
     def isMoveSuicidalOrWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) \

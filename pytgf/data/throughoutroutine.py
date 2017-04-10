@@ -202,7 +202,6 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         winning_moves = {}
         for moves in combinations:
             suicidal, winning = state.areMovesSuicidalOrWinning(moves)
-            print(moves, suicidal, winning)
             if not np.array(list(suicidal.values())).any():
                 safe_moves.append(moves)
                 for player_number, player_won in winning.items():
