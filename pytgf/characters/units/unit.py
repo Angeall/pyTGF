@@ -4,9 +4,9 @@ File containing the definition of a Unit.
 
 from copy import deepcopy
 from queue import Queue, Empty
-from typing import List
 
 import pygame
+from typing import List
 
 from pytgf.characters.units.particle import Particle
 from pytgf.characters.units.sprite import UnitSprite
@@ -102,13 +102,12 @@ class Unit(Particle):
                     temp_queue.put(current)
         except Empty:
             pass
-        finally:
-            self._particlesList.remove(particle)
+        self._particlesList.remove(particle)
 
-            self._particlesQueue = temp_queue
-            particle.kill()
-            if particle.sprite is not None:
-                self._particlesSpriteGroup.remove(particle.sprite)
+        self._particlesQueue = temp_queue
+        particle.kill()
+        if particle.sprite is not None:
+            self._particlesSpriteGroup.remove(particle.sprite)
 
     def hasParticle(self, particle: Particle) -> bool:
         """

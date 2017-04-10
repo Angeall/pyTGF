@@ -1,7 +1,7 @@
 """
 File containing the definition of an abstract ControllerWrapper, linking the game with a Controller
 """
-
+import traceback
 from abc import ABCMeta, abstractmethod
 from queue import Empty
 
@@ -9,6 +9,7 @@ import pygame
 from typing import Any
 
 from pytgf.controls.events.multiple import MultipleEvents
+from pytgf.controls.events.wake import WakeEvent
 
 try:
     from multiprocess.connection import PipeConnection
@@ -99,8 +100,10 @@ class ControllerWrapper(metaclass=ABCMeta):
                 self._routine()
             except (BrokenPipeError, EOFError, OSError):
                 self.close()
-            finally:
-                clock.tick(MAX_FPS)
+            except:
+                traceback.print_exc()
+                print('error')
+            clock.tick(MAX_FPS)
 
     def handleNewGameStateChangeIfNeeded(self) -> None:
         """
@@ -114,11 +117,12 @@ class ControllerWrapper(metaclass=ABCMeta):
                 events.extend(event.events)
             else:
                 events.append(event)
-        if len(events) is not None:
+        if len(events) != 0:
             for event in events:
-                if not isinstance(event, self.typeOfEventFromGame):
-                    raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
-                                    % (str(type(event)), str(self.typeOfEventFromGame)))
+                if not isinstance(event, self.typeOfEventFromGame) and not isinstance(event, WakeEvent):
+                    return
+                    # raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
+                    #                 % (str(type(event)), str(self.typeOfEventFromGame)))
             self.controller.reactToEvents(events)
 
     def checkGameInfo(self) -> None:

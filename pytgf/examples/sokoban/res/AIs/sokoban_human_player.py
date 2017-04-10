@@ -12,12 +12,12 @@ class HumanPlayer(SokobanPlayer, Human):
         self.upKey = up_key
         self.downKey = down_key
 
-    def reactToMouseEvent(self, mouse_event: MouseEvent) -> None:
+    def reactToMouseEvent(self, mouse_event: MouseEvent):
         if mouse_event.mouseState[0]:
             if mouse_event.tileId is not None:
                 return mouse_event.tileId
 
-    def reactToKeyboardEvent(self, keyboard_event: SokobanKeyboardEvent) -> None:
+    def reactToKeyboardEvent(self, keyboard_event: SokobanKeyboardEvent):
         player_tile_id = keyboard_event.playerTileID
         input_key = keyboard_event.characterKeys[0]
         new_tile_id = None

@@ -68,7 +68,7 @@ class MainLoop:
         self._currentTurnTaken = False
         self._screen = None
         self._state = CONTINUE  # The game must go on at start
-        self._messagesToSend = {}  # type: Dict[ControllerWrapper, List[Event]]
+        self._eventsToSend = {}  # type: Dict[ControllerWrapper, List[Event]]
 
         self.wrappersConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
         self.wrappersInfoConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
@@ -135,7 +135,7 @@ class MainLoop:
         self.game.addUnit(unit, team, tile_id)
         self._addControllerWrapper(wrapper, unit)
         if initial_action is None and (not self.api.isTurnByTurn() or unit.playerNumber == self.api.getCurrentPlayer()):
-            self._messagesToSend[wrapper].append(WakeEvent())
+            self._eventsToSend[wrapper].append(WakeEvent())
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
         resize_unit(unit, self.game.board)
@@ -315,11 +315,11 @@ class MainLoop:
         for unit, (tile_id, move_descriptor) in completed_moves.items():
             self.game.updateGameState(unit, tile_id, move_descriptor)
         for player_number, move_descriptor in just_started.items():
+            self._addMessageToSendToAll(player_number, move_descriptor)
             if self.api.isTurnByTurn():
-                self._addMessageToSendToAll(player_number, move_descriptor)
                 self._sendEventsToNextPlayer()
-            else:
-                self._informBotOnPerformedMove(player_number, move_descriptor)
+        if not self.api.isTurnByTurn():
+            self._sendEventsToAll()
         for unit in illegal_moves:
             self.game.unitsLocation[unit] = self.game.board.OUT_OF_BOARD_TILE.identifier
             self._killUnit(unit, self._getWrapperFromPlayerNumber(unit.playerNumber))
@@ -375,7 +375,6 @@ class MainLoop:
             impossible_moves: The list containing all the units that performed an impossible move this iteration  
             move: The performed move
             move_state: The state of the performed move
-            tile_id: The new tile id if the move was completed or None
         """
         if move_state == MOVE_COMPLETED:
             completed_moves[move.unit] = (move.reachedTileIdentifier,  self._moveDescriptors[move])
@@ -394,8 +393,8 @@ class MainLoop:
             moved_unit_number: The number representing the unit that moved 
             move_descriptor: The descriptor of the performed move
         """
-        for wrapper in self._messagesToSend:
-            self._messagesToSend[wrapper].append(BotEvent(moved_unit_number, move_descriptor))
+        for wrapper in self._eventsToSend:
+            self._eventsToSend[wrapper].append(BotEvent(moved_unit_number, move_descriptor))
 
     @staticmethod
     def _performNextStepOfMove(unit: MovingUnit, current_move: Path) -> int:
@@ -528,8 +527,12 @@ class MainLoop:
     def _sendEventsToController(self, player_number: int):
         next_player_wrapper = self._getWrapperFromPlayerNumber(player_number)
         pipe_conn = self._getPipeConnection(next_player_wrapper)
-        pipe_conn.send(MultipleEvents(self._messagesToSend[next_player_wrapper]))
-        self._messagesToSend[next_player_wrapper] = []
+        pipe_conn.send(MultipleEvents(self._eventsToSend[next_player_wrapper]))
+        self._eventsToSend[next_player_wrapper] = []
+
+    def _sendEventsToAll(self):
+        for player_number in self.api.getPlayerNumbers():
+            self._sendEventsToController(player_number)
 
     def _informBotOnPerformedMove(self, moved_unit_number: int, move_descriptor: MoveDescriptor) -> None:
         """
@@ -603,7 +606,7 @@ class MainLoop:
         parent_info_conn, child_info_conn = Pipe()
         self.wrappersConnection[wrapper] = parent_conn
         self.wrappersInfoConnection[wrapper] = parent_info_conn
-        self._messagesToSend[wrapper] = []
+        self._eventsToSend[wrapper] = []
         wrapper.setMainPipe(child_conn)
         wrapper.setGameInfoPipe(child_info_conn)
         if isinstance(wrapper, BotControllerWrapper):
