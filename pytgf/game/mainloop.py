@@ -132,10 +132,12 @@ class MainLoop:
             initial_action: The initial action of the unit
             team: The number of the team this player is in (-1 = no team)
         """
-        self.game.addUnit(unit, team, tile_id)
-        self._addControllerWrapper(wrapper, unit)
-        if initial_action is None and (not self.api.isTurnByTurn() or unit.playerNumber == self.api.getCurrentPlayer()):
-            self._eventsToSend[wrapper].append(WakeEvent())
+        is_controlled = wrapper is not None
+        self.game.addUnit(unit, team, tile_id, controlled=is_controlled)
+        if is_controlled:
+            self._addControllerWrapper(wrapper, unit)
+            if initial_action is None and (not self.api.isTurnByTurn() or unit.playerNumber == self.api.getCurrentPlayer()):
+                self._eventsToSend[wrapper].append(WakeEvent())
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
         resize_unit(unit, self.game.board)
@@ -223,6 +225,7 @@ class MainLoop:
             unit: The unit that will be moved
             move: The move that will be performed
         """
+        print("other move added")
         if unit not in self._otherMoves or self._otherMoves[unit] is None:
             self._otherMoves[unit] = move
         self._moveDescriptors[move] = event
@@ -344,20 +347,15 @@ class MainLoop:
 
     def _handleOtherMoves(self, completed_moves, illegal_moves, impossible_moves, just_started, moved_units):
         for unit in self._otherMoves:  # type: MovingUnit
-            unit_linker = None
-            for linker in self.wrappers:
-                if self._getUnitFromControllerWrapper(linker) is unit:
-                    unit_linker = linker
-            if unit_linker is not None:
-                move = self._otherMoves[unit]
-                if move is not None:
-                    move_state = self._performNextStepOfMove(move.unit, move)
-                    if move_state != MOVE_FAILED:
-                        moved_units.append(move.unit)
-                    if move.finished():
-                        self._otherMoves[unit] = None
-                    self._fillMoveStructures(completed_moves, just_started, illegal_moves, impossible_moves, move,
-                                             move_state)
+            move = self._otherMoves[unit]
+            if move is not None:
+                move_state = self._performNextStepOfMove(move.unit, move)
+                if move_state != MOVE_FAILED:
+                    moved_units.append(move.unit)
+                if move.finished():
+                    self._otherMoves[unit] = None
+                self._fillMoveStructures(completed_moves, just_started, illegal_moves, impossible_moves, move,
+                                         move_state)
 
     def _fillMoveStructures(self, completed_moves: Dict[Unit, Tuple[TileIdentifier, MoveDescriptor]],
                             just_started: Dict[int, MoveDescriptor], illegal_moves: List[Unit],

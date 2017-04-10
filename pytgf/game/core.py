@@ -66,6 +66,7 @@ class Core(metaclass=ABCMeta):
         self.unitsTeam = {}  # type: Dict[MovingUnit, int]
         self.players = {}  # type: Dict[int, MovingUnit]
         self.controlledPlayers = {}  # type: Dict[int, MovingUnit]
+        self._activeUnits = {}  # type: Dict[int, MovingUnit]
         self.unitsLocation = {}   # type: Dict[Particle, tuple]
         self._previousUnitsLocation = {}   # type: Dict[Particle, tuple]
         self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
@@ -74,7 +75,7 @@ class Core(metaclass=ABCMeta):
     # -------------------- PUBLIC METHODS -------------------- #
 
     def addUnit(self, unit: MovingUnit, team_number: int, origin_tile_id: TileIdentifier,
-                controlled: bool=True) -> None:
+                controlled: bool=True, active: bool=True) -> None:
         """
         Adds a unit to the game
 
@@ -83,12 +84,15 @@ class Core(metaclass=ABCMeta):
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
             controlled: True if this unit is controlled by a bot or a human
+            active: True if this unit must count in the "checkIfFinished" method. False if it must not count...
         """
         self.addUnitToTile(origin_tile_id, unit)
         self.players[unit.playerNumber] = unit
         if controlled:
             self.controlledPlayers[unit.playerNumber] = unit
             self.playersOrder.append(unit.playerNumber)
+        if active:
+            self._activeUnits[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
         resize_unit(unit, self.board)
         if team_number in self.teams.keys():
@@ -184,7 +188,7 @@ class Core(metaclass=ABCMeta):
         winning_team = None
         for team_number, team_players in self.teams.items():
             for unit in team_players:
-                if unit.isAlive() and unit.playerNumber in self.controlledPlayers:
+                if unit.isAlive() and unit.playerNumber in self._activeUnits:
                     teams_alive += 1
                     team_units = team_players
                     winning_team = team_number

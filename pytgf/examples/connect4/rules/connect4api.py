@@ -71,7 +71,7 @@ class Connect4API(API):
                                            for i, j in path_list],
                                     pre_action= lambda: self.game.addUnit(disc, team_number=team_number,
                                                                           origin_tile_id=(0, move_descriptor),
-                                                                          controlled=False),
+                                                                          controlled=False, active=False),
                                     post_action=lambda: self.updateMove(unit, move_descriptor))
                 else:
                     path = ListPath(disc, [ShortMove(disc, self.game.board.getTileById((0, move_descriptor)),
@@ -79,7 +79,7 @@ class Connect4API(API):
                                                      self.game.unitsLocation)],
                                     pre_action=self.game.addUnit(disc, team_number=team_number,
                                                                  origin_tile_id=(0, move_descriptor),
-                                                                 controlled=False),
+                                                                 controlled=False, active=False),
                                     post_action=lambda: self.updateMove(unit, move_descriptor))
                 return path
         raise UnfeasibleMoveException("The move " + str(move_descriptor) + " is unfeasible...")

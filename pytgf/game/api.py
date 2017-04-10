@@ -88,7 +88,8 @@ class API(metaclass=ABCMeta):
 
             if not feasible_move:
                 return False, None
-        self.game.checkIfFinished()
+        if not self.isTurnByTurn():
+            self.game.checkIfFinished()
         return True, new_game_state
 
     def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool = False,
@@ -237,7 +238,7 @@ class API(metaclass=ABCMeta):
              for that player, and the second linking player number to a boolean indicating if the move makes that
              player win the game.
         """
-        deadly = {}
+        suicidal = {}
         winning = {}
         api = self.copy()
         for player_number in self.game.playersOrder:
@@ -248,14 +249,16 @@ class API(metaclass=ABCMeta):
                 succeeded, new_api = api.simulateMove(player_number, move_descriptors[player_number], max_moves)
                 if succeeded:
                     api = new_api
+                    api.game.checkIfFinished()
                     player_deadly = not api.isPlayerAlive(player_number)
                     player_winning = not had_won and api.hasWon(player_number)
                 else:
                     player_deadly = True
-            deadly[player_number] = player_deadly
+            suicidal[player_number] = player_deadly
             winning[player_number] = player_winning
+        print(move_descriptors, '\n', api.game._simplifiedBoard, "\n", suicidal, winning, "\n")
 
-        return deadly, winning
+        return suicidal, winning
 
     def isMoveSuicidalOrWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) \
             -> Tuple[bool, bool]:
@@ -538,7 +541,9 @@ class API(metaclass=ABCMeta):
         next_player_index = (self.game.currentPlayerIndex + offset) % len(self.game.playersOrder)
         next_player_number = self.game.playersOrder[next_player_index]
         while not self.isFinished() and not self.isPlayerAlive(next_player_number):
-            next_player_index = (next_player_number + 1) % len(self.game.playersOrder)
+            next_player_index = (next_player_index + 1) % len(self.game.playersOrder)
+            if next_player_index == self.game.currentPlayerIndex:
+                break
             next_player_number = self.game.playersOrder[next_player_index]
         return next_player_index
 

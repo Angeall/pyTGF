@@ -2,7 +2,6 @@ from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o
 
 from pytgf.board import Board, Builder
 from pytgf.characters.units import MovingUnit
-from pytgf.controls.controllers import Passive
 from pytgf.controls.controllers.bot import Bot
 from pytgf.controls.controllers.human import Human
 from pytgf.examples.sokoban.controllers.wrapper import SokobanBotControllerWrapper, SokobanHumanControllerWrapper
@@ -45,7 +44,8 @@ class SokobanBoardBuilder(Builder):
         ending_unit = self._createEndingUnit(winning_tiles)
         self._game = SokobanGame(board, ending_unit, winning_tiles)
         for tile in winning_tiles:
-            self._game.addUnit(ending_unit, team_number=1000, origin_tile_id=tile.identifier, controlled=False)
+            self._game.addUnit(ending_unit, team_number=1000, origin_tile_id=tile.identifier, controlled=False,
+                               active=True)
         self._mainLoop = MainLoop(SokobanAPI(self._game))
         self._addBoxes()
         self._addPlayers()
@@ -100,7 +100,7 @@ class SokobanBoardBuilder(Builder):
         box_number = -1
         for (i, j) in self._boxLocations:
             self._mainLoop.addUnit(Box(self._unitSpeed, box_number),
-                                   SokobanBotControllerWrapper(Passive(box_number)), (i, j), team=2)
+                                   None, (i, j), team=2)
             box_number -= 1
 
     @staticmethod

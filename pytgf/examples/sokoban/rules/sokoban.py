@@ -34,7 +34,6 @@ class SokobanGame(Core):
             player2: The second given player
             frontal: If true, the collision is frontal and kills the two players
         """
-
         if player1 is self._endingUnit or player2 is self._endingUnit:
             self._handleEndingUnitCollision(player1, player2)
 

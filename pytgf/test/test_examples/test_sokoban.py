@@ -35,7 +35,7 @@ class TestSokoban(unittest.TestCase):
         self.wrapper._sendActionToGame((2, 0))
         self.wrapper._sendActionToGame((3, 2))
         pushed_box = None
-        for unit in self.loop.wrappers.values():
+        for unit in self.loop.game.players.values():
             if isinstance(unit, Box):
                 pushed_box = unit
         self.assertTrue(pushed_box is not None)

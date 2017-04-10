@@ -9,7 +9,7 @@ from pytgf.data.throughoutroutine import ThroughoutRoutine
 from pytgf.examples.connect4.builder import create_game
 
 
-class TestLazerbikeData(unittest.TestCase):
+class TestConnect4Data(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
