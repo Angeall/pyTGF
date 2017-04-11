@@ -1,5 +1,6 @@
 import unittest
 
+import pandas as pd
 from typing import List, Dict
 
 from pytgf.controls.controllers import Passive
@@ -16,43 +17,67 @@ class TestConnect4(unittest.TestCase):
                                 for wrapper in wrappers}
 
     def test_easy_win(self):
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)  # Plays after the end of the game => should not influence
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)  # Plays after the end of the game => should not influence
         self.assertTrue(self.mainLoop.api.isFinished())
         self.assertTrue(self.mainLoop.api.hasWon(1))
 
     def test_easy_win2(self):
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
-        self.mainLoop.api.performMove(1, 2, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 2)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
         self.assertTrue(self.mainLoop.api.isFinished())
         self.assertTrue(self.mainLoop.api.hasWon(2))
 
     def test_diagonal_win(self):
-        self.mainLoop.api.performMove(1, 0, max_moves=-1)
-        self.mainLoop.api.performMove(2, 1, max_moves=-1)
-        self.mainLoop.api.performMove(1, 1, max_moves=-1)
-        self.mainLoop.api.performMove(2, 2, max_moves=-1)
-        self.mainLoop.api.performMove(1, 2, max_moves=-1)
-        self.mainLoop.api.performMove(2, 3, max_moves=-1)
-        self.mainLoop.api.performMove(1, 2, max_moves=-1)
-        self.mainLoop.api.performMove(2, 3, max_moves=-1)
-        self.mainLoop.api.performMove(1, 3, max_moves=-1)
-        self.mainLoop.api.performMove(2, 5, max_moves=-1)
-        self.mainLoop.api.performMove(1, 3, max_moves=-1)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 1)
+        self.mainLoop.api.performMove(2, 2)
+        self.mainLoop.api.performMove(1, 2)
+        self.mainLoop.api.performMove(2, 3)
+        self.mainLoop.api.performMove(1, 2)
+        self.mainLoop.api.performMove(2, 3)
+        self.mainLoop.api.performMove(1, 3)
+        self.mainLoop.api.performMove(2, 5)
+        self.mainLoop.api.performMove(1, 3)
         self.assertTrue(self.mainLoop.api.isFinished())
         self.assertTrue(self.mainLoop.api.hasWon(1))
 
-    def test_test(self):
-        pass
+    def test_unfeasible(self):
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 0)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 0)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 0)
+        succeeded = self.mainLoop.api.performMove(1, 0)
+        self.assertFalse(succeeded)
+
+    def test_action_history(self):
+        self.mainLoop.api.performMove(1, 1)
+        self.mainLoop.api.performMove(2, 2)
+        self.mainLoop.api.performMove(1, 3)
+        self.mainLoop.api.performMove(2, 4)
+        self.mainLoop.api.performMove(1, 5)
+        self.mainLoop.api.performMove(2, 6)
+        self.mainLoop.api.performMove(1, 0)
+        self.mainLoop.api.performMove(2, 1)
+        self.mainLoop.api.performMove(1, 2)
+        self.mainLoop.api.performMove(2, 3)
+
+        self.assertEqual(self.mainLoop.api.getActionsHistory(1), [1, 3, 5, 0, 2])
+        self.assertEqual(self.mainLoop.api.getActionsHistory(2), [2, 4, 6, 1, 3])
+        is_equal = self.mainLoop.api.getAllActionsHistories() == pd.DataFrame([[1, 3, 5, 0, 2], [2, 4, 6, 1, 3]])
+        self.assertTrue(is_equal.all().all())

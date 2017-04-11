@@ -46,8 +46,8 @@ class Connect4API(API):
     def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
         return encoded_move
 
-    def createMoveForDescriptor(self, unit: Connect4Unit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
+    def createMoveForDescriptor(self, unit: Connect4Unit, move_descriptor: MoveDescriptor, force: bool = False,
+                                is_step: bool=False) -> Path:
         if isinstance(move_descriptor, int):
             occupants = self.game.getTileOccupants((0, move_descriptor))
             if len(occupants) == 0 or isinstance(occupants[0], Bottom):  # Column not full

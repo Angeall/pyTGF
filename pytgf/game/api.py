@@ -1,8 +1,10 @@
 """
 File containing the definition of a basic API to interact with a game from a controller
 """
+import copy
 from abc import ABCMeta, abstractmethod
 
+import pandas as pd
 from typing import Tuple, Dict, Union, List
 
 from pytgf.board import TileIdentifier
@@ -45,34 +47,33 @@ class API(metaclass=ABCMeta):
         """
         self.game = game
         self.id = id(self)
+        self._actionsHistory = {pl_num: [] for pl_num in self.getPlayerNumbers()}
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor, max_moves: int = 1, force: bool=False) \
+    def simulateMove(self, player_number: int, wanted_move: MoveDescriptor, force: bool=False) \
             -> Tuple[bool, Union['API', None]]:
         """
         Simulates the move by creating a new GameState
 
         Args:
+            force: Force the move, even if the game is turn-based and it is not the turn of the given player
             player_number: The number of the player moving
             wanted_move: The event triggering the move
-            max_moves: The maximum number of short moves to perform in case of a path or continuous move.
 
         Returns:
             A copy of this GameState in which the move have been applied (if it is possible)
         """
         new_game_state = self.copy()
-        feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves, force=force)
+        feasible_move = new_game_state.performMove(player_number, wanted_move, force=force)
         return feasible_move, new_game_state if feasible_move else None
 
-    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor], max_moves: int = 1) \
-            -> Tuple[bool, Union['API', None]]:
+    def simulateMoves(self, player_moves: Dict[int, MoveDescriptor]) -> Tuple[bool, Union['API', None]]:
         """
         Simulates the given moves for the key players
 
         Args:
             player_moves: a dictionary with player_number as key and a move as value for the key player
-            max_moves: The maximum number of short moves to perform in case of a path or continuous move.
 
         Returns:
             - A boolean -- True if all the moves succeeded, False otherwise
@@ -84,7 +85,7 @@ class API(metaclass=ABCMeta):
                 moves.append((pl_num, player_moves[pl_num]))
         new_game_state = self.copy()
         for player_number, wanted_move in moves:
-            feasible_move = new_game_state.performMove(player_number, wanted_move, max_moves=max_moves)
+            feasible_move = new_game_state.performMove(player_number, wanted_move)
 
             if not feasible_move:
                 return False, None
@@ -92,8 +93,7 @@ class API(metaclass=ABCMeta):
             self.game.checkIfFinished()
         return True, new_game_state
 
-    def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool = False,
-                    max_moves: int = 1) -> bool:
+    def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool = False) -> bool:
         """
         Performs the move inside this GameState
 
@@ -101,15 +101,20 @@ class API(metaclass=ABCMeta):
             player_number: The number of the player moving
             move_descriptor: The move to perform (either a Path or a move descriptor)
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
-            max_moves: The maximum number of short moves to perform in case of a path or continuous move.
         """
+        if self.isFinished():
+            return True
         if not force and self.isTurnByTurn() and player_number != self.getCurrentPlayer():
             raise NotYourTurnException("The move is performed by player " + str(player_number) + " while the current "
                                        "player is " + str(self.getCurrentPlayer()))
         unit = self.game.getUnitForNumber(player_number)  # type: MovingUnit
         try:
-            move = self.createMoveForDescriptor(unit, move_descriptor, max_moves=max_moves, force=force)
+            move = self.createMoveForDescriptor(unit, move_descriptor, force=force, is_step=True)
             new_tile_id = move.complete()
+            if player_number not in self._actionsHistory:
+                self._actionsHistory[player_number] = []
+            encoded_move = self.encodeMove(player_number, move_descriptor)
+            self._actionsHistory[player_number].append(encoded_move)
             self.game.updateGameState(move.unit, new_tile_id, move_descriptor)
             if self.isTurnByTurn():
                 self.switchToNextPlayer()
@@ -119,6 +124,26 @@ class API(metaclass=ABCMeta):
         except IllegalMove:
             unit.kill()
         return True
+
+    def getActionsHistory(self, player_number: int) -> List[MoveDescriptor]:
+        """
+        Args:
+            player_number: The number representing the player for which we want the actions history 
+
+        Returns: The history of the given player
+        """
+        if player_number not in self._actionsHistory:
+            return []
+        return self._actionsHistory[player_number]
+
+    def getAllActionsHistories(self) -> pd.DataFrame:
+        """
+        Returns: The history of all players, in vertical order (if there is an order between players)
+        """
+        df = pd.DataFrame()
+        for player_number in self.game.playersOrder:
+            df = df.append([self.getActionsHistory(player_number)], ignore_index=True)
+        return df
 
     def belongsToSameTeam(self, player_1_number: int, player_2_number: int) -> bool:
         """
@@ -225,13 +250,12 @@ class API(metaclass=ABCMeta):
         """
         return self.game.board.getNeighboursIdentifier(tile_id)
 
-    def areMovesSuicidalOrWinning(self, move_descriptors: Dict[int, MoveDescriptor],
-                                  max_moves: int=1) -> Tuple[Dict[int, bool], Dict[int, bool]]:
+    def areMovesSuicidalOrWinning(self, move_descriptors: Dict[int, MoveDescriptor]) \
+            -> Tuple[Dict[int, bool], Dict[int, bool]]:
         """
 
         Args:
             move_descriptors: The descriptors of the moves to perform along with the number of the player performing it
-            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
 
         Returns: 
             A couple of dict, the first linking player numbers to a boolean indicating if the move is a suicidal move 
@@ -246,7 +270,7 @@ class API(metaclass=ABCMeta):
             player_winning = False
             had_won = api.hasWon(player_number)
             if api.isPlayerAlive(player_number):
-                succeeded, new_api = api.simulateMove(player_number, move_descriptors[player_number], max_moves)
+                succeeded, new_api = api.simulateMove(player_number, move_descriptors[player_number])
                 if succeeded:
                     api = new_api
                     player_deadly = not api.isPlayerAlive(player_number)
@@ -257,46 +281,43 @@ class API(metaclass=ABCMeta):
             winning[player_number] = player_winning
         return suicidal, winning
 
-    def isMoveSuicidalOrWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) \
+    def isMoveSuicidalOrWinning(self, player_number: int, move_descriptor: MoveDescriptor) \
             -> Tuple[bool, bool]:
         """
         
         Args:
             player_number: The player that will perform the move
             move_descriptor: The descriptor of the move to perform
-            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
 
         Returns: A couple of booleans containing: (is_move_suicidal, is_move_winning)
         """
         if self.isPlayerAlive(player_number):
-            succeeded, new_api = self.simulateMove(player_number, move_descriptor, max_moves, force=True)
+            succeeded, new_api = self.simulateMove(player_number, move_descriptor, force=True)
             if succeeded:
                 return not new_api.isPlayerAlive(player_number), new_api.hasWon(player_number)
         return False, False
 
-    def isMoveSuicidal(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int = 1) -> bool:
+    def isMoveSuicidal(self, player_number: int, move_descriptor: MoveDescriptor) -> bool:
         """
 
         Args:
             player_number: The player that will perform the move
             move_descriptor: The descriptor of the move to perform
-            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
 
         Returns: True if the move kills the unit in the simulation
         """
-        return self.isMoveSuicidalOrWinning(player_number, move_descriptor, max_moves)[0]
+        return self.isMoveSuicidalOrWinning(player_number, move_descriptor)[0]
 
-    def isMoveWinning(self, player_number: int, move_descriptor: MoveDescriptor, max_moves: int=1) -> bool:
+    def isMoveWinning(self, player_number: int, move_descriptor: MoveDescriptor) -> bool:
         """
 
         Args:
             player_number: The player that will perform the move
             move_descriptor: The descriptor of the move to perform
-            max_moves: The maximum number of short moves performed during the simulation (used for continuous moves)
 
         Returns: True if the move makes the given player win the game
         """
-        return self.isMoveSuicidalOrWinning(player_number, move_descriptor, max_moves)[1]
+        return self.isMoveSuicidalOrWinning(player_number, move_descriptor)[1]
 
     def getTileByteCode(self, tile_id: tuple) -> int:
         """
@@ -323,7 +344,9 @@ class API(metaclass=ABCMeta):
         return byte_code
 
     def copy(self):
-        return type(self)(self.game.copy())
+        new_api = type(self)(self.game.copy())
+        new_api._actionsHistory = copy.deepcopy(self._actionsHistory)
+        return new_api
 
     def encodeMove(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
         """
@@ -476,16 +499,18 @@ class API(metaclass=ABCMeta):
         return order
 
     @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, force: bool = False,
+                                is_step: bool=False) -> Path:
         """
         Creates a move following the given event coming from the given unit
 
         Args:
             unit: The unit that triggered the event
             move_descriptor: The descriptor of the move triggered by the given unit
-            max_moves: The maximum number of moves done by the move to create (default: -1 => no limitations)
             force: Optional, a bot controller will force the move as it does not need to check if the move is possible
+            is_step: 
+                Optional, True indicates that the move will serve to perform a step in an API.
+                It can be ignored if the moves do not differ from a step or from a complete move
 
         Returns: A Path of move(s) triggered by the given event for the given unit
 
@@ -513,7 +538,7 @@ class API(metaclass=ABCMeta):
         """
         unit = self.game.players[player_number]
         try:
-            move = self.createMoveForDescriptor(unit, wanted_move, max_moves=-1)
+            move = self.createMoveForDescriptor(unit, wanted_move, is_step=True)
             return True, move
         except UnfeasibleMoveException:
             return False, None
@@ -558,7 +583,6 @@ class API(metaclass=ABCMeta):
             (does not check if the move is feasible).
         """
         pass
-
 
     @abstractmethod
     def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:

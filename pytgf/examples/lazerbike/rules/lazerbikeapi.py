@@ -2,6 +2,7 @@
 File containing the definition of the API used by the bot controllers of the Lazerbike game
 """
 from functools import partial
+
 from typing import List
 
 from pytgf.board import Tile, TileIdentifier
@@ -25,7 +26,7 @@ class LazerBikeAPI(API):
         self._unitsPreviousMoves = {}
         self._previousTraces = {}
 
-    def createMoveForDescriptor(self, unit: Bike, move_descriptor, max_moves: int=-1, force=False) -> Path:
+    def createMoveForDescriptor(self, unit: Bike, move_descriptor, force=False, is_step: bool=False) -> Path:
         fct = None
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys() or force
@@ -49,8 +50,8 @@ class LazerBikeAPI(API):
             if initial_move:
                 self._unitsPreviousMoves[unit] = move_descriptor
             return ContinuousPath(unit, self.game.getTileForUnit, fct, MAX_FPS, pre_action=pre_action,
-                                  max_moves=max_moves, step_post_action=partial(self._letTraceOnPreviousTile,
-                                                                                unit=unit),
+                                  max_moves=-1 if not is_step else 1,
+                                  step_post_action=partial(self._letTraceOnPreviousTile, unit=unit),
                                   units_location_dict=self.game.unitsLocation)
         raise UnfeasibleMoveException("The event couldn't create a valid move")
 

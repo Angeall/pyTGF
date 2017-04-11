@@ -15,6 +15,7 @@ class LazerBikeCore(Core):
     """
     Defines the rules for the Lazerbike game
     """
+
     @property
     def _suicideAllowed(self) -> bool:
         """

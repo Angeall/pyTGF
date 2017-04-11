@@ -1,7 +1,7 @@
 import unittest
-from typing import Tuple, List
 
 from multiprocess.connection import Pipe
+from typing import Tuple, List
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.units import Particle
@@ -38,7 +38,7 @@ class ExampleAPI(API):
         pass
 
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
+                                force: bool = False, is_step: bool=False) -> Path:
         raise UnfeasibleMoveException()
 
     def __init__(self, game: Core):

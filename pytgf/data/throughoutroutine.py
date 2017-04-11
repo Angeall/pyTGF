@@ -31,6 +31,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
                  must_keep_temp_files: bool=False, max_end_states: int=-1):
         super().__init__(eval_fct, possible_moves, max_depth)
         self.TEMP_DATA_PATH_NAME = os.path.join(COLLECTED_DATA_PATH_NAME, "temp" + str(id(self)))
+        self.fileID = 0
         self._gatherer = gatherer
         self._mustKeepTempFiles = must_keep_temp_files
         self._mustWriteFiles = must_write_files
@@ -45,10 +46,10 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         self._aPosterioriDataVectors = {}  # type: Dict[ObjID, Dict[MoveDescriptor, List]]
         self._concludedStates = {}  # type: Dict[ObjID, Any]
         self._tempFileIDs = []  # type: List[str]
+        self._actionsSequences = pd.DataFrame()  # type: pd.DataFrame
         self._nbStates = 0
         self._totalNbStates = 0
         self._writtenFiles = 0
-        self._mustSaveActionsSequences = True
         self._maxEndStates = max_end_states
         if max_end_states == -1:
             self._maxEndStates = float('inf')
@@ -115,6 +116,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
     def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None]]:
         finished = state.isFinished()
+
         # STOCKING A PRIORI DATA AND INIT A POSTERIORI DATA STRUCTURE
         if self._nbStates >= self._maxEndStates:  # We reached the limit
             return self._getTeamScore(state, self.eval(state)), None, \
@@ -127,6 +129,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
             self._aPosterioriDataVectors[state.id] = {action: [] for action in self._possibleMoves}
             data = None
         else:
+            self._registerActionsSequence(state)
             self._nbStates += 1
             self._totalNbStates += 1
         # SEARCHING MAX VALUE
@@ -148,6 +151,17 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
             if len(self._concludedStates) > MAX_TEMP_VECTORS:
                 self._writeToTempFile()
         return ret_val
+
+    def _registerActionsSequence(self, state):
+        actions_histories = state.getAllActionsHistories()
+        has_won = np.ndarray((0, 1))
+        for pl_num in state.getPlayerNumbers():
+            won = 0
+            if state.hasWon(pl_num):
+                won = 1
+            has_won = np.vstack((has_won, won))
+        actions_histories = np.hstack((has_won, actions_histories))
+        self._actionsSequences = self._actionsSequences.append(pd.DataFrame(actions_histories), ignore_index=True)
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
             -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
@@ -257,7 +271,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
             self._createDirectoryIfNeeded(COLLECTED_DATA_PATH_NAME)
             self._createDirectoryIfNeeded(self.TEMP_DATA_PATH_NAME)
 
-            file_id = str(random.randint(0, 1000))
+            file_id = str(self.fileID)
             self._tempFileIDs.append(file_id)
             self._writeToCsv(a_priori_vectors, self._getDataFileName(file_id),
                              self.TEMP_DATA_PATH_NAME, self._aPrioriTitles)
@@ -270,9 +284,10 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
 
             self._createDirectoryIfNeeded(ACTIONS_SEQUENCES_PATH_NAME)
             if self._mustWriteFiles:
-                self._writeToCsv(self._actionsSequences, "seq" + str(id(self._actionsSequences)),
+                self._writeToCsv(self._actionsSequences, "seq" + file_id,
                                  ACTIONS_SEQUENCES_PATH_NAME)
                 self._actionsSequences = pd.DataFrame()
+            self.fileID += 1
 
             del a_priori_vectors
             del a_posteriori_vectors_dicts

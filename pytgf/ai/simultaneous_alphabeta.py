@@ -7,7 +7,6 @@ import itertools
 import random
 
 import numpy as np
-import pandas as pd
 from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
@@ -26,7 +25,7 @@ class SimultaneousAlphaBeta:
     """
 
     def __init__(self, eval_fct: Callable[[API], Tuple[Value, ...]], possible_actions: Tuple[MoveDescriptor, ...],
-                 max_depth: int=6, turn_by_turn: bool=False, must_save_actions_sequences: bool=False):
+                 max_depth: int = 6, turn_by_turn: bool = False):
         """
 
         Args:
@@ -41,7 +40,6 @@ class SimultaneousAlphaBeta:
             possible_actions: The tuple of possible actions accepted in the game for all players
             max_depth: the maximum depth of the tree the algorithm can explore
         """
-        self._mustSaveActionsSequences = must_save_actions_sequences
         self.eval = eval_fct
         self.maxDepth = max_depth
         if self.maxDepth == -1:  # If there is no maximum depth...
@@ -53,7 +51,6 @@ class SimultaneousAlphaBeta:
         self.copyTime = 0
         self.turnByTurn = turn_by_turn
         self._currentMoveSequence = None  # type: np.ndarray
-        self._actionsSequences = pd.DataFrame()
         self._playerMapping = {}
         self._prepared = False
         self._currentlyTestedAction = None
@@ -122,13 +119,11 @@ class SimultaneousAlphaBeta:
         # Check if we reached the end of the tree
         if depth > self.maxDepth:
             score = self._getTeamScore(state, self.eval(state))
-            return score, None, (False, depth-1, False), state
+            return score, None, (False, depth - 1, False), state
         # Check if the game state is final
         elif state.isFinished():
-            self._saveActionsSequence(state)
-            return self._getTeamScore(state, self.eval(state)), None, (True, depth-1, state.hasWon(self.playerNumber)),\
-                   state
-
+            return (self._getTeamScore(state, self.eval(state)), None,
+                    (True, depth - 1, state.hasWon(self.playerNumber)), state)
         # Initializing the best values
         max_value = -float('inf')
         equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API]]
@@ -186,7 +181,7 @@ class SimultaneousAlphaBeta:
                 else:  # Both states ends in an inevitable loss
                     nb_turn = max(current_end_state[1], new_end_state[1])
                     return True, nb_turn, False
-            else:   # Only the new state finishes the game => no doubt, we need to update the current state
+            else:  # Only the new state finishes the game => no doubt, we need to update the current state
                 return new_end_state
         else:  # The new state hasn't reached a final state => indeterminate... benefit of the doubt
             if not current_end_state[2]:
@@ -224,9 +219,7 @@ class SimultaneousAlphaBeta:
             simulation_combination = combination
             feasible_moves, new_game_state = state.simulateMoves(simulation_combination)
             if feasible_moves and new_game_state is not None:
-                self._registerCurrentActions(combination, new_game_state)
                 value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
-                self._deleteLastActions()
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
@@ -244,27 +237,6 @@ class SimultaneousAlphaBeta:
         #            (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
         min_actions, new_game_state = random.choice(equal_min_choices)
         return min_value, min_actions, end_state, new_game_state
-
-    def _registerCurrentActions(self, actions: Dict[int, MoveDescriptor], state: API):
-        """
-        Register the given moves as the current moves
-
-        Args:
-            actions: The current moves done by the players
-            state: The state representing the game before the moves are performed
-        """
-        if self._mustSaveActionsSequences:
-            self._currentMoveSequence = np.hstack((self._currentMoveSequence,
-                                                   self._getActionsList(actions, state)))
-
-    def _deleteLastActions(self):
-        """
-        Unregister the last actions that were saved
-        """
-        if self._mustSaveActionsSequences:
-            last = self._currentMoveSequence[:, -1]
-            self._currentMoveSequence = self._currentMoveSequence[:, :-1]
-            return last
 
     def _getActionsList(self, actions: Dict[int, MoveDescriptor], state: API) -> np.ndarray:
         """
@@ -319,7 +291,7 @@ class SimultaneousAlphaBeta:
         if self.turnByTurn:
             unfeasible = []
             for moves in dicts:
-                succeeded, new_state = state.simulateMoves(moves, max_moves=-1)
+                succeeded, new_state = state.simulateMoves(moves)
                 if not succeeded:
                     unfeasible.append(moves)
             dicts = [dicts[i] for i in range(len(dicts)) if dicts[i] not in unfeasible]
@@ -360,7 +332,6 @@ class SimultaneousAlphaBeta:
 
         Returns: A list containing couples [player_number, move_descriptor]
         """
-        # TODO: Modify so that the possible moves are computed in the right order for turn by turn games
         moves = []
         for player_number in [player for player in players if state.game.controlledPlayers[player].isAlive()]:
             possible_moves_for_player = self._getPossibleMovesForPlayer(player_number, state)
@@ -381,20 +352,3 @@ class SimultaneousAlphaBeta:
         possible_moves_for_player = state.checkFeasibleMoves(player_number, self.possibleActions)
         random.shuffle(possible_moves_for_player)
         return possible_moves_for_player
-
-    def _saveActionsSequence(self, state: API):
-        """
-        Adds the current move sequences to the others
-
-        Args:
-            state: The state that is the result of the last move in the sequence
-        """
-        if self._mustSaveActionsSequences:
-            has_won = np.zeros((len(self._playerMapping), 1))
-            for player_number in state.getPlayerNumbers():
-                if state.hasWon(player_number):
-                    has_won[self._playerMapping[player_number]] = 1
-            actions_sequence = np.hstack((has_won, self._currentMoveSequence))
-            self._actionsSequences = self._actionsSequences.append(pd.DataFrame(actions_sequence))
-
-

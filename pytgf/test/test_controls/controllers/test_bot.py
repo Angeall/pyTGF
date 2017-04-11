@@ -18,7 +18,7 @@ class ExampleAPI(API):
         pass
 
     def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
+                                force: bool = False, is_step: bool=False) -> Path:
         pass
 
     def isItOneTestMethod(self):

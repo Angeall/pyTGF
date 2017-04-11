@@ -15,7 +15,8 @@ from pytgf.game import API
 
 
 class SokobanAPI(API):
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1, force: bool=False) -> Path:
+    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, force: bool=False, is_step: bool=False) \
+            -> Path:
         if isinstance(move_descriptor, tuple) and len(move_descriptor) == 2:
             destination_tile = self.game.board.getTileById(move_descriptor)
             if destination_tile.walkable:
@@ -28,8 +29,6 @@ class SokobanAPI(API):
                                                             lambda tile: tile.walkable and not tile.deadly)
                     current_tile = source_tile
                     tile_ids = self._checkIfBoxInTheWay(source_tile, tile_ids)
-                    if max_moves > 0:
-                        tile_ids = tile_ids[:max_moves]
                     if len(tile_ids) > 0:
                         for next_tile_id in tile_ids:
                             next_tile = self.game.board.getTileById(next_tile_id)
