@@ -90,7 +90,7 @@ class API(metaclass=ABCMeta):
             if not feasible_move:
                 return False, None
         if not self.isTurnByTurn():
-            self.game.checkIfFinished()
+            finished = new_game_state.game.checkIfFinished()
         return True, new_game_state
 
     def performMove(self, player_number: int, move_descriptor: MoveDescriptor, force: bool = False) -> bool:
@@ -102,7 +102,7 @@ class API(metaclass=ABCMeta):
             move_descriptor: The move to perform (either a Path or a move descriptor)
             force: Boolean that indicates if the move must be forced into the game (is optional in the game def...)
         """
-        if self.isFinished():
+        if self.game.isFinished():
             return True
         if not force and self.isTurnByTurn() and player_number != self.getCurrentPlayer():
             raise NotYourTurnException("The move is performed by player " + str(player_number) + " while the current "
@@ -111,10 +111,7 @@ class API(metaclass=ABCMeta):
         try:
             move = self.createMoveForDescriptor(unit, move_descriptor, force=force, is_step=True)
             new_tile_id = move.complete()
-            if player_number not in self._actionsHistory:
-                self._actionsHistory[player_number] = []
-            encoded_move = self.encodeMove(player_number, move_descriptor)
-            self._actionsHistory[player_number].append(encoded_move)
+            self._addActionToHistory(move_descriptor, player_number)
             self.game.updateGameState(move.unit, new_tile_id, move_descriptor)
             if self.isTurnByTurn():
                 self.switchToNextPlayer()
@@ -122,8 +119,15 @@ class API(metaclass=ABCMeta):
         except UnfeasibleMoveException:
             return False
         except IllegalMove:
+            self._addActionToHistory(move_descriptor, player_number)
             unit.kill()
         return True
+
+    def _addActionToHistory(self, move_descriptor, player_number):
+        if player_number not in self._actionsHistory:
+            self._actionsHistory[player_number] = []
+        encoded_move = self.encodeMove(player_number, move_descriptor)
+        self._actionsHistory[player_number].append(encoded_move)
 
     def getActionsHistory(self, player_number: int) -> List[MoveDescriptor]:
         """
@@ -192,19 +196,20 @@ class API(metaclass=ABCMeta):
 
         Returns: The list of all the feasible moves among the possible ones
         """
-        if not self.game.controlledPlayers[player_number].isAlive():  # If the unit is dead, no move is feasible for it
+        if not self.isPlayerAlive(player_number):  # If the unit is dead, no move is feasible for it
             return []
         feasible_moves = []
         for move in possible_moves:
             if self._generateMove(player_number, move)[0]:
                 feasible_moves.append(move)
+
         return feasible_moves
 
     def isFinished(self) -> bool:
         """
         Returns: True if the game is in a final state
         """
-        self.game.checkIfFinished()
+        finished = self.game.checkIfFinished()
         return self.game.isFinished()
 
     def isPlayerAlive(self, player_number: int) -> bool:
@@ -364,7 +369,7 @@ class API(metaclass=ABCMeta):
         # if not self.isPlayerAlive(player_number):
         #     return -2
         if self.game.getUnitForNumber(player_number).lastAction is None:
-            return -1
+            return -1000
         return self._encodeMoveIntoPositiveNumber(player_number, move_descriptor)
 
     def decodeMove(self, player_number: int, encoded_move: int) -> MoveDescriptor:
@@ -385,9 +390,9 @@ class API(metaclass=ABCMeta):
             NoMoveException:
                 If the encoded move is -1, it means that the player had't played yet when encoding the last move
         """
-        if encoded_move == -2:
+        if encoded_move == -2000:
             raise DeadPlayerException()
-        if encoded_move == -1:
+        if encoded_move == -1000:
             raise NoMovementException()
         return self._decodeMoveFromPositiveNumber(player_number, encoded_move)
 

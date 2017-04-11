@@ -75,6 +75,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
             The DataFrames containing the gathered data as a tuple
                 (A Priori Data, A Posteriori data indexed by actions)
         """
+
         self.alphaBetaSearching(player_number, state)
         return self._writeToFinalFile()
 

@@ -31,6 +31,7 @@ class RandomRoutine(ThroughoutRoutine):
         for _ in nb_iter:
             nb_moves = random.randint(0, self._maxNbSimulatedMoves)
             random_state = self.getRandomState(state.copy(), nb_moves)
+
             if random_state is not None:
                 self._lastRandomState = random_state
                 self.alphaBetaSearching(player_number, random_state)
@@ -54,7 +55,7 @@ class RandomRoutine(ThroughoutRoutine):
         for player_number in state.getPlayerNumbers():
             if state.game.getUnitForNumber(player_number).lastAction is None:
                 state.game.getUnitForNumber(player_number).lastAction = -1
-        if state.isFinished():
+        if state.game.isFinished():
             return None
         elif nb_moves == 0:
             return state

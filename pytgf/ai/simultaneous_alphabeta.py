@@ -214,7 +214,6 @@ class SimultaneousAlphaBeta:
         min_value = float('inf')
         equal_min_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API]]
         end_state = (False, 0, False)
-        new_game_state = None
         for combination in actions:
             simulation_combination = combination
             feasible_moves, new_game_state = state.simulateMoves(simulation_combination)
@@ -230,8 +229,6 @@ class SimultaneousAlphaBeta:
                     best_combination, new_game_state = random.choice(equal_min_choices)
                     return value, best_combination, end_state, new_game_state
                 beta = min(beta, value)
-            else:
-                print("Unfeasible move:", combination, '\n' + str(state.game._simplifiedBoard))
         # if len(equal_min_choices) == 0:  # No choice is good to take...
         #     return self._getTeamScore(state, self.eval(state)), None, \
         #            (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
@@ -291,7 +288,7 @@ class SimultaneousAlphaBeta:
         if self.turnByTurn:
             unfeasible = []
             for moves in dicts:
-                succeeded, new_state = state.simulateMoves(moves)
+                succeeded, _ = state.simulateMoves(moves)
                 if not succeeded:
                     unfeasible.append(moves)
             dicts = [dicts[i] for i in range(len(dicts)) if dicts[i] not in unfeasible]
