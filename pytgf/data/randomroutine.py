@@ -25,12 +25,12 @@ class RandomRoutine(ThroughoutRoutine):
         self._lastRandomState = None
 
     def routine(self, player_number: int, state: API):
-        self._prepare(player_number, state)
         nb_iter = range(self._nbRandomStates)
         res = None
         for _ in nb_iter:
             nb_moves = random.randint(0, self._maxNbSimulatedMoves)
             random_state = self.getRandomState(state.copy(), nb_moves)
+            self._prepare(player_number, state)
 
             if random_state is not None:
                 self._lastRandomState = random_state

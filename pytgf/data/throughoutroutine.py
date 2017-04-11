@@ -244,10 +244,17 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
                 if pre_seq not in winning_sequences:
                     winning_sequences[pre_seq] = []
                 winning_sequences[pre_seq].append(winning_move[order_of_player])
+            avoid_doubles = {key: None for key in winning_sequences}
             for i, other_sequence in enumerate(other_sequences):
                 pre_seq = tuple(other_sequence[:order_of_player])
-                if pre_seq in winning_sequences and other_sequence[order_of_player] not in winning_sequences[pre_seq]:
-                    to_remove.append(other_moves[i])
+                if pre_seq in winning_sequences:
+                    if other_sequence[order_of_player] not in winning_sequences[pre_seq]:
+                        to_remove.append(other_moves[i])
+                    else:
+                        if avoid_doubles[pre_seq] is None:
+                            avoid_doubles[pre_seq] = other_moves[i]
+                        else:
+                            to_remove.append(other_moves[i])
         to_keep = []
         for move in other_moves:
             if move not in to_remove:
