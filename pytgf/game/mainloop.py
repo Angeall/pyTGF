@@ -104,17 +104,18 @@ class MainLoop:
         if not self._prepared:
             self._prepareLoop()
         while self._state != END:
-            self._state = self._checkGameState()
             clock.tick(max_fps)
             self._handleInputs()
-            if self._state == CONTINUE:
-                self._getNextMoveFromControllerWrapperIfAvailable()
-                self._handlePendingMoves()
-                self._refreshScreen()
-            elif self._state == FINISH:
-                self.executor.terminate()
-                self._prepared = False
-                return None
+            if self._state != PAUSE:
+                self._state = self._checkGameState()
+                if self._state == CONTINUE:
+                    self._getNextMoveFromControllerWrapperIfAvailable()
+                    self._handlePendingMoves()
+                    self._refreshScreen()
+                elif self._state == FINISH:
+                    self.executor.terminate()
+                    self._prepared = False
+                    return None
         self.executor.terminate()
         self._prepared = False
         return self.game.winningPlayers

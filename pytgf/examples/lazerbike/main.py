@@ -98,8 +98,10 @@ def launch_game(gui: GUI, player_info: tuple):
     builder = Builder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
-    builder.setTilesVisible(False)
+    builder.setTilesVisible(True)
     board = builder.create()
+    board.graphics.setBorderColor((25, 25, 25))
+    board.graphics.setInternalColor((0, 125, 125))
 
     speed = 0.75*board.graphics.sideLength
     game = LazerBikeCore(board)
