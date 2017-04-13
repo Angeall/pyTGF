@@ -108,10 +108,10 @@ class TestLazerbikeRandomData(unittest.TestCase):
         builder.setTilesVisible(False)
         board = builder.create()  # type: Board
         cls.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
-        b1 = Bike(200, 1, max_trace=-1)
+        b1 = Bike(200, 1, max_trace=-1, initial_direction=GO_RIGHT)
         cls.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (2, 2), GO_RIGHT,
                          team=1)
-        b2 = Bike(200, 2, max_trace=-1)
+        b2 = Bike(200, 2, max_trace=-1, initial_direction=GO_LEFT)
         cls.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (12, 12), GO_LEFT,
                          team=2)
 

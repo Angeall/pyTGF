@@ -7,7 +7,6 @@ from typing import Optional
 from pytgf.characters.units.sprite import UnitSprite
 from pytgf.characters.units.unit import Unit
 
-
 __author__ = 'Anthony Rouneau'
 
 
@@ -31,6 +30,11 @@ class MovingUnit(Unit):
         self.playerNumber = player_number
         self.speed = speed
         self.lastAction = None
+        self.currentAction = None
 
-    def setLastAction(self, last_action: int):
+    def setLastAction(self, last_action):
         self.lastAction = last_action
+
+    def setCurrentAction(self, current_action):
+        self.currentAction = current_action
+

@@ -31,10 +31,10 @@ def gather_data():
     board = builder.create()
     board.graphics = None
     loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
-    b1 = Bike(200, 1, max_trace=-1, graphics=False)
+    b1 = Bike(200, 1, max_trace=-1, graphics=False, initial_direction=GO_RIGHT)
     loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (2, 2), GO_RIGHT,
                  team=1)
-    b2 = Bike(200, 2, max_trace=-1, graphics=False)
+    b2 = Bike(200, 2, max_trace=-1, graphics=False, initial_direction=GO_LEFT)
     loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (12, 12), GO_LEFT,
                  team=2)
 

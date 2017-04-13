@@ -2,7 +2,6 @@
 File containing the definition of the API used by the bot controllers of the Lazerbike game
 """
 from functools import partial
-
 from typing import List
 
 from pytgf.board import Tile, TileIdentifier
@@ -31,19 +30,19 @@ class LazerBikeAPI(API):
         pre_action = None
         initial_move = unit not in self._unitsPreviousMoves.keys() or force
         if move_descriptor == GO_RIGHT:
-            if initial_move or (unit.lastAction != GO_LEFT):
+            if initial_move or (unit.currentAction != GO_LEFT):
                 pre_action = partial(unit.turn, GO_RIGHT)
                 fct = self.game.getRightTile
         elif move_descriptor == GO_LEFT:
-            if initial_move or (unit.lastAction != GO_RIGHT):
+            if initial_move or (unit.currentAction != GO_RIGHT):
                 pre_action = partial(unit.turn, GO_LEFT)
                 fct = self.game.getLeftTile
         elif move_descriptor == GO_DOWN:
-            if initial_move or (unit.lastAction != GO_UP):
+            if initial_move or (unit.currentAction != GO_UP):
                 pre_action = partial(unit.turn, GO_DOWN)
                 fct = self.game.getBottomTile
         elif move_descriptor == GO_UP:
-            if initial_move or (unit.lastAction != GO_DOWN):
+            if initial_move or (unit.currentAction != GO_DOWN):
                 pre_action = partial(unit.turn, GO_UP)
                 fct = self.game.getTopTile
         if fct is not None:
@@ -71,7 +70,7 @@ class LazerBikeAPI(API):
             - +1 if the move makes it turn left, relatively to its current direction
             - -1000 if the move makes it turn back (illegal move...)
         """
-        diff = move_descriptor - self.getCurrentDirection(player_number)
+        diff = move_descriptor - self.game.getUnitForNumber(player_number).lastAction
         if abs(diff) == 2:
             return -1000
         if diff == 3:
@@ -109,18 +108,20 @@ class LazerBikeAPI(API):
         Returns:
             The code representing the tile (i, j) in the board
 
-                - 0 = walkable non-deadly
-                - 1 = walkable deadly
-                - 2 = non-walkable, non-deadly
-                - 3 = non-walkable, deadly
+                - 10 -> 13 indicates the current position of the player 1 + its current direction (0 to 3)
+                - 20 -> 23 indicates the current position of the player 2 + its current direction (0 to 3)
+                - 30 -> 33                    [...]                     3
+                - 40 -> 43                    [...]                     4
+                - -1 -> -4 indicates a tile occupied by a lazer put there by the player (no 1 to 4)
         """
         i, j = tile_id
-        tile = self.game.board.getTileById((i, j))
         byte_code = 0
-        if tile.deadly or len(self.game.getTileOccupants((i, j))) > 0:
-            byte_code += 1
-        if not tile.walkable:
-            byte_code += 2
+        occupants = self.game.getTileOccupants((i, j))
+        if len(occupants) > 0:
+            if len([occupants[i] for i in range(len(occupants)) if isinstance(occupants[i], Trace)]) > 0:  # Trace
+                byte_code = -occupants[0].playerNumber
+            elif occupants[0].isAlive():  # Player
+                    byte_code = int(str(occupants[0].playerNumber) + str(occupants[0].currentAction))
         return byte_code
 
     def isWall(self, tile_id: TileIdentifier) -> bool:
@@ -215,7 +216,7 @@ class LazerBikeAPI(API):
 
         Returns: The current direction of the player (0: right, 1: top, 2: left, 3: bottom)
         """
-        return self.game.getUnitForNumber(player_number).lastAction
+        return self.game.getUnitForNumber(player_number).currentAction
 
     def _resizeTrace(self, trace, current_tile: Tile) -> None:
         """

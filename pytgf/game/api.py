@@ -3,9 +3,9 @@ File containing the definition of a basic API to interact with a game from a con
 """
 import copy
 from abc import ABCMeta, abstractmethod
+from typing import Tuple, Dict, Union, List
 
 import pandas as pd
-from typing import Tuple, Dict, Union, List
 
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves import IllegalMove, MoveDescriptor
@@ -111,6 +111,7 @@ class API(metaclass=ABCMeta):
         try:
             move = self.createMoveForDescriptor(unit, move_descriptor, force=force, is_step=True)
             new_tile_id = move.complete()
+            unit.currentAction = move_descriptor
             self._addActionToHistory(move_descriptor, player_number)
             self.game.updateGameState(move.unit, new_tile_id, move_descriptor)
             if self.isTurnByTurn():

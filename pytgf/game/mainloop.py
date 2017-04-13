@@ -5,12 +5,12 @@ and the bot controllers handling
 
 import time
 from queue import Queue, Empty
-
-import pygame
-from multiprocess.connection import Pipe
 from typing import Dict, Optional, List
 from typing import Tuple
 from typing import Union
+
+import pygame
+from multiprocess.connection import Pipe
 
 from pytgf.controls.events.multiple import MultipleEvents
 from pytgf.controls.events.wake import WakeEvent
@@ -318,6 +318,7 @@ class MainLoop:
         for unit, (tile_id, move_descriptor) in completed_moves.items():
             self.game.updateGameState(unit, tile_id, move_descriptor)
         for player_number, move_descriptor in just_started.items():
+            self.game.getUnitForNumber(player_number).setCurrentAction(move_descriptor)
             self._addMessageToSendToAll(player_number, move_descriptor)
             if self.api.isTurnByTurn():
                 self._sendEventsToNextPlayer()
