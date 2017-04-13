@@ -52,11 +52,11 @@ def get_player_info(player_number: int):
     if player_number == 1:
         return 2, 2, GO_RIGHT
     elif player_number == 2:
-        return 17, 17, GO_LEFT
+        return 12, 12, GO_LEFT
     elif player_number == 3:
-        return 17, 2, GO_UP
+        return 12, 2, GO_UP
     else:
-        return 2, 17, GO_DOWN
+        return 2, 12, GO_DOWN
 
 
 def add_controller(main_loop: MainLoop, player_class, player_number: int, player_team: int, speed: int, max_trace: int):
@@ -93,13 +93,16 @@ def launch_game(gui: GUI, player_info: tuple):
     pygame.init()
     width = 1024
     height = 768
-    lines = 20
-    columns = 20
+    lines = 15
+    columns = 15
     builder = Builder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
+    # builder.setTilesVisible(True)
     board = builder.create()
+    # board.graphics.setBorderColor((0, 125, 125))
+    # board.graphics.setInternalColor((25, 25, 25))
 
     speed = 0.75*board.graphics.sideLength
     game = LazerBikeCore(board)
