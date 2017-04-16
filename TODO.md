@@ -8,6 +8,7 @@
 ## Game engine
 
 - Add "laps" between actions. Real time = one lap for every controller. Turn-based = one lap per player
+- Send a WAKE event in case of invalid action received.
 - Divide API and Core into Abstract/RealTime/TurnBased API and Core.
 - Add a time limit to the Bots => fire warning when bot exceeded the limit.
 - Fix the "can't quit the game" problem when exiting the `pygame` window while the `tkinter` end window is opened
