@@ -137,7 +137,8 @@ class MainLoop:
         self.game.addUnit(unit, team, tile_id, controlled=is_controlled)
         if is_controlled:
             self._addControllerWrapper(wrapper, unit)
-            if initial_action is None and (not self.api.isTurnByTurn() or unit.playerNumber == self.api.getCurrentPlayer()):
+            if initial_action is None and (not self.api.isTurnByTurn() or
+                                           unit.playerNumber == self.api.getCurrentPlayer()):
                 self._eventsToSend[wrapper].append(WakeEvent())
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
@@ -145,7 +146,7 @@ class MainLoop:
         unit.moveTo(tile.center)
         if initial_action is not None:
             unit.setLastAction(initial_action)
-            self._handleEvent(unit, initial_action)
+            self._handleEvent(unit, initial_action, wrapper.controller.playerNumber)
 
     def pause(self) -> None:
         """
@@ -298,7 +299,7 @@ class MainLoop:
                 move = pipe_conn.recv()
                 if not self.game.turnByTurn or (self.api.isCurrentPlayer(current_wrapper.controller.playerNumber)
                                                 and not self._currentTurnTaken):
-                    self._handleEvent(self.wrappers[current_wrapper], move)
+                    self._handleEvent(self.wrappers[current_wrapper], move, current_wrapper.controller.playerNumber)
 
     def _handlePendingMoves(self) -> None:
         """
@@ -467,7 +468,7 @@ class MainLoop:
             return END
         return CONTINUE
 
-    def _handleEvent(self, unit: Unit, event: MoveDescriptor) -> None:
+    def _handleEvent(self, unit: Unit, event: MoveDescriptor, player_number: int) -> None:
         """
         The goal of this method is to handle the given event for the given unit
 
@@ -476,12 +477,12 @@ class MainLoop:
             event: The event sent by the controller
         """
         try:
-            move = self.api.createMoveForDescriptor(unit, event)  # May raise: UnfeasibleMoveException
+            move = self.api.createMoveForDescriptor(unit, event)  # may raise: UnfeasibleMoveException
             self._currentTurnTaken = True
             self._moveDescriptors[move] = event
             self._addMove(unit, move)
         except UnfeasibleMoveException:
-            pass
+            self._sendEventsToController(player_number, event=WakeEvent())
 
     def _getPipeConnection(self, linker: ControllerWrapper) -> PipeConnection:
         """
@@ -524,10 +525,13 @@ class MainLoop:
         next_player_number = self.api.getNextPlayer()
         self._sendEventsToController(next_player_number)
 
-    def _sendEventsToController(self, player_number: int):
+    def _sendEventsToController(self, player_number: int, event: Event=None):
+
         next_player_wrapper = self._getWrapperFromPlayerNumber(player_number)
         pipe_conn = self._getPipeConnection(next_player_wrapper)
-        pipe_conn.send(MultipleEvents(self._eventsToSend[next_player_wrapper]))
+        if event is None:
+            event = MultipleEvents(self._eventsToSend[next_player_wrapper])
+        pipe_conn.send(event)
         self._eventsToSend[next_player_wrapper] = []
 
     def _sendEventsToAll(self):
