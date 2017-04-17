@@ -2,8 +2,8 @@ from typing import Optional
 
 from pytgf.board import Board
 from pytgf.board import TileIdentifier
-from pytgf.characters.units import MovingUnit
 from pytgf.characters.units import Particle
+from pytgf.characters.units import Unit
 from pytgf.controls.events import KeyboardEvent
 from pytgf.game import Core
 
@@ -19,12 +19,12 @@ class SokobanGame(Core):
     def _teamKillAllowed(self) -> bool:
         return False
 
-    def __init__(self, board: Board, ending_unit: MovingUnit, winning_tiles: list):
+    def __init__(self, board: Board, ending_unit: Unit, winning_tiles: list):
         super().__init__(board)
-        self._endingUnit = ending_unit  # type: MovingUnit
+        self._endingUnit = ending_unit  # type: Unit
         self._winningTiles = winning_tiles
 
-    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, tile_id: TileIdentifier, frontal: bool = False,
+    def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool = False,
                         particle: Optional[Particle]=None):
         """
         Checks if the player1 is colliding with the invisible player

@@ -10,7 +10,7 @@ import pandas as pd
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves import IllegalMove, MoveDescriptor
 from pytgf.characters.moves import Path
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 from pytgf.game.core import Core, UnfeasibleMoveException
 
 __author__ = 'Anthony Rouneau'
@@ -107,7 +107,7 @@ class API(metaclass=ABCMeta):
         if not force and self.isTurnByTurn() and player_number != self.getCurrentPlayer():
             raise NotYourTurnException("The move is performed by player " + str(player_number) + " while the current "
                                        "player is " + str(self.getCurrentPlayer()))
-        unit = self.game.getUnitForNumber(player_number)  # type: MovingUnit
+        unit = self.game.getUnitForNumber(player_number)  # type: Unit
         try:
             move = self.createMoveForDescriptor(unit, move_descriptor, force=force, is_step=True)
             new_tile_id = move.complete()
@@ -505,7 +505,7 @@ class API(metaclass=ABCMeta):
         return order
 
     @abstractmethod
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, force: bool = False,
+    def createMoveForDescriptor(self, unit: Unit, move_descriptor: MoveDescriptor, force: bool = False,
                                 is_step: bool=False) -> Path:
         """
         Creates a move following the given event coming from the given unit

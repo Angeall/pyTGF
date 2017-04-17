@@ -4,15 +4,14 @@ File containing the definition of a Game.
 
 from abc import ABCMeta, abstractmethod
 from copy import deepcopy
-
 from typing import Dict, List, Union, Tuple, Callable, Optional
 
 from pytgf.board import Board, Tile
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.moves import Path
-from pytgf.characters.units import MovingUnit
 from pytgf.characters.units import Particle
+from pytgf.characters.units import Unit
 from pytgf.characters.utils.units import resize_unit
 from pytgf.controls.events import KeyboardEvent, MouseEvent
 from pytgf.utils.geom import Coordinates
@@ -62,11 +61,11 @@ class Core(metaclass=ABCMeta):
         self.turnByTurn = turn_by_turn
         self.winningPlayers = None
         self.winningTeam = None
-        self.teams = {}  # type: Dict[int, List[MovingUnit]]
-        self.unitsTeam = {}  # type: Dict[MovingUnit, int]
-        self.players = {}  # type: Dict[int, MovingUnit]
-        self.controlledPlayers = {}  # type: Dict[int, MovingUnit]
-        self._activeUnits = {}  # type: Dict[int, MovingUnit]
+        self.teams = {}  # type: Dict[int, List[Unit]]
+        self.unitsTeam = {}  # type: Dict[Unit, int]
+        self.players = {}  # type: Dict[int, Unit]
+        self.controlledPlayers = {}  # type: Dict[int, Unit]
+        self._activeUnits = {}  # type: Dict[int, Unit]
         self.unitsLocation = {}   # type: Dict[Particle, tuple]
         self._previousUnitsLocation = {}   # type: Dict[Particle, tuple]
         self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
@@ -74,7 +73,7 @@ class Core(metaclass=ABCMeta):
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def addUnit(self, unit: MovingUnit, team_number: int, origin_tile_id: TileIdentifier,
+    def addUnit(self, unit: Unit, team_number: int, origin_tile_id: TileIdentifier,
                 controlled: bool=True, active: bool=True) -> None:
         """
         Adds a unit to the game
@@ -100,7 +99,7 @@ class Core(metaclass=ABCMeta):
         else:
             self.teams[team_number] = [unit]
 
-    def getTileForUnit(self, unit: MovingUnit) -> Tile:
+    def getTileForUnit(self, unit: Unit) -> Tile:
         """
         Args:
             unit: The unit for which the Tile will be given
@@ -115,7 +114,7 @@ class Core(metaclass=ABCMeta):
         """
         return self._finished
 
-    def updateGameState(self, unit: MovingUnit, tile_id: TileIdentifier, move_descriptor: MoveDescriptor) -> None:
+    def updateGameState(self, unit: Unit, tile_id: TileIdentifier, move_descriptor: MoveDescriptor) -> None:
         """
         Change the unit's tile and checks for collisions
 
@@ -159,7 +158,7 @@ class Core(metaclass=ABCMeta):
         """
         return deepcopy(self)
 
-    def belongsToSameTeam(self, unit1: MovingUnit, unit2: MovingUnit) -> bool:
+    def belongsToSameTeam(self, unit1: Unit, unit2: Unit) -> bool:
         """
         Checks if the two given units are in the same team
 
@@ -206,7 +205,7 @@ class Core(metaclass=ABCMeta):
                 self.winningTeam = winning_team
             return True
 
-    def createKeyboardEvent(self, unit: MovingUnit, input_key) -> KeyboardEvent:
+    def createKeyboardEvent(self, unit: Unit, input_key) -> KeyboardEvent:
         """
         Creates a keyboard event (override for custom events)
 
@@ -218,7 +217,7 @@ class Core(metaclass=ABCMeta):
         """
         return KeyboardEvent((input_key,))
 
-    def createMouseEvent(self, unit: MovingUnit, pixel: Coordinates, mouse_state: Tuple[bool, bool, bool],
+    def createMouseEvent(self, unit: Unit, pixel: Coordinates, mouse_state: Tuple[bool, bool, bool],
                          click_up: bool, tile_id: TileIdentifier) -> MouseEvent:
         """
         Creates a mouse event (override for custom events)
@@ -234,7 +233,7 @@ class Core(metaclass=ABCMeta):
         """
         return MouseEvent(pixel, mouse_state, click_up, tile_id)
 
-    def getUnitForNumber(self, player_number: int) -> MovingUnit:
+    def getUnitForNumber(self, player_number: int) -> Unit:
         """
         Args:
             player_number: The number representing the wanted unit
@@ -266,7 +265,7 @@ class Core(metaclass=ABCMeta):
             return tuple(self.tilesOccupants[tile_id])
         return ()
 
-    def addCustomMove(self, unit: MovingUnit, move: Path, event: MoveDescriptor) -> None:
+    def addCustomMove(self, unit: Unit, move: Path, event: MoveDescriptor) -> None:
         """
         Uses the "addCustomMoveFunc" that could have been defined by the mainloop to add a move that will be performed
          step by step each frame.
@@ -307,7 +306,7 @@ class Core(metaclass=ABCMeta):
 
     # -------------------- PROTECTED METHODS -------------------- #
 
-    def _handleCollision(self, unit: MovingUnit, particles: List[Particle], tile_id: TileIdentifier) -> None:
+    def _handleCollision(self, unit: Unit, particles: List[Particle], tile_id: TileIdentifier) -> None:
         """
         Handles a collision between a unit and other units
 
@@ -319,7 +318,7 @@ class Core(metaclass=ABCMeta):
             if not (unit is particle):
                 if particle not in self.unitsLocation.keys():  # If the other unit is a Particle
                     other_player = None
-                    for player in self.unitsLocation.keys():  # type: MovingUnit
+                    for player in self.unitsLocation.keys():  # type: Unit
                         if player.hasParticle(particle):
                             other_player = player
                             break
@@ -338,7 +337,7 @@ class Core(metaclass=ABCMeta):
         """
         return len([unit for unit in self.tilesOccupants[tile_id] if unit.isAlive()]) > 1
 
-    def _removeUnitFromTile(self, unit: MovingUnit) -> None:
+    def _removeUnitFromTile(self, unit: Unit) -> None:
         """
         Removes the given unit from its current tile
 
@@ -368,7 +367,7 @@ class Core(metaclass=ABCMeta):
         return False
 
     @abstractmethod
-    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, tile_id: TileIdentifier, frontal: bool = False,
+    def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool = False,
                         particle: Optional[Particle]=None):
         """
         Makes what it has to be done when the first given player collides with a particle of the second given player

@@ -7,7 +7,7 @@ from pytgf.characters.moves import ListPath
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.moves import Path
 from pytgf.characters.moves import ShortMove
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 from pytgf.controls.wrappers.wrapper import MAX_FPS
 from pytgf.examples.sokoban.rules.sokoban import FULL_HOLE_COLOR
 from pytgf.examples.sokoban.units.box import Box
@@ -15,7 +15,7 @@ from pytgf.game import API
 
 
 class SokobanAPI(API):
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, force: bool=False, is_step: bool=False) \
+    def createMoveForDescriptor(self, unit: Unit, move_descriptor, force: bool=False, is_step: bool=False) \
             -> Path:
         if isinstance(move_descriptor, tuple) and len(move_descriptor) == 2:
             destination_tile = self.game.board.getTileById(move_descriptor)

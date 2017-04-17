@@ -1,10 +1,11 @@
-import numpy as np
 from typing import Optional, List
+
+import numpy as np
 
 from pytgf.board import Board
 from pytgf.board import TileIdentifier
-from pytgf.characters.units import MovingUnit
 from pytgf.characters.units import Particle
+from pytgf.characters.units import Unit
 from pytgf.examples.connect4.units.bottom import Bottom
 from pytgf.examples.connect4.units.disc import Disc
 from pytgf.game import Core
@@ -26,7 +27,7 @@ class Connect4Core(Core):
     def _suicideAllowed(self) -> bool:
         return False
 
-    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, tile_id: TileIdentifier, frontal: bool = False,
+    def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool = False,
                         particle: Optional[Particle]=None):
         if isinstance(player2, Bottom) and isinstance(player1, Disc):
             team_number = self.unitsTeam[player1]

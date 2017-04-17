@@ -4,8 +4,8 @@ from queue import Empty
 from pytgf.board import Builder
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.moves import Path
-from pytgf.characters.units import MovingUnit
 from pytgf.characters.units import Particle
+from pytgf.characters.units import Unit
 from pytgf.controls.controllers import Bot, TeammatePayload
 from pytgf.game import Core, API
 
@@ -17,7 +17,7 @@ class ExampleAPI(API):
     def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
         pass
 
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+    def createMoveForDescriptor(self, unit: Unit, move_descriptor: MoveDescriptor, max_moves: int = -1,
                                 force: bool = False, is_step: bool=False) -> Path:
         pass
 

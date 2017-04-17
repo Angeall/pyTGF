@@ -7,7 +7,7 @@ from typing import List, Optional, Callable
 from pytgf.board import Tile
 from pytgf.characters.moves.path import Path
 from pytgf.characters.moves.shortmove import ShortMove
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 
 __author__ = 'Anthony Rouneau'
 
@@ -17,7 +17,7 @@ class ListPath(Path):
     Class defining a path made of a list os ShortMoves. When the path reaches the end of that list,
     the path is considered as finished
     """
-    def __init__(self, unit: MovingUnit, move_list: List[ShortMove], pre_action: Optional[Callable[[], None]]=None,
+    def __init__(self, unit: Unit, move_list: List[ShortMove], pre_action: Optional[Callable[[], None]]=None,
                  post_action: Optional[Callable[[], None]]=None,
                  step_pre_action: Optional[Callable[[Tile, Tile], None]]=None,
                  step_post_action: Optional[Callable[[Tile, Tile], None]]=None, max_moves: int=-1):

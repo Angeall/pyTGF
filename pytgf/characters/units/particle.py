@@ -19,18 +19,19 @@ class Particle:
     A Particle is something than can be placed on a tile of the game. It can be killed, drawn and moved.
     """
 
-    def __init__(self, sprite: Optional[UnitSprite]=None, nb_lives: int=1, player_number: int=-1):
+    def __init__(self, sprite: Optional[UnitSprite]=None, nb_lives: int=1, id_number: int=-1, speed: int=150):
         """
         Instantiates a particle unit in the game
 
         Args:
             sprite: The sprite to draw on the board (can be None if the Particle must not be drawn)
             nb_lives: The number of lives this unit has before it dies
-            player_number: The number representing the player that owns this particle
+            id_number: The number representing the player that owns this particle
         """
         self._nbLives = nb_lives
         self.sprite = sprite  # type: UnitSprite
-        self.playerNumber = player_number
+        self.playerNumber = id_number
+        self.speed = speed
         self._isAlive = True
         self._drawable = None
 

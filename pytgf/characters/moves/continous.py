@@ -8,8 +8,8 @@ from pytgf.board import Tile
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves.path import Path
 from pytgf.characters.moves.shortmove import ShortMove
-from pytgf.characters.units import MovingUnit
 from pytgf.characters.units import Particle
+from pytgf.characters.units import Unit
 
 __author__ = 'Anthony Rouneau'
 
@@ -21,7 +21,7 @@ class ContinuousPath(Path):
     function cannot give another destination tile or when the wanted move is invalid/impossible
     """
 
-    def __init__(self, unit: MovingUnit, source_tile_func: Callable[[Any, MovingUnit], Tile],
+    def __init__(self, unit: Unit, source_tile_func: Callable[[Any, Unit], Tile],
                  next_tile_func: Callable[[Any, Tile], Tile], fps: int,
                  units_location_dict: Dict[Particle, TileIdentifier], pre_action: Optional[Callable[[], None]]=None,
                  post_action: Optional[Callable[[], None]]=None,

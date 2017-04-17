@@ -1,6 +1,6 @@
 import os
 
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Particle
 from pytgf.characters.units.sprite import UnitSprite
 
 
@@ -14,6 +14,6 @@ class DiscSprite(UnitSprite):
         return os.path.join(self.resFolder, "disc" + str(self.teamNumber) + ".png")
 
 
-class Disc(MovingUnit):
+class Disc(Particle):
     def __init__(self, player_number: int, team_number: int, speed: int,  graphics: bool=True):
-        super().__init__(player_number=player_number, sprite=DiscSprite(team_number, graphics), speed=speed)
+        super().__init__(id_number=player_number, sprite=DiscSprite(team_number, graphics), speed=speed)

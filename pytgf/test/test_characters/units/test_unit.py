@@ -8,7 +8,7 @@ class TestUnit(unittest.TestCase):
         """
         Tests if a unit is properly killed
         """
-        unit = Unit()
+        unit = Unit(1)
         self.assertTrue(unit.isAlive())
         unit.kill()
         self.assertFalse(unit.isAlive())
@@ -17,7 +17,7 @@ class TestUnit(unittest.TestCase):
         """
         Tests if a unit is properly killed
         """
-        unit = Unit(nb_lives=2)
+        unit = Unit(1, nb_lives=2)
         self.assertTrue(unit.isAlive())
         unit.kill()
         self.assertTrue(unit.isAlive())
@@ -28,7 +28,7 @@ class TestUnit(unittest.TestCase):
         """
         Tests if a unit contains particle that are added to it
         """
-        unit = Unit()
+        unit = Unit(1)
         particle1 = Particle()
         particle2 = Particle()
         unit.addParticle(particle1)

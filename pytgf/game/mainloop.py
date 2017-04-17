@@ -24,7 +24,7 @@ from pygame.constants import DOUBLEBUF, MOUSEBUTTONDOWN, MOUSEBUTTONUP, K_ESCAPE
 
 from pytgf.board import TileIdentifier
 from pytgf.characters.moves import IllegalMove, ImpossibleMove, Path, MoveDescriptor
-from pytgf.characters.units import MovingUnit, Unit
+from pytgf.characters.units import Unit
 from pytgf.controls.events import BotEvent, SpecialEvent, Event
 from pytgf.controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
 from pytgf.game import API, UnfeasibleMoveException
@@ -73,8 +73,8 @@ class MainLoop:
         self.wrappersConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
         self.wrappersInfoConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
 
-        self.wrappers = {}  # type: Dict[ControllerWrapper, MovingUnit]
-        self._unitsMoves = {}  # type: Dict[MovingUnit, Tuple[Path, Queue]]
+        self.wrappers = {}  # type: Dict[ControllerWrapper, Unit]
+        self._unitsMoves = {}  # type: Dict[Unit, Tuple[Path, Queue]]
         self._moveDescriptors = {}  # type: Dict[Path, MoveDescriptor]
         self._otherMoves = {}  # type: Dict[Unit, Path]
         self._killSent = {}  # Used to maintain the fact that the kill event has been sent
@@ -83,7 +83,7 @@ class MainLoop:
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def run(self, max_fps: int = MAX_FPS) -> Union[None, Tuple[MovingUnit, ...]]:
+    def run(self, max_fps: int = MAX_FPS) -> Union[None, Tuple[Unit, ...]]:
         """
         Launch the game and its logical loop
 
@@ -120,7 +120,7 @@ class MainLoop:
         self._prepared = False
         return self.game.winningPlayers
 
-    def addUnit(self, unit: MovingUnit, wrapper: ControllerWrapper, tile_id: TileIdentifier,
+    def addUnit(self, unit: Unit, wrapper: ControllerWrapper, tile_id: TileIdentifier,
                 initial_action: MoveDescriptor = None, team: int = -1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
@@ -205,7 +205,7 @@ class MainLoop:
             elif event.type == MOUSEBUTTONUP:
                 self._dispatchMouseEventToHumanControllers(None, click_up=True)
 
-    def _addMove(self, unit: MovingUnit, move: Path) -> None:
+    def _addMove(self, unit: Unit, move: Path) -> None:
         """
         Adds a move (cancelling the pending moves)
 
@@ -231,7 +231,7 @@ class MainLoop:
             self._otherMoves[unit] = move
         self._moveDescriptors[move] = event
 
-    def _cancelCurrentMoves(self, unit: MovingUnit) -> None:
+    def _cancelCurrentMoves(self, unit: Unit) -> None:
         """
         Cancel the current movement if there is one and remove all the other pending movements.
 
@@ -308,8 +308,8 @@ class MainLoop:
 
         completed_moves = {}  # type: Dict[Unit, Tuple[TileIdentifier, MoveDescriptor]]
         just_started = {}  # type: Dict[int, MoveDescriptor]
-        illegal_moves = []  # type: List[MovingUnit]
-        impossible_moves = {}  # type: List[MovingUnit]
+        illegal_moves = []  # type: List[Unit]
+        impossible_moves = {}  # type: List[Unit]
 
         self._handleOtherMoves(completed_moves, illegal_moves, impossible_moves, just_started, moved_units)
         self._handleMoves(completed_moves, illegal_moves, impossible_moves, just_started, moved_units)
@@ -348,7 +348,7 @@ class MainLoop:
                                              current_move, move_state)
 
     def _handleOtherMoves(self, completed_moves, illegal_moves, impossible_moves, just_started, moved_units):
-        for unit in self._otherMoves:  # type: MovingUnit
+        for unit in self._otherMoves:  # type: Unit
             move = self._otherMoves[unit]
             if move is not None:
                 move_state = self._performNextStepOfMove(move.unit, move)
@@ -397,7 +397,7 @@ class MainLoop:
             self._eventsToSend[wrapper].append(BotEvent(moved_unit_number, move_descriptor))
 
     @staticmethod
-    def _performNextStepOfMove(unit: MovingUnit, current_move: Path) -> int:
+    def _performNextStepOfMove(unit: Unit, current_move: Path) -> int:
         """
         Perform the next step of the given move on the given unit
 
@@ -427,7 +427,7 @@ class MainLoop:
                 current_move.stop(cancel_post_action=True)
         return MOVE_FAILED
 
-    def _getNextMoveForUnitIfAvailable(self, unit: MovingUnit) -> Union[Path, None]:
+    def _getNextMoveForUnitIfAvailable(self, unit: Unit) -> Union[Path, None]:
         """
         Checks if a move is available for the given controller, and if so, returns it
 
@@ -467,7 +467,7 @@ class MainLoop:
             return END
         return CONTINUE
 
-    def _handleEvent(self, unit: MovingUnit, event: MoveDescriptor) -> None:
+    def _handleEvent(self, unit: Unit, event: MoveDescriptor) -> None:
         """
         The goal of this method is to handle the given event for the given unit
 
@@ -508,7 +508,7 @@ class MainLoop:
                 break
         return found
 
-    def _getUnitFromControllerWrapper(self, linker: ControllerWrapper) -> MovingUnit:
+    def _getUnitFromControllerWrapper(self, linker: ControllerWrapper) -> Unit:
         """
         Args:
             linker: The linker for which we want the unit
@@ -547,7 +547,7 @@ class MainLoop:
                 pipe_conn = self._getPipeConnection(wrapper)
                 pipe_conn.send(BotEvent(moved_unit_number, move_descriptor))
 
-    def _killUnit(self, unit: MovingUnit, linker: ControllerWrapper) -> None:
+    def _killUnit(self, unit: Unit, linker: ControllerWrapper) -> None:
         """
         Kills the given unit and tells its linker
 
@@ -593,7 +593,7 @@ class MainLoop:
         time.sleep(2)  # Waiting for the processes to launch correctly
         self._prepared = True
 
-    def _addControllerWrapper(self, wrapper: ControllerWrapper, unit: MovingUnit) -> None:
+    def _addControllerWrapper(self, wrapper: ControllerWrapper, unit: Unit) -> None:
         """
         Adds the linker to the loop, creating the pipe connections
 

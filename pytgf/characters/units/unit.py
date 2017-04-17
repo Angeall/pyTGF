@@ -4,9 +4,9 @@ File containing the definition of a Unit.
 
 from copy import deepcopy
 from queue import Queue, Empty
+from typing import List
 
 import pygame
-from typing import List
 
 from pytgf.characters.units.particle import Particle
 from pytgf.characters.units.sprite import UnitSprite
@@ -19,8 +19,8 @@ class Unit(Particle):
     A unit is a Particle that can have its own Particles. (e.g. a Gunner that owns its fired bullets)
     """
 
-    def __init__(self, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
-                 surviving_particles: bool=False):
+    def __init__(self, player_number: int, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
+                 surviving_particles: bool=False, speed: int=150):
         """
         Instantiates a unit in the game
 
@@ -30,12 +30,33 @@ class Unit(Particle):
             nb_lives: The number of lives this unit has before it dies
             surviving_particles: If true, the particles of this unit won't die with this unit
         """
-        super().__init__(sprite, nb_lives=nb_lives)
+        super().__init__(sprite, nb_lives=nb_lives, speed=speed)
         self.survivingParticles = surviving_particles
+        self.lastAction = None
+        self.currentAction = None
+        self.playerNumber = player_number
         self._particlesSpriteGroup = pygame.sprite.Group()
         self._particlesQueue = Queue()
         self._particlesList = []
         self._maxParticles = max_particles
+
+    def setLastAction(self, last_action):
+        """
+        Sets the last action of this unit
+        
+        Args:
+            last_action: The last action performed by this unit 
+        """
+        self.lastAction = last_action
+
+    def setCurrentAction(self, current_action):
+        """
+        Sets the current action of this unit
+        
+        Args:
+            current_action: The action this unit is currently performing
+        """
+        self.currentAction = current_action
 
     def draw(self, surface: pygame.Surface) -> None:
         """

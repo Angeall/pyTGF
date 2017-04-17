@@ -1,6 +1,6 @@
 import os
 
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 from pytgf.characters.units.sprite import UnitSprite
 
 
@@ -10,7 +10,7 @@ class BoxSprite(UnitSprite):
         return os.path.join(self.resFolder, "box.png")
 
 
-class Box(MovingUnit):
-    def __init__(self, speed: int, player_number: int=-1):
-        super().__init__(player_number, BoxSprite(), speed=speed, surviving_particles=True)
-        self.playerNumber = player_number
+class Box(Unit):
+    def __init__(self, speed: int, id_number: int=-1):
+        super().__init__(id_number, BoxSprite(), speed=speed, surviving_particles=True)
+        self.playerNumber = id_number

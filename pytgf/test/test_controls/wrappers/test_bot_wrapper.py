@@ -1,7 +1,7 @@
 import unittest
+from typing import Tuple, List
 
 from multiprocess.connection import Pipe
-from typing import Tuple, List
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.characters.units import Particle
@@ -13,7 +13,7 @@ except ImportError:
 
 from pytgf.board import Builder
 from pytgf.characters.moves import Path
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 from pytgf.controls.controllers import Bot
 from pytgf.controls.events import BotEvent, SpecialEvent
 from pytgf.controls.wrappers.bot import BotControllerWrapper
@@ -37,7 +37,7 @@ class ExampleAPI(API):
     def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
         pass
 
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+    def createMoveForDescriptor(self, unit: Unit, move_descriptor: MoveDescriptor, max_moves: int = -1,
                                 force: bool = False, is_step: bool=False) -> Path:
         raise UnfeasibleMoveException()
 
@@ -106,11 +106,11 @@ class ExampleBot(Bot):
 class TestBotControllerWrapper(unittest.TestCase):
     def setUp(self):
         self.game = ExampleGame(Builder(10, 10, 7, 6).create())
-        self.game.addUnit(MovingUnit(1), 1, (0, 0))
+        self.game.addUnit(Unit(1), 1, (0, 0))
         self.bot1 = ExampleBot(1)
         self.bot1.gameState = self.game.copy()
         self.linker1 = ExampleBotControllerWrapper(self.bot1)
-        self.game.addUnit(MovingUnit(2), 1, (0, 0))
+        self.game.addUnit(Unit(2), 1, (0, 0))
         self.bot2 = ExampleBot(2)
         self.bot2.gameState = self.game.copy()
         self.linker2 = ExampleBotControllerWrapper(self.bot2)

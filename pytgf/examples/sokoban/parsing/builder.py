@@ -1,7 +1,7 @@
 from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o, K_COMMA, K_k, K_l, K_g, K_t, K_f, K_h
 
 from pytgf.board import Board, Builder
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 from pytgf.controls.controllers.bot import Bot
 from pytgf.controls.controllers.human import Human
 from pytgf.examples.sokoban.controllers.wrapper import SokobanBotControllerWrapper, SokobanHumanControllerWrapper
@@ -105,7 +105,7 @@ class SokobanBoardBuilder(Builder):
 
     @staticmethod
     def _createEndingUnit(winning_tiles):
-        ending_unit = MovingUnit(1000)
+        ending_unit = Unit(1000)
         if len(winning_tiles) == 0:
             raise NeverEndingGame("No winning tiles were given to the game, resulting in a never ending game.")
         return ending_unit

@@ -1,6 +1,6 @@
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Particle
 
 
-class Bottom(MovingUnit):
-    def __init__(self, player_number: int):
-        super().__init__(player_number)
+class Bottom(Particle):
+    def __init__(self, id_number: int):
+        super().__init__(id_number=id_number)

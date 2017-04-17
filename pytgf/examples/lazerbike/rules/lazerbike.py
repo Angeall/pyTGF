@@ -5,8 +5,8 @@ from typing import Optional
 
 from pytgf.board import Tile
 from pytgf.board import TileIdentifier
-from pytgf.characters.units import MovingUnit
 from pytgf.characters.units import Particle
+from pytgf.characters.units import Unit
 from pytgf.examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
 from pytgf.game.core import Core
 
@@ -30,7 +30,7 @@ class LazerBikeCore(Core):
         """
         return True
 
-    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, tile_id: TileIdentifier, frontal: bool=False,
+    def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool=False,
                         particle: Optional[Particle]=None) -> None:
         """
         Makes what it has to be done when the first given player collides with a particle of the second given player

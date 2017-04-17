@@ -1,6 +1,6 @@
 import os
 
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 from pytgf.characters.units.sprite import UnitSprite
 
 default_player_number = 1
@@ -22,7 +22,7 @@ class BikeSprite(UnitSprite):
         return os.path.join(self.resFolder, "bike" + self.playerNumber + ".png")
 
 
-class Bike(MovingUnit):
+class Bike(Unit):
     def __init__(self, speed: int, player_number: int=default_player_number, max_trace: int=-1, initial_direction=0,
                  graphics: bool=True):
         global default_player_number

@@ -2,7 +2,7 @@ import unittest
 
 from pytgf.board import Tile
 from pytgf.characters.moves import ShortMove, ImpossibleMove, IllegalMove, InconsistentMove
-from pytgf.characters.units import MovingUnit
+from pytgf.characters.units import Unit
 
 
 class TestShortMove(unittest.TestCase):
@@ -10,7 +10,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that the good number of steps is performed to complete a move
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
@@ -28,7 +28,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that an impossible move raises the good exception
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=False, deadly=False)
         # Distance separating the two tiles is 30 pixels
@@ -39,7 +39,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that a unit not placed on the source tile can not be moved from it
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
@@ -51,7 +51,7 @@ class TestShortMove(unittest.TestCase):
         """
         Test that a illegal move raises the good exception
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=None, walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
