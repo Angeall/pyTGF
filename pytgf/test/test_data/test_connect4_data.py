@@ -5,8 +5,7 @@ import pygame
 from pytgf.controls.controllers import Passive
 from pytgf.data.component import Component
 from pytgf.data.gatherer import Gatherer
-from pytgf.data.randomroutine import RandomRoutine
-from pytgf.data.throughoutroutine import ThroughoutRoutine
+from pytgf.data.routines import ThroughoutRoutine, RandomRoutine
 from pytgf.examples.connect4.builder import create_game
 
 

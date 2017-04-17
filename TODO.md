@@ -14,20 +14,10 @@
 - Fix the "can't quit the game" problem when exiting the `pygame` window while the `tkinter` end window is opened
 - Generalize the game creation
 
-## Units
-
-- Delete MovingUnit, move speed into particle, as a particle too can move...
-
 ## Examples
 
-- Make the Connect 4 disc Particles instead of MovingUnits
 - Add comments
 - Add a setting feature to Sokoban: Select the board
-
-## Package management
-
-- Structure the `data` package
-- Delete the `ai` package
 
 ## GUI
 

@@ -8,8 +8,7 @@ from pytgf.board import Builder
 from pytgf.controls.controllers import Passive
 from pytgf.data.component import Component
 from pytgf.data.gatherer import Gatherer
-from pytgf.data.randomroutine import RandomRoutine
-from pytgf.data.throughoutroutine import ThroughoutRoutine
+from pytgf.data.routines import ThroughoutRoutine, RandomRoutine
 from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper
 from pytgf.examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
 from pytgf.examples.lazerbike.rules import LazerBikeAPI

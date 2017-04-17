@@ -4,7 +4,7 @@ from pytgf.board import Builder
 from pytgf.controls.controllers import Passive
 from pytgf.data.component import Component
 from pytgf.data.gatherer import Gatherer
-from pytgf.data.randomroutine import RandomRoutine
+from pytgf.data.routines.randomroutine import RandomRoutine
 from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper
 from pytgf.examples.lazerbike.gamedata import GO_LEFT, GO_UP, GO_RIGHT, GO_DOWN
 from pytgf.examples.lazerbike.rules import LazerBikeAPI

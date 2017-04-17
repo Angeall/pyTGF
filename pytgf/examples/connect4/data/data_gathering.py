@@ -3,7 +3,7 @@ import pygame
 from pytgf.controls.controllers import Passive
 from pytgf.data.component import Component
 from pytgf.data.gatherer import Gatherer
-from pytgf.data.randomroutine import RandomRoutine
+from pytgf.data.routines.randomroutine import RandomRoutine
 from pytgf.examples.connect4.builder import create_game
 
 __author__ = "Anthony Rouneau"

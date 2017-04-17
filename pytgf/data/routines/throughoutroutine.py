@@ -3,14 +3,13 @@ Contains the definition of a routine to gather daata
 """
 import os
 import random
-
-import numpy as np
-import pandas as pd
 from typing import Any
 from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 
-from pytgf.ai import SimultaneousAlphaBeta
-from pytgf.ai.simultaneous_alphabeta import Value, EndState
+import numpy as np
+import pandas as pd
+
+from pytgf.board.simulation.simultaneous_alphabeta import SimultaneousAlphaBeta, Value, EndState
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.data.component import Data, Component
 from pytgf.data.gatherer import Gatherer

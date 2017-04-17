@@ -5,9 +5,9 @@ for all the players
 
 import itertools
 import random
+from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 import numpy as np
-from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.game import API
