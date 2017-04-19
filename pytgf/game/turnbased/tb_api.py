@@ -41,6 +41,7 @@ class TurnBasedAPI(API, metaclass=ABCMeta):
         """
         Returns: The number representing the current player
         """
+        temp = self.currentPlayerIndex
         self.currentPlayerIndex = self._getNextPlayerIndex()
 
     def getNextPlayer(self, offset: int = 1) -> int:

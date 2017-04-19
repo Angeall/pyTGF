@@ -1,9 +1,11 @@
+from typing import Tuple, Dict, Type, Optional
+
 from pygame.locals import *
 
 from pytgf.board import Builder
 from pytgf.controls.controllers import Bot, Human
 from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper
-from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, Direction
 from pytgf.examples.lazerbike.rules import LazerBikeCore, LazerBikeAPI
 from pytgf.examples.lazerbike.units.bike import Bike
 from pytgf.game.realtime import RealTimeMainLoop
@@ -16,19 +18,11 @@ human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
 nb_human = 0
 
 
-def get_player_info(player_number: int):
-    if player_number == 1:
-        return 2, 2, GO_RIGHT
-    elif player_number == 2:
-        return 12, 12, GO_LEFT
-    elif player_number == 3:
-        return 12, 2, GO_UP
-    else:
-        return 2, 12, GO_DOWN
+default_initial_positions = {1: (2, 2, GO_RIGHT), 2: (12, 12, GO_LEFT), 3: (12, 2, GO_UP), 4: (2, 12, GO_DOWN)}
 
 
 def add_controller(main_loop: RealTimeMainLoop, player_class, player_number: int, player_team: int, speed: int,
-                   max_trace: int):
+                   max_trace: int, init_positions, graphics):
     global nb_human
     if issubclass(player_class, Bot):
         linker = LazerBikeBotControllerWrapper(player_class(player_number))
@@ -40,35 +34,32 @@ def add_controller(main_loop: RealTimeMainLoop, player_class, player_number: int
     else:
         raise TypeError("The type of the player (\'%s\') must either be a Bot or a Human subclass."
                         % (str(player_class)))
-    player_info = get_player_info(player_number)
+    player_info = init_positions[player_number]
     start_pos = player_info[0:2]
     initial_direction = player_info[2]
-    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace, initial_direction=initial_direction),
+    main_loop.addUnit(Bike(speed, player_number, max_trace=max_trace, initial_direction=initial_direction,
+                           graphics=graphics),
                       linker, start_pos, initial_direction, team=player_team)
 
 
-def create_game(player_info: tuple):
+def create_game(player_info: Tuple[Dict[int, Type], Dict[int, int]], width: int=1024, height: int=768, lines: int=15,
+                columns: int=15, init_positions: Dict[int, Tuple[int, int, Direction]]=default_initial_positions,
+                speed: Optional[int]=None, max_trace: int=-1, graphics: bool=True):
     global nb_human
-    width = 1024
-    height = 768
-    lines = 15
-    columns = 15
     builder = Builder(width, height, lines, columns)
     builder.setBordersColor((0, 125, 125))
     builder.setBackgroundColor((25, 25, 25))
     builder.setTilesVisible(False)
-    # builder.setTilesVisible(True)
     board = builder.create()
-    # board.graphics.setBorderColor((0, 125, 125))
-    # board.graphics.setInternalColor((25, 25, 25))
 
-    speed = 0.75 * board.graphics.sideLength
+    if speed is None:
+        speed = 0.75 * board.graphics.sideLength
     game = LazerBikeCore(board)
     main_loop = RealTimeMainLoop(LazerBikeAPI(game))
     player_classes = player_info[0]
     player_teams = player_info[1]
     for player_number, player_class in player_classes.items():
         add_controller(main_loop, player_class, player_number, player_teams[player_number], int(speed),
-                       int(min(lines, columns) * (2 / 3)))
+                       max_trace, init_positions, graphics)
     nb_human = 0
     return main_loop

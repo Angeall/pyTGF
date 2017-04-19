@@ -10,7 +10,7 @@ from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_DOWN, GO_LEFT
 from pytgf.examples.lazerbike.rules import LazerBikeAPI
 from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeCore
 from pytgf.examples.lazerbike.units.bike import Bike
-from pytgf.game.mainloop import MainLoop
+from pytgf.game.realtime import RealTimeMainLoop
 
 
 class TestLazerbike(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestLazerbike(unittest.TestCase):
         builder.setBackgroundColor((25, 25, 25))
         builder.setTilesVisible(False)
         board = builder.create()  # type: Board
-        self.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
+        self.loop = RealTimeMainLoop(LazerBikeAPI(LazerBikeCore(board)))
 
     def tearDown(self):
         if self.loop.executor is not None:

@@ -6,7 +6,7 @@ from pytgf.controls.controllers import Passive
 from pytgf.examples.sokoban.parsing.builder import SokobanBoardBuilder
 from pytgf.examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
 from pytgf.examples.sokoban.units.box import Box
-from pytgf.game.mainloop import MainLoop
+from pytgf.game.realtime import RealTimeMainLoop
 
 
 class TestSokoban(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestSokoban(unittest.TestCase):
         builder = SokobanBoardBuilder(self.width, self.height, self.parserResult, [self.controller], 1000)
         builder.setBordersColor((0, 0, 0))
         builder.setTilesVisible(True)
-        self.loop = builder.createGame()  # type: MainLoop
+        self.loop = builder.createGame()  # type: RealTimeMainLoop
         self.wrapper = list(self.loop.wrappers.keys())[0]
         if isinstance(self.loop.wrappers[self.wrapper], Box):
             linkers_list = list(self.loop.wrappers.keys())

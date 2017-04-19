@@ -50,7 +50,6 @@ class SokobanGame(Core):
                     len(self.getTileOccupants(tile.identifier)) - 1  # -1 because the end unit is in each winning tile
             total_nb_players = len(self.controlledPlayers)
             self._endingUnit.setNbLives(total_nb_players - players_in_winning_tiles)  # if it is dead, the game ends
-            print(self._endingUnit._nbLives)
 
     def createKeyboardEvent(self, unit, input_key) -> KeyboardEvent:
         return SokobanKeyboardEvent(character_keys=(input_key,), player_tile_id=self.getTileIdForUnit(unit))

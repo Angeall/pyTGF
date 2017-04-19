@@ -3,18 +3,12 @@ import unittest
 import numpy as np
 import pygame
 
-from pytgf.board import Board
-from pytgf.board import Builder
 from pytgf.controls.controllers import Passive
 from pytgf.data.component import Component
 from pytgf.data.gatherer import Gatherer
 from pytgf.data.routines import ThroughoutRoutine, RandomRoutine
-from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper
+from pytgf.examples.lazerbike.builder import create_game
 from pytgf.examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
-from pytgf.examples.lazerbike.rules import LazerBikeAPI
-from pytgf.examples.lazerbike.rules import LazerBikeCore
-from pytgf.examples.lazerbike.units.bike import Bike
-from pytgf.game.mainloop import MainLoop
 
 
 class TestLazerbikeData(unittest.TestCase):
@@ -22,22 +16,11 @@ class TestLazerbikeData(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        cls.width = 720
-        cls.height = 480
-        cls.lines = 3
-        cls.columns = 3
-        builder = Builder(cls.width, cls.height, cls.lines, cls.columns)
-        builder.setBordersColor((0, 125, 125))
-        builder.setBackgroundColor((25, 25, 25))
-        builder.setTilesVisible(False)
-        board = builder.create()  # type: Board
-        cls.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
-        b1 = Bike(200, 1, max_trace=-1)
-        cls.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (0, 0), GO_RIGHT,
-                         team=1)
-        b2 = Bike(200, 2, max_trace=-1)
-        cls.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (2, 2), GO_LEFT,
-                         team=2)
+
+        players_positions = {1: (0, 0, GO_RIGHT), 2: (2, 2, GO_LEFT)}
+
+        cls.loop = create_game(({1: Passive, 2: Passive}, {1: 1, 2: 2}), lines=3, columns=3,
+                               init_positions=players_positions, speed=200)
 
         a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1],
                             lambda api: api.getCurrentDirection(1),
@@ -97,22 +80,8 @@ class TestLazerbikeRandomData(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         pygame.init()
-        cls.width = 720
-        cls.height = 480
-        cls.lines = 15
-        cls.columns = 15
-        builder = Builder(cls.width, cls.height, cls.lines, cls.columns)
-        builder.setBordersColor((0, 125, 125))
-        builder.setBackgroundColor((25, 25, 25))
-        builder.setTilesVisible(False)
-        board = builder.create()  # type: Board
-        cls.loop = MainLoop(LazerBikeAPI(LazerBikeCore(board)))
-        b1 = Bike(200, 1, max_trace=-1, initial_direction=GO_RIGHT)
-        cls.loop.addUnit(b1, LazerBikeBotControllerWrapper(Passive(1)), (2, 2), GO_RIGHT,
-                         team=1)
-        b2 = Bike(200, 2, max_trace=-1, initial_direction=GO_LEFT)
-        cls.loop.addUnit(b2, LazerBikeBotControllerWrapper(Passive(2)), (12, 12), GO_LEFT,
-                         team=2)
+
+        cls.loop = create_game(({1: Passive, 2: Passive}, {1: 1, 2: 2}))
 
         a_priori_methods = [lambda api: api.getPlayerLocation(1)[0], lambda api: api.getPlayerLocation(1)[1],
                             lambda api: api.getCurrentDirection(1),

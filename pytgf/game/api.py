@@ -265,7 +265,7 @@ class API(metaclass=ABCMeta):
             player_winning = False
             had_won = api.hasWon(player_number)
             if api.isPlayerAlive(player_number):
-                succeeded, new_api = api.simulateMove(player_number, move_descriptors[player_number])
+                succeeded, new_api = api.simulateMove(player_number, move_descriptors[player_number], force=True)
                 if succeeded:
                     api = new_api
                     player_deadly = not api.isPlayerAlive(player_number)

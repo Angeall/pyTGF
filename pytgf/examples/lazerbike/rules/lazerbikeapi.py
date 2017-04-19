@@ -12,8 +12,8 @@ from pytgf.examples.lazerbike.gamedata import MAX_FPS, GO_DOWN, GO_RIGHT, GO_UP,
 from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeCore
 from pytgf.examples.lazerbike.units.bike import Bike
 from pytgf.examples.lazerbike.units.trace import Trace
+from pytgf.game import API
 from pytgf.game import UnfeasibleMoveException
-from pytgf.game.realtime import API
 
 
 class LazerBikeAPI(API):
