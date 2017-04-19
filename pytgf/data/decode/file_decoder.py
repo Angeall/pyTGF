@@ -1,6 +1,6 @@
 import random
 from abc import ABCMeta, abstractmethod
-from os import listdir
+from os import listdir, remove
 from os.path import isfile, join
 
 import numpy as np
@@ -15,6 +15,7 @@ class FileDecoder(metaclass=ABCMeta):
         self._path = path
         self._fileNames = [join(self._path, f) for f in listdir(self._path)
                            if f.startswith(prefix) and isfile(join(self._path, f))]
+        self._usedFiles = []
         random.shuffle(self._fileNames)
 
     @abstractmethod
@@ -35,9 +36,17 @@ class FileDecoder(metaclass=ABCMeta):
         Returns: The ndarray representing the data contained in the "nb_file_per_step" next random files.
         """
         data_frame = pd.DataFrame()
-        for _ in range(self._nbFilesPerStep):
+        for _ in range(min(self._nbFilesPerStep, len(self._fileNames))):
             file_name = self._fileNames.pop()
             df = pd.read_csv(file_name)
+            self._usedFiles.append(file_name)
             data_frame = data_frame.append(df, ignore_index=True)
         return self._parseDataFrame(data_frame)
 
+    def deleteUsedFiles(self):
+        """
+        Deletes the files that were used (and not already deleted) 
+        """
+        for file_name in self._usedFiles:
+            remove(file_name)
+        self._usedFiles = []
