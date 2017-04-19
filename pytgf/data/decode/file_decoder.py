@@ -31,6 +31,12 @@ class FileDecoder(metaclass=ABCMeta):
         """
         pass
 
+    def hasData(self) -> bool:
+        """
+        Returns: True if there remain files to be read
+        """
+        return len(self._fileNames) > 0
+
     def getNextData(self) -> np.ndarray:
         """
         Returns: The ndarray representing the data contained in the "nb_file_per_step" next random files.
