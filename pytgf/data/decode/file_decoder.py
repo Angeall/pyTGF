@@ -37,7 +37,7 @@ class FileDecoder(metaclass=ABCMeta):
         data_frame = pd.DataFrame()
         for _ in range(self._nbFilesPerStep):
             file_name = self._fileNames.pop()
-            df = pd.read_csv(file_name, header=None)
+            df = pd.read_csv(file_name)
             data_frame = data_frame.append(df, ignore_index=True)
         return self._parseDataFrame(data_frame)
 
