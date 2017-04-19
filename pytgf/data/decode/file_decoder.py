@@ -10,7 +10,8 @@ __author__ = "Anthony Rouneau"
 
 
 class FileDecoder(metaclass=ABCMeta):
-    def __init__(self, nb_files_per_step: int, path: str, prefix: str=""):
+    def __init__(self, nb_files_per_step: int, path: str, prefix: str="", verbose: bool=True):
+        self.verbose = verbose
         self._nbFilesPerStep = nb_files_per_step
         self._path = path
         self._fileNames = [join(self._path, f) for f in listdir(self._path)
@@ -42,11 +43,14 @@ class FileDecoder(metaclass=ABCMeta):
         Returns: The ndarray representing the data contained in the "nb_file_per_step" next random files.
         """
         data_frame = pd.DataFrame()
-        for _ in range(min(self._nbFilesPerStep, len(self._fileNames))):
+        nb_files = min(self._nbFilesPerStep, len(self._fileNames))
+        for i in range(nb_files):
             file_name = self._fileNames.pop()
             df = pd.read_csv(file_name)
             self._usedFiles.append(file_name)
             data_frame = data_frame.append(df, ignore_index=True)
+            if self.verbose:
+                print("reading file", i, "/", nb_files)
         return self._parseDataFrame(data_frame)
 
     def deleteUsedFiles(self):

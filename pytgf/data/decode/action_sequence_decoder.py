@@ -9,7 +9,8 @@ class ActionSequenceDecoder(FileDecoder):
     
     """
 
-    def __init__(self, nb_files_per_step: int, path: str, player_number: int, nb_players: int, must_win: bool=True):
+    def __init__(self, nb_files_per_step: int, path: str, player_number: int, nb_players: int, must_win: bool=True,
+                 prefix: str="", verbose: bool=True):
         """
         
         Args:
@@ -18,14 +19,16 @@ class ActionSequenceDecoder(FileDecoder):
             player_number: The number representing the player (between 0 and nb_players-1) 
             nb_players: The total number of players
             must_win: True if the player must have won to save its action sequence
+            verbose: If True, the code will print when it finished parsing a file
         """
-        super().__init__(nb_files_per_step, path)
+        super().__init__(nb_files_per_step, path, prefix, verbose)
         self._playerNumber = player_number
         self._mustWin = must_win
         self._nbPlayers = nb_players
 
     def _parseDataFrame(self, data_frame: pd.DataFrame) -> list:
         actions = []
+        nb_sequences = int(data_frame.shape[0] / self._nbPlayers)
         for i in range(0, data_frame.shape[0], self._nbPlayers):
             player_has_won = data_frame.loc[i+self._playerNumber][0] == 1
             players_actions_sequences = [list(data_frame.loc[i+offset][1:]) for offset in range(self._nbPlayers)]
@@ -43,6 +46,8 @@ class ActionSequenceDecoder(FileDecoder):
                     if not is_nan:
                         sequence.append(cur_actions)
                 actions.append(sequence)
+            if self.verbose:
+                print("parsing file", str(int(i/self._nbPlayers)), "/", str(nb_sequences))
         return actions
 
 
