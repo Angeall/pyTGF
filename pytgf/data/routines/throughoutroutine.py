@@ -235,9 +235,9 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         to_remove = []
         other_sequences = state.convertIntoMoveSequence(other_moves)
         for winning_player_number, moves in winning_moves.items():
-            order_of_player = state.getOrderOfPlayer(winning_player_number, force=True)
+            order_of_player = state.getOrderOfPlayer(winning_player_number)
             winning_sequences = {}
-            sequences = state.convertIntoMoveSequence(moves, force=True)
+            sequences = state.convertIntoMoveSequence(moves)
             for winning_move in sequences:
                 pre_seq = tuple(winning_move[:order_of_player])
                 if pre_seq not in winning_sequences:

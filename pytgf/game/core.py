@@ -44,7 +44,7 @@ class Core(metaclass=ABCMeta):
     """
     The Game contains a Board, containing Tiles, but also Units, placed on Tiles
     """
-    def __init__(self, board: Board, turn_by_turn: bool=False):
+    def __init__(self, board: Board):
         """
         Creates a new Game using the given board
 
@@ -55,10 +55,8 @@ class Core(metaclass=ABCMeta):
         """
         self.board = board  # type: Board
         self._finished = False
-        self.playersOrder = []  # type: List[int]
-        self.currentPlayerIndex = 0
+        self.playerNumbers = []  # type: List[int]
 
-        self.turnByTurn = turn_by_turn
         self.winningPlayers = None
         self.winningTeam = None
         self.teams = {}  # type: Dict[int, List[Unit]]
@@ -73,7 +71,7 @@ class Core(metaclass=ABCMeta):
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def addUnit(self, unit: Unit, team_number: int, origin_tile_id: TileIdentifier,
+    def addUnit(self, unit: Particle, team_number: int, origin_tile_id: TileIdentifier,
                 controlled: bool=True, active: bool=True) -> None:
         """
         Adds a unit to the game
@@ -89,7 +87,7 @@ class Core(metaclass=ABCMeta):
         self.players[unit.playerNumber] = unit
         if controlled:
             self.controlledPlayers[unit.playerNumber] = unit
-            self.playersOrder.append(unit.playerNumber)
+            self.playerNumbers.append(unit.playerNumber)
         if active:
             self._activeUnits[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number

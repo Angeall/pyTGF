@@ -9,12 +9,12 @@ from pytgf.examples.connect4.rules import Connect4API
 from pytgf.examples.connect4.rules import Connect4Core
 from pytgf.examples.connect4.units import Bottom
 from pytgf.examples.connect4.units import Connect4Unit
-from pytgf.game.mainloop import MainLoop
+from pytgf.game.turnbased import TurnBasedMainLoop
 
 __author__ = "Anthony Rouneau"
 
 
-def add_controller(main_loop: MainLoop, player_classes: List):
+def add_controller(main_loop: TurnBasedMainLoop, player_classes: List):
     assert len(player_classes) == 2
     for i, player_class in enumerate(player_classes):
         player_number = i + 1
@@ -29,7 +29,7 @@ def add_controller(main_loop: MainLoop, player_classes: List):
                           team=player_number)
 
 
-def create_game(selected_classes: dict, width: int, height: int, graphics: bool=True) -> MainLoop:
+def create_game(selected_classes: dict, width: int, height: int, graphics: bool=True) -> TurnBasedMainLoop:
     lines = 6
     columns = 7
     builder = Builder(width, height, lines, columns)
@@ -39,7 +39,7 @@ def create_game(selected_classes: dict, width: int, height: int, graphics: bool=
     board.graphics = board.graphics if graphics else None
 
     game = Connect4Core(board)
-    main_loop = MainLoop(Connect4API(game), turn_by_turn=True)
+    main_loop = TurnBasedMainLoop(Connect4API(game))
     player_classes = [None, None]
     for player_number, player_class in selected_classes.items():
         player_classes[player_number - 1] = player_class

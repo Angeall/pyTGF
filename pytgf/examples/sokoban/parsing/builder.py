@@ -10,7 +10,7 @@ from pytgf.examples.sokoban.rules.sokoban import SokobanGame
 from pytgf.examples.sokoban.rules.sokobanapi import SokobanAPI
 from pytgf.examples.sokoban.units.box import Box
 from pytgf.examples.sokoban.units.sokobandrawstick import SokobanDrawstick
-from pytgf.game.mainloop import MainLoop
+from pytgf.game.realtime import RealTimeMainLoop
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),
@@ -46,7 +46,7 @@ class SokobanBoardBuilder(Builder):
         for tile in winning_tiles:
             self._game.addUnit(ending_unit, team_number=1000, origin_tile_id=tile.identifier, controlled=False,
                                active=True)
-        self._mainLoop = MainLoop(SokobanAPI(self._game))
+        self._mainLoop = RealTimeMainLoop(SokobanAPI(self._game))
         self._addBoxes()
         self._addPlayers()
         return self._mainLoop

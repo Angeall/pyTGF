@@ -7,11 +7,11 @@ from pytgf.examples.connect4.rules import Connect4Core
 from pytgf.examples.connect4.units import Connect4Unit
 from pytgf.examples.connect4.units.bottom import Bottom
 from pytgf.examples.connect4.units.disc import Disc
-from pytgf.game import API
 from pytgf.game import UnfeasibleMoveException
+from pytgf.game.turnbased import TurnBasedAPI
 
 
-class Connect4API(API):
+class Connect4API(TurnBasedAPI):
     def __init__(self, game: Connect4Core):
         self.discNumber = 100
         self.numberOfDiscPlayed = 0

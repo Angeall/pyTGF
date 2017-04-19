@@ -78,7 +78,7 @@ class SimultaneousAlphaBeta:
             return random.choice(self.possibleActions)
 
     def _prepare(self, player_number: int, state: API):
-        self._currentMoveSequence = np.ndarray((state.getNumberOfAlivePlayers(), 0))
+        self._currentMoveSequence = np.ndarray((len(state.getAlivePlayersNumbers()), 0))
         ordered_list = state.getPlayerNumbers().copy()
         ordered_list.sort()
         self._playerMapping = {play_num: i for i, play_num in enumerate(ordered_list)}

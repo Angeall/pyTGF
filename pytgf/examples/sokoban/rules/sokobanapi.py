@@ -11,7 +11,7 @@ from pytgf.characters.units import Unit
 from pytgf.controls.wrappers.wrapper import MAX_FPS
 from pytgf.examples.sokoban.rules.sokoban import FULL_HOLE_COLOR
 from pytgf.examples.sokoban.units.box import Box
-from pytgf.game import API
+from pytgf.game.realtime import API
 
 
 class SokobanAPI(API):

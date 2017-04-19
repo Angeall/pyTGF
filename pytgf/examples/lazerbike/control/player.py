@@ -53,7 +53,7 @@ class LazerBikeBotPlayer(LazerBikePlayer, Bot, metaclass=ABCMeta):
         Returns: True if the given move must trigger a new move selection from this controller
         """
         self._playersMove.append(player_number)
-        if len(self._playersMove) >= self.gameState.getNumberOfAlivePlayers():
+        if len(self._playersMove) >= len(self.gameState.getAlivePlayersNumbers()):
             self._playersMove = []
             return True
         else:

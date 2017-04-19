@@ -4,6 +4,7 @@ and the bot controllers handling
 """
 
 import time
+from abc import ABCMeta, abstractmethod
 from queue import Queue, Empty
 from typing import Dict, Optional, List
 from typing import Tuple
@@ -48,13 +49,13 @@ MOVE_IMPOSSIBLE = -2
 MOVE_FAILED = -3
 
 
-class MainLoop:
+class MainLoop(metaclass=ABCMeta):
     """
     Defines the logical loop of a game, running MAX_FPS times per second, sending the inputs to the HumanControllerWrapper, and the
     game updates to the BotControllerWrappers.
     """
 
-    def __init__(self, api: API, turn_by_turn: bool = False):
+    def __init__(self, api: API):
         """
         Instantiates the logical loop
 
@@ -64,7 +65,6 @@ class MainLoop:
         self.api = api
         self.game = api.game
         self.game.addCustomMoveFunc = self._addCustomMove
-        self.game.turnByTurn = turn_by_turn
         self._currentTurnTaken = False
         self._screen = None
         self._state = CONTINUE  # The game must go on at start
@@ -137,8 +137,7 @@ class MainLoop:
         self.game.addUnit(unit, team, tile_id, controlled=is_controlled)
         if is_controlled:
             self._addControllerWrapper(wrapper, unit)
-            if initial_action is None and (not self.api.isTurnByTurn() or
-                                           unit.playerNumber == self.api.getCurrentPlayer()):
+            if self._mustSendInitialWakeEvent(initial_action, unit):
                 self._eventsToSend[wrapper].append(WakeEvent())
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
@@ -227,7 +226,6 @@ class MainLoop:
             unit: The unit that will be moved
             move: The move that will be performed
         """
-        print("other move added")
         if unit not in self._otherMoves or self._otherMoves[unit] is None:
             self._otherMoves[unit] = move
         self._moveDescriptors[move] = event
@@ -297,8 +295,7 @@ class MainLoop:
             pipe_conn = self._getPipeConnection(current_wrapper)
             if pipe_conn.poll():
                 move = pipe_conn.recv()
-                if not self.game.turnByTurn or (self.api.isCurrentPlayer(current_wrapper.controller.playerNumber)
-                                                and not self._currentTurnTaken):
+                if self._mustRetrieveNextMove(current_wrapper):
                     self._handleEvent(self.wrappers[current_wrapper], move, current_wrapper.controller.playerNumber)
 
     def _handlePendingMoves(self) -> None:
@@ -322,10 +319,9 @@ class MainLoop:
         for player_number, move_descriptor in just_started.items():
             self.game.getUnitForNumber(player_number).setCurrentAction(move_descriptor)
             self._addMessageToSendToAll(player_number, move_descriptor)
-            if self.api.isTurnByTurn():
-                self._sendEventsToNextPlayer()
-        if not self.api.isTurnByTurn():
-            self._sendEventsToAll()
+        players_to_be_sent_messages = self._getPlayerNumbersToWhichSendEvents()
+        for player_number in players_to_be_sent_messages:
+            self._sendEventsToController(player_number)
         for unit in illegal_moves:
             self.game.unitsLocation[unit] = self.game.board.OUT_OF_BOARD_TILE.identifier
             self._killUnit(unit, self._getWrapperFromPlayerNumber(unit.playerNumber))
@@ -437,18 +433,14 @@ class MainLoop:
 
         Returns: The next move if it is available, and None otherwise
         """
-        # if self._turnByTurn and not unit.playerNumber == self._playersOrder[self._currentPlayerIndex]:
-        #     return None  # Sorry, not your turn to play !
         moves = self._unitsMoves[unit]
         current_move = moves[0]  # type: Path
         if current_move is None or current_move.finished():
+            if current_move is not None:
+                if isinstance(current_move, Path):
+                    self._reactToFinishedMove()
+                    del self._moveDescriptors[current_move]
             try:
-                if current_move is not None:
-                    if isinstance(current_move, Path):
-                        if self.api.isTurnByTurn():
-                            self.api.switchToNextPlayer()
-                            self._currentTurnTaken = False
-                        del self._moveDescriptors[current_move]
                 move = moves[1].get_nowait()  # type: Path
                 self._unitsMoves[unit] = (move, moves[1])
                 current_move = move
@@ -518,13 +510,6 @@ class MainLoop:
         """
         return self.wrappers[linker]
 
-    def _sendEventsToNextPlayer(self):
-        """
-        Send the events waiting to the next player to play
-        """
-        next_player_number = self.api.getNextPlayer()
-        self._sendEventsToController(next_player_number)
-
     def _sendEventsToController(self, player_number: int, event: Event=None):
 
         next_player_wrapper = self._getWrapperFromPlayerNumber(player_number)
@@ -533,10 +518,6 @@ class MainLoop:
             event = MultipleEvents(self._eventsToSend[next_player_wrapper])
         pipe_conn.send(event)
         self._eventsToSend[next_player_wrapper] = []
-
-    def _sendEventsToAll(self):
-        for player_number in self.api.getPlayerNumbers():
-            self._sendEventsToController(player_number)
 
     def _informBotOnPerformedMove(self, moved_unit_number: int, move_descriptor: MoveDescriptor) -> None:
         """
@@ -615,3 +596,19 @@ class MainLoop:
         wrapper.setGameInfoPipe(child_info_conn)
         if isinstance(wrapper, BotControllerWrapper):
             self._addCollaborationPipes(wrapper)
+
+    @abstractmethod
+    def _mustSendInitialWakeEvent(self, initial_action: MoveDescriptor, unit: Unit) -> bool:
+        pass
+
+    @abstractmethod
+    def _mustRetrieveNextMove(self, current_wrapper: ControllerWrapper) -> bool:
+        pass
+
+    @abstractmethod
+    def _getPlayerNumbersToWhichSendEvents(self) -> List[int]:
+        pass
+
+    @abstractmethod
+    def _reactToFinishedMove(self):
+        pass

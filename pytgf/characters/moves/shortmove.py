@@ -7,7 +7,6 @@ from typing import Dict, Any
 from pytgf.board import Tile
 from pytgf.board import TileIdentifier
 from pytgf.characters.units import Particle
-from pytgf.characters.units import Unit
 from pytgf.utils.geom import get_hypotenuse_length
 
 __author__ = 'Anthony Rouneau'
@@ -44,7 +43,7 @@ class ShortMove(object):
     This class supposes that the unit comes from the center of the sourceTile.
     """
 
-    def __init__(self, unit: Unit, source_tile: Tile, destination_tile: Tile, fps: int,
+    def __init__(self, unit: Particle, source_tile: Tile, destination_tile: Tile, fps: int,
                  units_location: Dict[Particle, TileIdentifier], graphical: bool=True):
         """
         Instantiates a move object between two tiles
