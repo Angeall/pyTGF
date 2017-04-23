@@ -1,3 +1,3 @@
-from pytgf.characters.units.particle import Particle
-from pytgf.characters.units.unit import Unit
+from .particle import Particle
+from .unit import Unit
 

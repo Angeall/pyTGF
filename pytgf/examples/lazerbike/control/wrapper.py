@@ -4,8 +4,8 @@ Defines a specific controller wrapper for the Lazerbike game.
 
 from abc import ABCMeta
 
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
+from ....characters.moves import MoveDescriptor
+from ....controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
 
 
 class LazerBikeControllerWrapper(ControllerWrapper, metaclass=ABCMeta):

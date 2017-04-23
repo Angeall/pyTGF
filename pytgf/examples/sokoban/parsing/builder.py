@@ -1,16 +1,16 @@
 from pygame.locals import K_RIGHT, K_LEFT, K_UP, K_DOWN, K_d, K_a, K_w, K_s, K_o, K_COMMA, K_k, K_l, K_g, K_t, K_f, K_h
 
-from pytgf.board import Board, Builder
-from pytgf.characters.units import Unit
-from pytgf.controls.controllers.bot import Bot
-from pytgf.controls.controllers.human import Human
-from pytgf.examples.sokoban.controllers.wrapper import SokobanBotControllerWrapper, SokobanHumanControllerWrapper
-from pytgf.examples.sokoban.parsing.parser import TileProperty, box, winning, player_tile
-from pytgf.examples.sokoban.rules.sokoban import SokobanGame
-from pytgf.examples.sokoban.rules.sokobanapi import SokobanAPI
-from pytgf.examples.sokoban.units.box import Box
-from pytgf.examples.sokoban.units.sokobandrawstick import SokobanDrawstick
-from pytgf.game.realtime import RealTimeMainLoop
+from ..controllers.wrapper import SokobanBotControllerWrapper, SokobanHumanControllerWrapper
+from ..parsing.parser import TileProperty, box, winning, player_tile
+from ..rules.sokoban import SokobanGame
+from ..rules.sokobanapi import SokobanAPI
+from ..units.box import Box
+from ..units.sokobandrawstick import SokobanDrawstick
+from ....board import Board, Builder
+from ....characters.units import Unit
+from ....controls.controllers.bot import Bot
+from ....controls.controllers.human import Human
+from ....game.realtime import RealTimeMainLoop
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),

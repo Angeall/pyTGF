@@ -2,13 +2,11 @@ from typing import Optional, List
 
 import numpy as np
 
-from pytgf.board import Board
-from pytgf.board import TileIdentifier
-from pytgf.characters.units import Particle
-from pytgf.characters.units import Unit
-from pytgf.examples.connect4.units.bottom import Bottom
-from pytgf.examples.connect4.units.disc import Disc
-from pytgf.game import Core
+from ..units import Bottom, Disc
+from ....board import Board
+from ....board import TileIdentifier
+from ....characters.units import Particle, Unit
+from ....game import Core
 
 
 class Connect4Core(Core):

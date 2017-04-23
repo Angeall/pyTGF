@@ -1,17 +1,11 @@
-import pytgf
-
-from pytgf.board import Tile
-from pytgf.board import pathfinder
-from pytgf.board.pathfinder import UnreachableDestination
-from pytgf.characters.moves import ListPath
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.moves import Path
-from pytgf.characters.moves import ShortMove
-from pytgf.characters.units import Unit
-from pytgf.controls.wrappers.wrapper import MAX_FPS
-from pytgf.examples.sokoban.rules.sokoban import FULL_HOLE_COLOR
-from pytgf.examples.sokoban.units.box import Box
-from pytgf.game.realtime import API
+from ..rules.sokoban import FULL_HOLE_COLOR
+from ..units.box import Box
+from ....board import Tile, pathfinder
+from ....characters.moves import ListPath, MoveDescriptor, Path, ShortMove
+from ....characters.units import Unit
+from ....controls.wrappers.wrapper import MAX_FPS
+from ....game import UnfeasibleMoveException
+from ....game.realtime import API
 
 
 class SokobanAPI(API):
@@ -36,9 +30,9 @@ class SokobanAPI(API):
                                                    units_location=self.game.unitsLocation))
                             current_tile = next_tile
                         return ListPath(unit, moves, step_pre_action=self._pushBoxIfNeeded)
-                except UnreachableDestination:
+                except pathfinder.UnreachableDestination:
                     pass
-        raise pytgf.game.UnfeasibleMoveException()
+        raise UnfeasibleMoveException()
 
     def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
         return move_descriptor[0] + (move_descriptor[1] << 16)

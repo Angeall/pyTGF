@@ -7,11 +7,10 @@ from typing import Tuple, Dict, Union, List
 
 import pandas as pd
 
-from pytgf.board import TileIdentifier
-from pytgf.characters.moves import IllegalMove, MoveDescriptor
-from pytgf.characters.moves import Path
-from pytgf.characters.units import Unit
-from pytgf.game.core import Core, UnfeasibleMoveException
+from .core import Core, UnfeasibleMoveException
+from ..board import TileIdentifier
+from ..characters.moves import IllegalMove, MoveDescriptor, Path
+from ..characters.units import Unit
 
 __author__ = 'Anthony Rouneau'
 

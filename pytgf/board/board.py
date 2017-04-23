@@ -7,8 +7,8 @@ from typing import Union, Tuple, List
 
 import pygame
 
-from pytgf.board.graphics import BoardGraphics, Width, Height
-from pytgf.utils.geom import Coordinates
+from .graphics import BoardGraphics, Width, Height
+from ..utils.geom import Coordinates
 
 __author__ = 'Anthony Rouneau'
 

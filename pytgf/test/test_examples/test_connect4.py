@@ -1,11 +1,11 @@
 import unittest
-
-import pandas as pd
 from typing import List, Dict
 
-from pytgf.controls.controllers import Passive
-from pytgf.controls.wrappers import ControllerWrapper
-from pytgf.examples.connect4.builder import create_game
+import pandas as pd
+
+from ...controls.controllers import Passive
+from ...controls.wrappers import ControllerWrapper
+from ...examples.connect4.builder import create_game
 
 
 class TestConnect4(unittest.TestCase):

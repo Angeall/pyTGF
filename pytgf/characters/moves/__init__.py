@@ -1,5 +1,5 @@
-from pytgf.characters.moves.continous import ContinuousPath
-from pytgf.characters.moves.listpath import ListPath
-from pytgf.characters.moves.path import Path
-from pytgf.characters.moves.shortmove import ShortMove, MoveDescriptor, IllegalMove, ImpossibleMove, InconsistentMove
+from .continous import ContinuousPath
+from .listpath import ListPath
+from .path import Path
+from .shortmove import ShortMove, MoveDescriptor, IllegalMove, ImpossibleMove, InconsistentMove
 

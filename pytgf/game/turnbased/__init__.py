@@ -1,2 +1,2 @@
-from pytgf.game.turnbased.tb_api import TurnBasedAPI
-from pytgf.game.turnbased.tb_mainloop import TurnBasedMainLoop
+from .tb_api import TurnBasedAPI
+from .tb_mainloop import TurnBasedMainLoop

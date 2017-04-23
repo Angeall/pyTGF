@@ -1,6 +1,6 @@
 from typing import List
 
-from pytgf.controls.events import Event
+from .event import Event
 
 
 class MultipleEvents:

@@ -4,10 +4,9 @@ File containing the abstract definition of a Path. While the path has a next mov
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable, Tuple, Union
 
-from pytgf.board import Tile
-from pytgf.board import TileIdentifier
-from pytgf.characters.moves.shortmove import ShortMove
-from pytgf.characters.units import Particle
+from .shortmove import ShortMove
+from ..units import Particle
+from ...board import Tile, TileIdentifier
 
 __author__ = 'Anthony Rouneau'
 

@@ -3,14 +3,14 @@ import unittest
 
 import pygame
 
-from pytgf.board import Builder, Board
-from pytgf.controls.controllers import Passive
-from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper
-from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_DOWN, GO_LEFT
-from pytgf.examples.lazerbike.rules import LazerBikeAPI
-from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeCore
-from pytgf.examples.lazerbike.units.bike import Bike
-from pytgf.game.realtime import RealTimeMainLoop
+from ...board import Builder, Board
+from ...controls.controllers import Passive
+from ...examples.lazerbike.control import LazerBikeBotControllerWrapper
+from ...examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_DOWN, GO_LEFT
+from ...examples.lazerbike.rules import LazerBikeAPI
+from ...examples.lazerbike.rules.lazerbike import LazerBikeCore
+from ...examples.lazerbike.units.bike import Bike
+from ...game.realtime import RealTimeMainLoop
 
 
 class TestLazerbike(unittest.TestCase):

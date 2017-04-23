@@ -5,7 +5,7 @@ File containing methods that can be used to find shortest paths inside a board.
 from queue import PriorityQueue
 from typing import Callable, Tuple, Dict, List, Optional, Any
 
-from pytgf.board import Tile, TileIdentifier
+from .board import Tile, TileIdentifier
 
 __author__ = 'Anthony Rouneau'
 

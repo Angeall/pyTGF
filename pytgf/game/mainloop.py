@@ -13,9 +13,6 @@ from typing import Union
 import pygame
 from multiprocess.connection import Pipe
 
-from pytgf.controls.events.multiple import MultipleEvents
-from pytgf.controls.events.wake import WakeEvent
-
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
@@ -23,14 +20,15 @@ except ImportError:
 from pathos.pools import ProcessPool as Pool
 from pygame.constants import DOUBLEBUF, MOUSEBUTTONDOWN, MOUSEBUTTONUP, K_ESCAPE, KEYDOWN, QUIT
 
-from pytgf.board import TileIdentifier
-from pytgf.characters.moves import IllegalMove, ImpossibleMove, Path, MoveDescriptor
-from pytgf.characters.units import Unit
-from pytgf.controls.events import BotEvent, SpecialEvent, Event
-from pytgf.controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
-from pytgf.game import API, UnfeasibleMoveException
-from pytgf.utils.geom import Coordinates
-from pytgf.characters.utils.units import resize_unit
+from . import API, UnfeasibleMoveException
+from ..controls.events import MultipleEvents, WakeEvent
+from ..board import TileIdentifier
+from ..characters.moves import IllegalMove, ImpossibleMove, Path, MoveDescriptor
+from ..characters.units import Unit
+from ..controls.events import BotEvent, SpecialEvent, Event
+from ..controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
+from ..utils.geom import Coordinates
+from ..characters.utils.units import resize_unit
 
 __author__ = 'Anthony Rouneau'
 

@@ -1,11 +1,11 @@
 import random
 from typing import Tuple, Callable, Union
 
-from pytgf.board.simulation.simultaneous_alphabeta import Value
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.data.gatherer import Gatherer
-from pytgf.data.routines.throughoutroutine import ThroughoutRoutine, MAX_TEMP_VECTORS
-from pytgf.game import API
+from ...board.simulation.simultaneous_alphabeta import Value
+from ...characters.moves import MoveDescriptor
+from ...data.gatherer import Gatherer
+from ...data.routines.throughoutroutine import ThroughoutRoutine, MAX_TEMP_VECTORS
+from ...game import API
 
 __author__ = "Anthony Rouneau"
 

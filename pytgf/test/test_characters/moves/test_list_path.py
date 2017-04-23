@@ -1,8 +1,8 @@
 import unittest
 
-from pytgf.board import Tile
-from pytgf.characters.moves import ListPath, ShortMove
-from pytgf.characters.units import Unit
+from ....board import Tile
+from ....characters.moves import ListPath, ShortMove
+from ....characters.units import Unit
 
 
 class Touchable:

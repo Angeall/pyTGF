@@ -9,11 +9,11 @@ from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 import numpy as np
 import pandas as pd
 
-from pytgf.board.simulation.simultaneous_alphabeta import SimultaneousAlphaBeta, Value, EndState
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.data.component import Data, Component
-from pytgf.data.gatherer import Gatherer
-from pytgf.game import API
+from ..component import Data, Component
+from ..gatherer import Gatherer
+from ...board.simulation.simultaneous_alphabeta import SimultaneousAlphaBeta, Value, EndState
+from ...characters.moves import MoveDescriptor
+from ...game import API
 
 __author__ = "Anthony Rouneau"
 ObjID = int

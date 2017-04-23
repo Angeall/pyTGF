@@ -1,4 +1,4 @@
-from pytgf.characters.units import Unit
+from ....characters.units import Unit
 
 __author__ = "Anthony Rouneau"
 

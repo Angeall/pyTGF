@@ -6,15 +6,15 @@ from abc import ABCMeta, abstractmethod
 from copy import deepcopy
 from typing import Dict, List, Union, Tuple, Callable, Optional
 
-from pytgf.board import Board, Tile
-from pytgf.board import TileIdentifier
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.moves import Path
-from pytgf.characters.units import Particle
-from pytgf.characters.units import Unit
-from pytgf.characters.utils.units import resize_unit
-from pytgf.controls.events import KeyboardEvent, MouseEvent
-from pytgf.utils.geom import Coordinates
+from ..board import Board, Tile
+from ..board import TileIdentifier
+from ..characters.moves import MoveDescriptor
+from ..characters.moves import Path
+from ..characters.units import Particle
+from ..characters.units import Unit
+from ..characters.utils.units import resize_unit
+from ..controls.events import KeyboardEvent, MouseEvent
+from ..utils.geom import Coordinates
 
 __author__ = 'Anthony Rouneau'
 

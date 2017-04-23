@@ -1,7 +1,9 @@
-from pytgf.controls.events.bot import BotEvent
-from pytgf.controls.events.event import Event
-from pytgf.controls.events.human import HumanEvent
-from pytgf.controls.events.keyboard import KeyboardEvent
-from pytgf.controls.events.mouse import MouseEvent
-from pytgf.controls.events.special import SpecialEvent
+from .bot import BotEvent
+from .event import Event
+from .human import HumanEvent
+from .keyboard import KeyboardEvent
+from .mouse import MouseEvent
+from .multiple import MultipleEvents
+from .special import SpecialEvent
+from .wake import WakeEvent
 

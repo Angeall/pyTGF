@@ -1,11 +1,9 @@
 from typing import Optional
 
-from pytgf.board import Board
-from pytgf.board import TileIdentifier
-from pytgf.characters.units import Particle
-from pytgf.characters.units import Unit
-from pytgf.controls.events import KeyboardEvent
-from pytgf.game import Core
+from ....board import Board, TileIdentifier
+from ....characters.units import Particle, Unit
+from ....controls.events import KeyboardEvent
+from ....game import Core
 
 FULL_HOLE_COLOR = (125, 125, 125)
 

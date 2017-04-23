@@ -1,8 +1,8 @@
 import unittest
 
-from pytgf.board import Tile
-from pytgf.characters.moves import ContinuousPath
-from pytgf.characters.units import Unit
+from ....board import Tile
+from ....characters.moves import ContinuousPath
+from ....characters.units import Unit
 
 
 class Touchable:

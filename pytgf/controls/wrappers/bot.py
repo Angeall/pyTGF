@@ -12,9 +12,9 @@ except ImportError:
     PipeConnection = object
 
 
-from pytgf.controls.controllers.bot import Bot, TeammatePayload, TeammateMessage
-from pytgf.controls.events.bot import BotEvent
-from pytgf.controls.wrappers.wrapper import ControllerWrapper
+from ..controllers.bot import Bot, TeammatePayload, TeammateMessage
+from ..events.bot import BotEvent
+from .wrapper import ControllerWrapper
 
 __author__ = 'Anthony Rouneau'
 

@@ -4,10 +4,10 @@ File containing the basic player for the lazerbike game
 
 from abc import ABCMeta
 
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.controls.controllers import Controller, Bot
-from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
-from pytgf.examples.lazerbike.rules import LazerBikeAPI, LazerBikeCore
+from ..gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from ..rules import LazerBikeAPI, LazerBikeCore
+from ....characters.moves import MoveDescriptor
+from ....controls.controllers import Controller, Bot
 
 
 class LazerBikePlayer(Controller, metaclass=ABCMeta):

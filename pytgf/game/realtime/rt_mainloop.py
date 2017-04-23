@@ -1,9 +1,9 @@
 from typing import List
 
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.units import Unit
-from pytgf.controls.wrappers import ControllerWrapper
-from pytgf.game.mainloop import MainLoop
+from ..mainloop import MainLoop
+from ...characters.moves import MoveDescriptor
+from ...characters.units import Unit
+from ...controls.wrappers import ControllerWrapper
 
 
 class RealTimeMainLoop(MainLoop):

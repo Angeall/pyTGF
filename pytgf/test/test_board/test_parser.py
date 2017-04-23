@@ -1,6 +1,6 @@
 import unittest
 
-from pytgf.board.parser import BoardParser, IncorrectShapeError
+from ...board.parser import BoardParser, IncorrectShapeError
 
 
 class ExampleParser(BoardParser):

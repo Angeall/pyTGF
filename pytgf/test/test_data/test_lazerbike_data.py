@@ -3,12 +3,12 @@ import unittest
 import numpy as np
 import pygame
 
-from pytgf.controls.controllers import Passive
-from pytgf.data.component import Component
-from pytgf.data.gatherer import Gatherer
-from pytgf.data.routines import ThroughoutRoutine, RandomRoutine
-from pytgf.examples.lazerbike.builder import create_game
-from pytgf.examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
+from ...controls.controllers import Passive
+from ...data.component import Component
+from ...data.gatherer import Gatherer
+from ...data.routines import ThroughoutRoutine, RandomRoutine
+from ...examples.lazerbike.builder import create_game
+from ...examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
 
 
 class TestLazerbikeData(unittest.TestCase):

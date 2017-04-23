@@ -2,11 +2,11 @@ import unittest
 
 import pygame
 
-from pytgf.controls.controllers import Passive
-from pytgf.data.component import Component
-from pytgf.data.gatherer import Gatherer
-from pytgf.data.routines import ThroughoutRoutine, RandomRoutine
-from pytgf.examples.connect4.builder import create_game
+from ...controls.controllers import Passive
+from ...data.component import Component
+from ...data.gatherer import Gatherer
+from ...data.routines import ThroughoutRoutine, RandomRoutine
+from ...examples.connect4.builder import create_game
 
 
 class TestConnect4ThoroughData(unittest.TestCase):

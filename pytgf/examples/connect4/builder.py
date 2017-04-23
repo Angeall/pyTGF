@@ -1,15 +1,11 @@
 from typing import List
 
-from pytgf.board import Builder
-from pytgf.controls.controllers import Bot
-from pytgf.controls.controllers import Human
-from pytgf.examples.connect4.controllers import Connect4BotControllerWrapper
-from pytgf.examples.connect4.controllers import Connect4HumanControllerWrapper
-from pytgf.examples.connect4.rules import Connect4API
-from pytgf.examples.connect4.rules import Connect4Core
-from pytgf.examples.connect4.units import Bottom
-from pytgf.examples.connect4.units import Connect4Unit
-from pytgf.game.turnbased import TurnBasedMainLoop
+from .controllers import Connect4BotControllerWrapper, Connect4HumanControllerWrapper
+from .rules import Connect4API, Connect4Core
+from .units import Bottom, Connect4Unit
+from ...board import Builder
+from ...controls.controllers import Bot, Human
+from ...game.turnbased import TurnBasedMainLoop
 
 __author__ = "Anthony Rouneau"
 

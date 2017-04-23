@@ -1,4 +1,4 @@
-from pytgf.controls.events import BotEvent
+from .bot import BotEvent
 
 
 class WakeEvent(BotEvent):

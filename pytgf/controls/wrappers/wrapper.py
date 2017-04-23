@@ -4,21 +4,18 @@ File containing the definition of an abstract ControllerWrapper, linking the gam
 import traceback
 from abc import ABCMeta, abstractmethod
 from queue import Empty
-
-import pygame
 from typing import Any
 
-from pytgf.controls.events.multiple import MultipleEvents
-from pytgf.controls.events.wake import WakeEvent
+import pygame
 
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
     PipeConnection = object
 
-from pytgf.controls.controllers.controller import Controller
-from pytgf.controls.events.event import Event
-from pytgf.controls.events.special import SpecialEvent
+from ..controllers.controller import Controller
+from ..events import Event, WakeEvent, MultipleEvents
+from ..events.special import SpecialEvent
 
 __author__ = 'Anthony Rouneau'
 

@@ -1,8 +1,8 @@
 """
 File containing the definition of a BotEvent used to be sent to BotControllers
 """
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.controls.events.event import Event
+from .event import Event
+from ...characters.moves import MoveDescriptor
 
 __author__ = 'Anthony Rouneau'
 

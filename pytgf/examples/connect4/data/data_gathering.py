@@ -1,10 +1,10 @@
 import pygame
 
-from pytgf.controls.controllers import Passive
-from pytgf.data.component import Component
-from pytgf.data.gatherer import Gatherer
-from pytgf.data.routines.randomroutine import RandomRoutine
-from pytgf.examples.connect4.builder import create_game
+from ..builder import create_game
+from ....controls.controllers import Passive
+from ....data.component import Component
+from ....data.gatherer import Gatherer
+from ....data.routines.randomroutine import RandomRoutine
 
 __author__ = "Anthony Rouneau"
 

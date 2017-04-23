@@ -2,8 +2,8 @@
 File containing the definition of a testing controller that does nothing
 """
 
-from pytgf.controls.controllers.bot import Bot
-from pytgf.controls.events import Event
+from .bot import Bot
+from ..events import Event
 
 __author__ = 'Anthony Rouneau'
 

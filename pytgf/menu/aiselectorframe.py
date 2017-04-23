@@ -11,9 +11,9 @@ from tkinter import *
 from tkinter.ttk import *
 from typing import Callable, Dict, Tuple
 
-import pytgf.utils.gui
-from pytgf.controls.controllers import Controller
-from pytgf.menu.basicframe import BasicFrameBuilder
+from .basicframe import BasicFrameBuilder
+from ..controls.controllers import Controller
+from ..utils.gui import center_popup
 
 
 class AISelectorFrameBuilder(BasicFrameBuilder):
@@ -286,7 +286,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         label.grid(row=0, column=0, columnspan=3)
         bt = Button(popup, text="OK", command=popup.destroy)
         bt.grid(row=1, column=1)
-        pytgf.utils.gui.center_popup(popup, self.parent)
+        center_popup(popup, self.parent)
 
     def _showIncorrectTeamsPopup(self):
         """
@@ -300,4 +300,4 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         label.grid(row=0, column=0, columnspan=3)
         bt = Button(popup, text="OK", command=popup.destroy)
         bt.grid(row=1, column=1)
-        pytgf.utils.gui.center_popup(popup, self.parent)
+        center_popup(popup, self.parent)

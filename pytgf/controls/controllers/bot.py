@@ -4,14 +4,12 @@ File containing the definition of a bot controller.
 
 from abc import ABCMeta, abstractmethod
 from queue import Queue
-
 from typing import List, Any
 
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.controls.controllers.controller import Controller
-from pytgf.controls.events.bot import BotEvent
-from pytgf.controls.events.wake import WakeEvent
-from pytgf.game import Core, API
+from .controller import Controller
+from ..events import BotEvent, WakeEvent
+from ...characters.moves import MoveDescriptor
+from ...game import Core, API
 
 __author__ = 'Anthony Rouneau'
 

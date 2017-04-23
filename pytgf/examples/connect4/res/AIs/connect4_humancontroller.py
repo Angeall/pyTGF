@@ -1,9 +1,9 @@
 """
 File containing the definition of a human player for the Connect4 Game
 """
-from pytgf.controls.controllers import Human
-from pytgf.controls.events import KeyboardEvent, MouseEvent
-from pytgf.examples.connect4.controllers.player import Connect4Player
+from ...controllers.player import Connect4Player
+from .....controls.controllers import Human
+from .....controls.events import KeyboardEvent, MouseEvent
 
 
 __author__ = "Anthony Rouneau"

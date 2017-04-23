@@ -3,9 +3,9 @@ import os
 import pygame
 import pygame.transform as transform
 
-from pytgf.characters.units import Particle
-from pytgf.characters.units.sprite import UnitSprite
-from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from ..gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
+from ....characters.units import Particle
+from ....characters.units.sprite import UnitSprite
 
 TOP_RIGHT = 0
 TOP_LEFT = 1

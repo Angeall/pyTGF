@@ -2,7 +2,7 @@ import unittest
 
 import pandas as pd
 
-from pytgf.data.decode.action_sequence_decoder import ActionSequenceDecoder
+from ....data.decode.action_sequence_decoder import ActionSequenceDecoder
 
 __author__ = "Anthony Rouneau"
 

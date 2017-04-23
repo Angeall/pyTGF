@@ -1,8 +1,8 @@
 import unittest
 
-from pytgf.board import Tile
-from pytgf.characters.moves import ShortMove, ImpossibleMove, IllegalMove, InconsistentMove
-from pytgf.characters.units import Unit
+from ....board import Tile
+from ....characters.moves import ShortMove, ImpossibleMove, IllegalMove, InconsistentMove
+from ....characters.units import Unit
 
 
 class TestShortMove(unittest.TestCase):

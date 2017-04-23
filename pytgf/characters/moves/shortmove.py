@@ -4,10 +4,10 @@ File containing the definition of a ShortMove between two tiles
 
 from typing import Dict, Any
 
-from pytgf.board import Tile
-from pytgf.board import TileIdentifier
-from pytgf.characters.units import Particle
-from pytgf.utils.geom import get_hypotenuse_length
+from ..units import Particle
+from ...board import Tile
+from ...board import TileIdentifier
+from ...utils.geom import get_hypotenuse_length
 
 __author__ = 'Anthony Rouneau'
 

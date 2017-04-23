@@ -1,14 +1,14 @@
-from pytgf.characters.moves import ListPath
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.moves import Path
-from pytgf.characters.moves import ShortMove
-from pytgf.controls.wrappers.wrapper import MAX_FPS
-from pytgf.examples.connect4.rules import Connect4Core
-from pytgf.examples.connect4.units import Connect4Unit
-from pytgf.examples.connect4.units.bottom import Bottom
-from pytgf.examples.connect4.units.disc import Disc
-from pytgf.game import UnfeasibleMoveException
-from pytgf.game.turnbased import TurnBasedAPI
+from .connect4 import Connect4Core
+from ..units import Connect4Unit
+from ..units.bottom import Bottom
+from ..units.disc import Disc
+from ....characters.moves import ListPath
+from ....characters.moves import MoveDescriptor
+from ....characters.moves import Path
+from ....characters.moves import ShortMove
+from ....controls.wrappers.wrapper import MAX_FPS
+from ....game import UnfeasibleMoveException
+from ....game.turnbased import TurnBasedAPI
 
 
 class Connect4API(TurnBasedAPI):

@@ -1,8 +1,7 @@
+from itertools import product
 from typing import Iterable, List, Dict
 
-from itertools import product
-
-from pytgf.characters.moves import MoveDescriptor
+from ..moves import MoveDescriptor
 
 __author__ = "Anthony Rouneau"
 

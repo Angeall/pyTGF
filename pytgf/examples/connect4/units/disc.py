@@ -1,7 +1,7 @@
 import os
 
-from pytgf.characters.units import Particle
-from pytgf.characters.units.sprite import UnitSprite
+from ....characters.units import Particle
+from ....characters.units.sprite import UnitSprite
 
 
 class DiscSprite(UnitSprite):

@@ -1,7 +1,8 @@
 from abc import ABCMeta
 
-from pytgf.characters.moves import MoveDescriptor, Path
-from pytgf.game import API, Core
+from ..api import API
+from ..core import Core
+from ...characters.moves import MoveDescriptor, Path
 
 
 class NotYourTurnException(Exception):

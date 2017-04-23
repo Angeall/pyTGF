@@ -4,16 +4,16 @@ File containing the definition of the API used by the bot controllers of the Laz
 from functools import partial
 from typing import List
 
-from pytgf.board import Tile, TileIdentifier
-from pytgf.characters.moves import ContinuousPath
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.moves import Path
-from pytgf.examples.lazerbike.gamedata import MAX_FPS, GO_DOWN, GO_RIGHT, GO_UP, GO_LEFT
-from pytgf.examples.lazerbike.rules.lazerbike import LazerBikeCore
-from pytgf.examples.lazerbike.units.bike import Bike
-from pytgf.examples.lazerbike.units.trace import Trace
-from pytgf.game import API
-from pytgf.game import UnfeasibleMoveException
+from .lazerbike import LazerBikeCore
+from ..gamedata import MAX_FPS, GO_DOWN, GO_RIGHT, GO_UP, GO_LEFT
+from ..units.bike import Bike
+from ..units.trace import Trace
+from ....board import Tile, TileIdentifier
+from ....characters.moves import ContinuousPath
+from ....characters.moves import MoveDescriptor
+from ....characters.moves import Path
+from ....game import API
+from ....game import UnfeasibleMoveException
 
 
 class LazerBikeAPI(API):

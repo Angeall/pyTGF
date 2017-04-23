@@ -1,4 +1,4 @@
-from pytgf.characters.units import Particle
+from ....characters.units import Particle
 
 
 class Bottom(Particle):

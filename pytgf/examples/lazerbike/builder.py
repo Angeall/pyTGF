@@ -2,13 +2,13 @@ from typing import Tuple, Dict, Type, Optional
 
 from pygame.locals import *
 
-from pytgf.board import Builder
-from pytgf.controls.controllers import Bot, Human
-from pytgf.examples.lazerbike.control import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper
-from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, Direction
-from pytgf.examples.lazerbike.rules import LazerBikeCore, LazerBikeAPI
-from pytgf.examples.lazerbike.units.bike import Bike
-from pytgf.game.realtime import RealTimeMainLoop
+from .control import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper
+from .gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, Direction
+from .rules import LazerBikeCore, LazerBikeAPI
+from .units.bike import Bike
+from ...board import Builder
+from ...controls.controllers import Bot, Human
+from ...game.realtime import RealTimeMainLoop
 
 human_controls = [(K_RIGHT, K_LEFT, K_UP, K_DOWN),
                   (K_d, K_a, K_w, K_s),

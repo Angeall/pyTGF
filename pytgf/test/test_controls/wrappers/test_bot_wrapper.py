@@ -3,21 +3,20 @@ from typing import Tuple, List
 
 from multiprocess.connection import Pipe
 
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.units import Particle
-
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
     PipeConnection = object
 
-from pytgf.board import Builder
-from pytgf.characters.moves import Path
-from pytgf.characters.units import Unit
-from pytgf.controls.controllers import Bot
-from pytgf.controls.events import BotEvent, SpecialEvent
-from pytgf.controls.wrappers.bot import BotControllerWrapper
-from pytgf.game import Core, UnfeasibleMoveException, API
+from ....characters.moves import MoveDescriptor
+from ....characters.units import Particle
+from ....board import Builder
+from ....characters.moves import Path
+from ....characters.units import Unit
+from ....controls.controllers import Bot
+from ....controls.events import BotEvent, SpecialEvent
+from ....controls.wrappers.bot import BotControllerWrapper
+from ....game import Core, UnfeasibleMoveException, API
 
 MOVE1 = "MOVE1"
 MOVE2 = "MOVE2"

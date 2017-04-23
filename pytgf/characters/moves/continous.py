@@ -4,12 +4,10 @@ File containing the definition of a continuous path
 
 from typing import Callable, Dict, Optional, Any
 
-from pytgf.board import Tile
-from pytgf.board import TileIdentifier
-from pytgf.characters.moves.path import Path
-from pytgf.characters.moves.shortmove import ShortMove
-from pytgf.characters.units import Particle
-from pytgf.characters.units import Unit
+from .path import Path
+from .shortmove import ShortMove
+from ..units import Particle, Unit
+from ...board import Tile, TileIdentifier
 
 __author__ = 'Anthony Rouneau'
 

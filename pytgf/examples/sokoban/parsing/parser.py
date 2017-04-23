@@ -1,4 +1,4 @@
-from pytgf.board.parser import BoardParser, TileProperty
+from ....board.parser import BoardParser, TileProperty
 
 
 hole = TileProperty(deadly=True, walkable=True, internal_color=(0, 0, 0), border_color=None, has_box=False,

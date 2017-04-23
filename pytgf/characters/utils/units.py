@@ -1,6 +1,6 @@
-from pytgf.board import Board
-from pytgf.characters.units import Particle
-from pytgf.utils.geom import get_hypotenuse_length, get_polygon_radius
+from ..units import Particle
+from ...board import Board
+from ...utils.geom import get_hypotenuse_length, get_polygon_radius
 
 
 def resize_unit(unit: Particle, board: Board) -> None:

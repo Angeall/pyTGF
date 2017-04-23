@@ -4,8 +4,8 @@ Contains the definition of a data gatherer, which is a class that contains multi
 
 from typing import Iterable
 
-from pytgf.data.component import Component
-from pytgf.game import API
+from .component import Component
+from ..game import API
 
 __author__ = "Anthony Rouneau"
 

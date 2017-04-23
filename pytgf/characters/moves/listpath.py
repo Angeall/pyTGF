@@ -4,10 +4,10 @@ File containing the definition of a path made of a list of ShortMoves
 
 from typing import List, Optional, Callable
 
-from pytgf.board import Tile
-from pytgf.characters.moves.path import Path
-from pytgf.characters.moves.shortmove import ShortMove
-from pytgf.characters.units import Particle
+from .path import Path
+from .shortmove import ShortMove
+from ..units import Particle
+from ...board import Tile
 
 __author__ = 'Anthony Rouneau'
 

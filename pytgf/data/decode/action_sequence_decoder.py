@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from pytgf.data.decode.file_decoder import FileDecoder
+from .file_decoder import FileDecoder
 
 
 class ActionSequenceDecoder(FileDecoder):

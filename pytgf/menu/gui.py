@@ -4,7 +4,7 @@ File containing the definition of a GUI, a container of Frames
 
 from tkinter import *
 
-from pytgf.utils.gui import center_window
+from ..utils.gui import center_window
 
 
 class GUI:

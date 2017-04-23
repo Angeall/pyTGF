@@ -3,8 +3,8 @@ File containing the definition of a Mouse Event to send to Human Controllers
 """
 from typing import Tuple
 
-from pytgf.board import TileIdentifier
-from pytgf.controls.events import HumanEvent
+from .human import HumanEvent
+from ...board import TileIdentifier
 
 __author__ = 'Anthony Rouneau'
 

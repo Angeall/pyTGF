@@ -9,8 +9,8 @@ from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 import numpy as np
 
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.game import API
+from ...characters.moves import MoveDescriptor
+from ...game import API
 
 __author__ = 'Anthony Rouneau'
 

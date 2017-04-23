@@ -1,11 +1,11 @@
 import pygame
 
-from pytgf.controls.controllers import Passive
-from pytgf.data.component import Component
-from pytgf.data.gatherer import Gatherer
-from pytgf.data.routines.randomroutine import RandomRoutine
-from pytgf.examples.lazerbike.builder import create_game
-from pytgf.examples.lazerbike.gamedata import GO_LEFT, GO_UP, GO_RIGHT, GO_DOWN
+from ..builder import create_game
+from ..gamedata import GO_LEFT, GO_UP, GO_RIGHT, GO_DOWN
+from ....controls.controllers import Passive
+from ....data.component import Component
+from ....data.gatherer import Gatherer
+from ....data.routines.randomroutine import RandomRoutine
 
 __author__ = "Anthony Rouneau"
 

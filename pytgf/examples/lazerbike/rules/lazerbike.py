@@ -3,12 +3,11 @@ File containing the rules of the Lazerbike game
 """
 from typing import Optional
 
-from pytgf.board import Tile
-from pytgf.board import TileIdentifier
-from pytgf.characters.units import Particle
-from pytgf.characters.units import Unit
-from pytgf.examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
-from pytgf.game.core import Core
+from ..gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
+from ....board import Tile
+from ....board import TileIdentifier
+from ....characters.units import Particle, Unit
+from ....game.core import Core
 
 
 class LazerBikeCore(Core):

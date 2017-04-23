@@ -1,7 +1,7 @@
 import os
 
-from pytgf.characters.units import Unit
-from pytgf.characters.units.sprite import UnitSprite
+from ....characters.units import Unit
+from ....characters.units.sprite import UnitSprite
 
 
 class SokobanPlayerSprite(UnitSprite):

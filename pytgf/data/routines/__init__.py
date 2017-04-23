@@ -1,2 +1,2 @@
-from pytgf.data.routines.randomroutine import RandomRoutine
-from pytgf.data.routines.throughoutroutine import ThroughoutRoutine
+from .randomroutine import RandomRoutine
+from .throughoutroutine import ThroughoutRoutine

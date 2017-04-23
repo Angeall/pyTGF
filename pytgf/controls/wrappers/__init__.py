@@ -1,4 +1,4 @@
-from pytgf.controls.wrappers.bot import BotControllerWrapper
-from pytgf.controls.wrappers.human import HumanControllerWrapper
-from pytgf.controls.wrappers.wrapper import ControllerWrapper
+from .bot import BotControllerWrapper
+from .human import HumanControllerWrapper
+from .wrapper import ControllerWrapper
 

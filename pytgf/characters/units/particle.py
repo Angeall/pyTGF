@@ -7,9 +7,8 @@ from typing import Optional
 
 import pygame
 
-import pytgf.utils.geom
-from pytgf.characters.units.sprite import UnitSprite
-from pytgf.utils.geom import Coordinates
+from .sprite import UnitSprite
+from ...utils.geom import vectorize, Coordinates
 
 __author__ = 'Anthony Rouneau'
 
@@ -92,7 +91,7 @@ class Particle:
         if self.sprite is not None and self.sprite.rect is not None:
             current_position = self.sprite.rect.center
             if current_position != destination:
-                x, y = pytgf.utils.geom.vectorize(current_position, destination)
+                x, y = vectorize(current_position, destination)
                 self.sprite.rect.move_ip(x, y)
 
     def move(self, destination_offset: Coordinates) -> None:

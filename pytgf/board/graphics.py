@@ -10,9 +10,7 @@ import pygame
 from pygame import gfxdraw
 from scipy.spatial import KDTree
 
-import pytgf.utils.geom
-from pytgf.utils.geom import Coordinates
-
+from ..utils.geom import dist, Coordinates, get_convex_hull, get_path
 
 __author__ = 'Anthony Rouneau'
 
@@ -57,7 +55,7 @@ class BoardGraphics:
             tiles_visible: If true, the borders of each tile will be drawn by the "draw" method.
         """
         self.size = size
-        self.sideLength = pytgf.utils.geom.dist(tiles_borders[0][0][-1], tiles_borders[0][0][0])
+        self.sideLength = dist(tiles_borders[0][0][-1], tiles_borders[0][0][0])
         self.nbrOfSides = len(tiles_borders[0][0])
         self._tilesVisible = tiles_visible
         self._borders = borders
@@ -178,8 +176,8 @@ class BoardGraphics:
         Returns: True if the point is inside and False otherwise
         """
         points = self._drawMatrix[i][j]
-        convex_hull = pytgf.utils.geom.get_convex_hull(points)
-        hull_path = pytgf.utils.geom.get_path(points, convex_hull)
+        convex_hull = get_convex_hull(points)
+        hull_path = get_path(points, convex_hull)
         return hull_path.contains_point(point)
 
     def getTileIdByPixel(self, pixel: Coordinates) -> Union[Tuple[int, int], None]:
@@ -335,14 +333,14 @@ class BoardGraphics:
 
         Returns: True if all the length are equal with a epsilon-accuracy.
         """
-        length = pytgf.utils.geom.dist(points[0], points[1])
+        length = dist(points[0], points[1])
         if abs(length - self.sideLength) > self._TILE_LENGTH_EPSILON:
             return False
         i = 1
         while i < len(points) - 1:
-            computed_length = pytgf.utils.geom.dist(points[i], points[i + 1])
+            computed_length = dist(points[i], points[i + 1])
             if abs(computed_length - length) > self._TILE_LENGTH_EPSILON:
                 return False
             i += 1
-        return abs(pytgf.utils.geom.dist(points[len(points) - 1], points[0]) - length) < self._TILE_LENGTH_EPSILON
+        return abs(dist(points[len(points) - 1], points[0]) - length) < self._TILE_LENGTH_EPSILON
 

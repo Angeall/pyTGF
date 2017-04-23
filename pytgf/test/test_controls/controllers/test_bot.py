@@ -1,13 +1,13 @@
 import unittest
 from queue import Empty
 
-from pytgf.board import Builder
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.moves import Path
-from pytgf.characters.units import Particle
-from pytgf.characters.units import Unit
-from pytgf.controls.controllers import Bot, TeammatePayload
-from pytgf.game import Core, API
+from ....board import Builder
+from ....characters.moves import MoveDescriptor
+from ....characters.moves import Path
+from ....characters.units import Particle
+from ....characters.units import Unit
+from ....controls.controllers import Bot, TeammatePayload
+from ....game import Core, API
 
 
 class ExampleAPI(API):

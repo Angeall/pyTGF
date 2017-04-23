@@ -2,11 +2,11 @@ import unittest
 
 import pygame
 
-from pytgf.controls.controllers import Passive
-from pytgf.examples.sokoban.parsing.builder import SokobanBoardBuilder
-from pytgf.examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
-from pytgf.examples.sokoban.units.box import Box
-from pytgf.game.realtime import RealTimeMainLoop
+from ...controls.controllers import Passive
+from ...examples.sokoban.parsing.builder import SokobanBoardBuilder
+from ...examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
+from ...examples.sokoban.units.box import Box
+from ...game.realtime import RealTimeMainLoop
 
 
 class TestSokoban(unittest.TestCase):

@@ -4,7 +4,7 @@ Contains the definition of the "Component" class, which is used in a data gather
 
 from typing import Callable, Any, Union, Iterable, Tuple, Optional
 
-from pytgf.game import API
+from ..game import API
 
 __author__ = "Anthony Rouneau"
 

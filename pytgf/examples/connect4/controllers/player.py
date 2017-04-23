@@ -1,7 +1,6 @@
 from abc import ABCMeta
 
-from pytgf.controls.controllers import Controller
-
+from ....controls.controllers import Controller
 
 __author__ = "Anthony Rouneau"
 
