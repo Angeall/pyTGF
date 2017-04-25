@@ -1,3 +1,5 @@
+from typing import List, Any
+
 import numpy as np
 import pandas as pd
 
@@ -33,22 +35,41 @@ class ActionSequenceDecoder(FileDecoder):
             player_has_won = data_frame.loc[i+self._playerNumber][0] == 1
             players_actions_sequences = [list(data_frame.loc[i+offset][1:]) for offset in range(self._nbPlayers)]
             if not self._mustWin or player_has_won:
-                sequence = []
-                for k in range(data_frame.shape[1]-1):
-                    cur_actions = []
-                    is_nan = False
-                    for j in range(self._nbPlayers):
-                        item = players_actions_sequences[j][k]
-                        if np.isnan(item):
-                            is_nan = True
-                            break
-                        cur_actions.append(item)
-                    if not is_nan:
-                        sequence.append(cur_actions)
-                actions.append(sequence)
+                actions.append(self.getPlayersActionsSequence(data_frame.shape[1] - 1, players_actions_sequences,
+                                                              self._nbPlayers))
             if self.verbose:
                 print("parsing file", str(int(i/self._nbPlayers)), "/", str(nb_sequences))
         return actions
+
+    @staticmethod
+    def getPlayersActionsSequence(seq_length: int, players_actions_sequences: List[List[Any]], nb_players: int) \
+            -> List[List[Any]]:
+        """
+        Transforms multiple lists, each containing one player's actions into a list of actions.
+        e.g. transforms [[1, 2, 3], [4, 5, 6]] into [[1, 4], [2, 5], [3, 6]]
+         
+        Args:
+            nb_players: The number of players in the sequence
+            seq_length: The length of the wanted sequence 
+            players_actions_sequences: 
+                List containing multiple lists, each containing one player's actions into a list of actions.
+
+        Returns: 
+            A list containing List of actions performed by each player.
+        """
+        sequence = []
+        for k in range(seq_length):
+            cur_actions = []
+            is_nan = False
+            for j in range(nb_players):
+                item = players_actions_sequences[j][k]
+                if np.isnan(item):
+                    is_nan = True
+                    break
+                cur_actions.append(item)
+            if not is_nan:
+                sequence.append(cur_actions)
+        return sequence
 
 
 
