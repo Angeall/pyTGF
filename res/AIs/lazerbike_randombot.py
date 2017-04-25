@@ -45,4 +45,4 @@ class RandomBot(LazerBikeBotPlayer):
         Returns:
 
         """
-        return random.choice(self.availableMoves)
+        return random.choice(self.possibleMoves)

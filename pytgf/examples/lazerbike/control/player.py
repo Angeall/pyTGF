@@ -3,6 +3,7 @@ File containing the basic player for the lazerbike game
 """
 
 from abc import ABCMeta
+from typing import List
 
 from ..gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
 from ..rules import LazerBikeAPI, LazerBikeCore
@@ -29,8 +30,11 @@ class LazerBikeBotPlayer(LazerBikePlayer, Bot, metaclass=ABCMeta):
             player_number: The identifier of the unit controlled by this controller
         """
         super().__init__(player_number)
-        self.availableMoves = [GO_DOWN, GO_UP, GO_RIGHT, GO_LEFT]
         self._playersMove = []
+
+    @property
+    def possibleMoves(self) -> List[MoveDescriptor]:
+        return [GO_RIGHT, GO_DOWN, GO_LEFT, GO_UP]
 
     def _getGameStateAPI(self, game: LazerBikeCore) -> LazerBikeAPI:
         """
@@ -66,4 +70,4 @@ class LazerBikeBotPlayer(LazerBikePlayer, Bot, metaclass=ABCMeta):
 
         Returns: True if the given move descriptor is allowed by the game
         """
-        return move in (GO_RIGHT, GO_DOWN, GO_LEFT, GO_UP)
+        return move in self.possibleMoves

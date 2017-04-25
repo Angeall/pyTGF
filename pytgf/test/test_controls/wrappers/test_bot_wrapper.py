@@ -71,6 +71,10 @@ class ExampleGame(Core):
 
 
 class ExampleBot(Bot):
+    @property
+    def possibleMoves(self) -> List[MoveDescriptor]:
+        return []
+
     def _getGameStateAPI(self, game: Core):
         return ExampleAPI(game)
 

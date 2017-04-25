@@ -4,7 +4,7 @@ File containing the definition of a bot controller.
 
 from abc import ABCMeta, abstractmethod
 from queue import Queue
-from typing import List, Any
+from typing import List, Any, Iterable
 
 from .controller import Controller
 from ..events import BotEvent, WakeEvent
@@ -175,3 +175,10 @@ class Bot(Controller, metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    @property
+    def possibleMoves(self) -> Iterable[MoveDescriptor]:
+        """
+        Returns: A list containing all the possible moves for this controller if they can be listed.
+        """
+        pass

@@ -1,5 +1,6 @@
 import unittest
 from queue import Empty
+from typing import List
 
 from ....board import Builder
 from ....characters.moves import MoveDescriptor
@@ -41,6 +42,10 @@ class ExampleGame(Core):
 
 
 class ExampleBot(Bot):
+    @property
+    def possibleMoves(self) -> List[MoveDescriptor]:
+        return []
+
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
         pass
 

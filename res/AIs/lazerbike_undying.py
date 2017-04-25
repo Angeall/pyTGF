@@ -7,7 +7,6 @@ from typing import Tuple
 from ...pytgf.board.simulation import SimultaneousAlphaBeta
 from ...pytgf.characters.moves import MoveDescriptor
 from ...pytgf.examples.lazerbike.control import LazerBikeBotPlayer
-from ...pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT
 from ...pytgf.game import API
 
 
@@ -24,7 +23,7 @@ class UndyingAI(LazerBikeBotPlayer):
         """
         super().__init__(player_number)
         self._playersMove = []
-        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, (GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT), max_depth=3)
+        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, self.possibleMoves, max_depth=3)
 
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message) -> None:
         """
