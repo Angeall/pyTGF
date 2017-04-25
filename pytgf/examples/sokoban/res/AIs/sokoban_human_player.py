@@ -1,7 +1,7 @@
-from ...controllers.player import SokobanPlayer
-from ...rules.sokoban import SokobanKeyboardEvent
-from .....controls.controllers import Human
-from .....controls.events import MouseEvent
+from pytgf.controls.controllers import Human
+from pytgf.controls.events import MouseEvent
+from pytgf.examples.sokoban.controllers.player import SokobanPlayer
+from pytgf.examples.sokoban.rules.sokoban import SokobanKeyboardEvent
 
 
 class HumanPlayer(SokobanPlayer, Human):

@@ -4,10 +4,10 @@ File containing the definition of an undying AI, its goal is not to die.
 import time
 from typing import Tuple
 
-from ...pytgf.board.simulation import SimultaneousAlphaBeta
-from ...pytgf.characters.moves import MoveDescriptor
-from ...pytgf.examples.lazerbike.control import LazerBikeBotPlayer
-from ...pytgf.game import API
+from pytgf.board.simulation import SimultaneousAlphaBeta
+from pytgf.characters.moves import MoveDescriptor
+from pytgf.examples.lazerbike.control import LazerBikeBotPlayer
+from pytgf.game import API
 
 
 class UndyingAI(LazerBikeBotPlayer):

@@ -3,9 +3,9 @@ from tkinter.ttk import Frame, Label, Button
 
 import pygame
 
-from .builder import create_game
-from .controllers import Connect4Player
-from ...menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
+from pytgf.examples.connect4.builder import create_game
+from pytgf.examples.connect4.controllers import Connect4Player
+from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
 selection_frame = None  # type: Frame
 main_frame = None

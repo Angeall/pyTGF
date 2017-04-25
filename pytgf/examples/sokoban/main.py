@@ -4,10 +4,10 @@ from tkinter.ttk import Frame, Label, Button
 
 import pygame
 
-from .controllers.player import SokobanPlayer
-from .parsing.builder import SokobanBoardBuilder
-from .parsing.parser import SokobanBoardParser
-from ...menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
+from pytgf.examples.sokoban.controllers.player import SokobanPlayer
+from pytgf.examples.sokoban.parsing.builder import SokobanBoardBuilder
+from pytgf.examples.sokoban.parsing.parser import SokobanBoardParser
+from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
 selection_frame = None
 main_frame = None

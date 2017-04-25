@@ -4,10 +4,10 @@ File containing the definition of a bot controller taking random decisions
 
 import random
 
-from ...control.player import LazerBikeBotPlayer
-from .....characters.moves import MoveDescriptor
-from .....controls.controllers import TeammateMessage
-from .....game.api import API
+from pytgf.characters.moves import MoveDescriptor
+from pytgf.controls.controllers import TeammateMessage
+from pytgf.examples.lazerbike.control.player import LazerBikeBotPlayer
+from pytgf.game.api import API
 
 
 class RandomBot(LazerBikeBotPlayer):
