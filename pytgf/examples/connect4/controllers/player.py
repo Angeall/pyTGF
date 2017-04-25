@@ -3,6 +3,7 @@ from abc import ABCMeta
 from ....characters.moves import MoveDescriptor
 from ....controls.controllers import Bot
 from ....controls.controllers import Controller
+from ....controls.controllers import TeammateMessage
 from ....examples.connect4.rules import Connect4API, Connect4Core
 from ....game.turnbased import TurnBasedAPI
 
@@ -27,3 +28,6 @@ class Connect4BotPlayer(Connect4Player, Bot, metaclass=ABCMeta):
 
     def _getGameStateAPI(self, game: Connect4Core):
         return Connect4API(game)
+
+    def selectMoveFollowingTeammateMessage(self, teammate_number: int, message: TeammateMessage):
+        return None  # There are no team mates in Connect 4...
