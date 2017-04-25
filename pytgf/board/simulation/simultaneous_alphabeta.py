@@ -5,7 +5,7 @@ for all the players
 
 import itertools
 import random
-from typing import List, Dict, Union, Callable, TypeVar, Tuple, Iterable
+from typing import List, Dict, Union, Callable, TypeVar, Tuple
 
 import numpy as np
 
@@ -24,7 +24,8 @@ class SimultaneousAlphaBeta:
     Implementation of a cutoff AlphaBeta algorithm that performs the moves of all the players simultaneously
     """
 
-    def __init__(self, eval_fct: Callable[[API], Tuple[Value, ...]], possible_actions: Iterable[MoveDescriptor, ...],
+    def __init__(self, eval_fct: Callable[[API], Tuple[Value, ...]],
+                 possible_actions: Union[Tuple[MoveDescriptor, ...], List[MoveDescriptor]],
                  max_depth: int = 6, turn_by_turn: bool = False):
         """
 

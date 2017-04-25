@@ -175,8 +175,8 @@ class Bot(Controller, metaclass=ABCMeta):
         """
         pass
 
-    @abstractmethod
     @property
+    @abstractmethod
     def possibleMoves(self) -> Iterable[MoveDescriptor]:
         """
         Returns: A list containing all the possible moves for this controller if they can be listed.
