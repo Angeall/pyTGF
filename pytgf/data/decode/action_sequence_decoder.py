@@ -1,4 +1,4 @@
-from typing import List, Any
+from typing import List, Any, Iterable
 
 import numpy as np
 import pandas as pd
@@ -41,7 +41,7 @@ class ActionSequenceDecoder(FileDecoder):
         return actions
 
     @staticmethod
-    def getPlayersActionsSequence(players_actions_sequences: List[List[Any]]) -> List[List[Any]]:
+    def getPlayersActionsSequence(players_actions_sequences: Iterable) -> List[List[Any]]:
         """
         Transforms multiple lists, each containing one player's actions into a list of actions.
         e.g. transforms [[1, 2, 3], [4, 5, 6]] into [[1, 4], [2, 5], [3, 6]]
