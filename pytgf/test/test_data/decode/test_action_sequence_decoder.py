@@ -29,3 +29,8 @@ class TestActionSequenceDecoder(unittest.TestCase):
         self.assertEqual(result[0], [[5, 3], [3, 2], [4, 4], [0, 4]])
         self.assertEqual(result[1], [[2, 1], [4, 2]])
         self.assertEqual(result[2], [[4, 3], [3, 1]])
+
+    def test_correct_sequencer(self):
+        actions = [[1, 2, 3], [4, 5, 6]]  # Seq length = 3, Nb players = 2
+        actions_couples = ActionSequenceDecoder.getPlayersActionsSequence(actions)
+        self.assertEqual(actions_couples, [[1, 4], [2, 5], [3, 6]])

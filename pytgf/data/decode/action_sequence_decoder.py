@@ -35,15 +35,13 @@ class ActionSequenceDecoder(FileDecoder):
             player_has_won = data_frame.loc[i+self._playerNumber][0] == 1
             players_actions_sequences = [list(data_frame.loc[i+offset][1:]) for offset in range(self._nbPlayers)]
             if not self._mustWin or player_has_won:
-                actions.append(self.getPlayersActionsSequence(data_frame.shape[1] - 1, players_actions_sequences,
-                                                              self._nbPlayers))
+                actions.append(self.getPlayersActionsSequence(players_actions_sequences))
             if self.verbose:
                 print("parsing file", str(int(i/self._nbPlayers)), "/", str(nb_sequences))
         return actions
 
     @staticmethod
-    def getPlayersActionsSequence(seq_length: int, players_actions_sequences: List[List[Any]], nb_players: int) \
-            -> List[List[Any]]:
+    def getPlayersActionsSequence(players_actions_sequences: List[List[Any]]) -> List[List[Any]]:
         """
         Transforms multiple lists, each containing one player's actions into a list of actions.
         e.g. transforms [[1, 2, 3], [4, 5, 6]] into [[1, 4], [2, 5], [3, 6]]
@@ -58,13 +56,13 @@ class ActionSequenceDecoder(FileDecoder):
             A list containing List of actions performed by each player.
         """
         sequence = []
-        for k in range(seq_length):
+        for k in range(len(players_actions_sequences[0])):  # Sequence
             cur_actions = []
             is_nan = False
-            for j in range(nb_players):
+            for j in range(len(players_actions_sequences)):  # Nb of players
                 item = players_actions_sequences[j][k]
                 if np.isnan(item):
-                    is_nan = True
+                    is_nan = True  # Once we reached a "NaN", the sequence is considered as finished
                     break
                 cur_actions.append(item)
             if not is_nan:
