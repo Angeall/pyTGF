@@ -30,3 +30,8 @@ class Controller(metaclass=ABCMeta):
             events: The new event to which this controller must react if needed
         """
         pass
+
+    def getReady(self):
+        """
+        Methods that can be overridden so that it gets the controller ready
+        """

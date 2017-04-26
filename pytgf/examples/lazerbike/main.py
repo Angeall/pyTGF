@@ -3,9 +3,9 @@ from tkinter.ttk import Frame, Label, Button
 
 import pygame
 
-from .builder import create_game
-from .control import LazerBikePlayer
-from ...menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
+from pytgf.examples.lazerbike.builder import create_game
+from pytgf.examples.lazerbike.control import LazerBikePlayer
+from pytgf.menu import AISelectorFrameBuilder, ButtonFrameBuilder, GUI
 
 selection_frame = None  # type: Frame
 main_frame = None

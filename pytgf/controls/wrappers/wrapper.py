@@ -1,12 +1,13 @@
 """
 File containing the definition of an abstract ControllerWrapper, linking the game with a Controller
 """
-import traceback
 from abc import ABCMeta, abstractmethod
 from queue import Empty
 from typing import Any
 
 import pygame
+
+from pytgf.controls.events import ReadyEvent
 
 try:
     from multiprocess.connection import PipeConnection
@@ -91,15 +92,15 @@ class ControllerWrapper(metaclass=ABCMeta):
         Runs the logical loop of this linker, looking for actions coming from the controller and updating
         the controller's local copy of the game state. The loop runs with a maximum of MAX_FPS iteration/s
         """
+        self.controller.getReady()
         clock = pygame.time.Clock()
+        self.mainPipe.send(ReadyEvent())
         while self._connected:
             try:
                 self._routine()
             except (BrokenPipeError, EOFError, OSError):
+                print("Closing pipes for player", self.controller.playerNumber)
                 self.close()
-            except:
-                traceback.print_exc()
-                print('error')
             clock.tick(MAX_FPS)
 
     def handleNewGameStateChangeIfNeeded(self) -> None:

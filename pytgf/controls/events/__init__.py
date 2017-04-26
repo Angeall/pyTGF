@@ -4,6 +4,7 @@ from .human import HumanEvent
 from .keyboard import KeyboardEvent
 from .mouse import MouseEvent
 from .multiple import MultipleEvents
+from .ready import ReadyEvent
 from .special import SpecialEvent
 from .wake import WakeEvent
 

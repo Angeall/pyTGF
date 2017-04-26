@@ -85,7 +85,6 @@ class Bot(Controller, metaclass=ABCMeta):
                 if not succeeded:
                     print("error in move... for player %s and descriptor %s" %
                           (str(event.playerNumber), str(event.moveDescriptor)))
-
                 move_interesting = move_interesting or self._isMoveInteresting(event.playerNumber, event.moveDescriptor)
             else:
                 move_interesting = True

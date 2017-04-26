@@ -147,13 +147,13 @@ class API(metaclass=ABCMeta):
 
         Returns: True if the two players belongs to the same team, False otherwise.
         """
-        return self.game.belongsToSameTeam(self.game.players[player_1_number], self.game.players[player_2_number])
+        return self.game.belongsToSameTeam(self.game.units[player_1_number], self.game.units[player_2_number])
 
     def getPlayerNumbers(self):
         """
         Returns: The list of the number of each player, sorted !
         """
-        players = list(self.game.controlledPlayers.keys())
+        players = list(self.game.avatars.keys())
         players.sort()
         return players
 
@@ -209,7 +209,7 @@ class API(metaclass=ABCMeta):
 
         Returns: True if the player is alive, False otherwise
         """
-        return self.game.players[player_number].isAlive()
+        return self.game.units[player_number].isAlive()
 
     def hasWon(self, player_number: int) -> bool:
         """
@@ -230,7 +230,7 @@ class API(metaclass=ABCMeta):
 
         Returns: The (i, j) coordinates of the player, i being the row index and j being the column index.
         """
-        return self.game.unitsLocation[self.game.players[player_number]]
+        return self.game.unitsLocation[self.game.units[player_number]]
 
     def getAdjacent(self, tile_id: TileIdentifier) -> Tuple[TileIdentifier, ...]:
         """
@@ -469,7 +469,7 @@ class API(metaclass=ABCMeta):
              - The Path created from the given move descriptor, or None if the move was not successfully created
 
         """
-        unit = self.game.players[player_number]
+        unit = self.game.units[player_number]
         try:
             move = self.createMoveForDescriptor(unit, wanted_move, is_step=True)
             return True, move

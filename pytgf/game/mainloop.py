@@ -3,7 +3,6 @@ Fie containing the definition of the logical loop of a game, containing all the 
 and the bot controllers handling
 """
 
-import time
 from abc import ABCMeta, abstractmethod
 from queue import Queue, Empty
 from typing import Dict, Optional, List
@@ -12,6 +11,8 @@ from typing import Union
 
 import pygame
 from multiprocess.connection import Pipe
+
+from pytgf.controls.events import ReadyEvent
 
 try:
     from multiprocess.connection import PipeConnection
@@ -41,7 +42,8 @@ MAX_FPS = 30
 
 MOVE_COMPLETED = 0
 MOVE_JUST_STARTED = 1
-MOVE_IN_PROGRESS = 2
+MOVE_COMPLETED_AND_JUST_STARTED = 2
+MOVE_IN_PROGRESS = 3
 MOVE_ILLEGAL = -1
 MOVE_IMPOSSIBLE = -2
 MOVE_FAILED = -3
@@ -101,6 +103,8 @@ class MainLoop(metaclass=ABCMeta):
             pass
         if not self._prepared:
             self._prepareLoop()
+        for player_number in self.api.getPlayerNumbers():
+            self._sendEventsToController(player_number)
         while self._state != END:
             clock.tick(max_fps)
             self._handleInputs()
@@ -132,7 +136,7 @@ class MainLoop(metaclass=ABCMeta):
             team: The number of the team this player is in (-1 = no team)
         """
         is_controlled = wrapper is not None
-        self.game.addUnit(unit, team, tile_id, controlled=is_controlled)
+        self.game.addUnit(unit, team, tile_id, is_avatar=is_controlled)
         if is_controlled:
             self._addControllerWrapper(wrapper, unit)
             if self._mustSendInitialWakeEvent(initial_action, unit):
@@ -312,12 +316,13 @@ class MainLoop(metaclass=ABCMeta):
         self._updateFromMoves(completed_moves, illegal_moves, impossible_moves, just_started)
 
     def _updateFromMoves(self, completed_moves, illegal_moves, impossible_moves, just_started):
+        players_to_be_sent_messages = []
         for unit, (tile_id, move_descriptor) in completed_moves.items():
             self.game.updateGameState(unit, tile_id, move_descriptor)
         for player_number, move_descriptor in just_started.items():
-            self.game.getUnitForNumber(player_number).setCurrentAction(move_descriptor)
+            self.game.getControllerUnitForNumber(player_number).setCurrentAction(move_descriptor)
             self._addMessageToSendToAll(player_number, move_descriptor)
-        players_to_be_sent_messages = self._getPlayerNumbersToWhichSendEvents()
+            players_to_be_sent_messages = self._getPlayerNumbersToWhichSendEvents()
         for player_number in players_to_be_sent_messages:
             self._sendEventsToController(player_number)
         for unit in illegal_moves:
@@ -371,7 +376,10 @@ class MainLoop(metaclass=ABCMeta):
             move: The performed move
             move_state: The state of the performed move
         """
-        if move_state == MOVE_COMPLETED:
+        if move_state == MOVE_COMPLETED_AND_JUST_STARTED:
+            completed_moves[move.unit] = (move.reachedTileIdentifier,  self._moveDescriptors[move])
+            just_started[move.unit.playerNumber] = self._moveDescriptors[move]
+        elif move_state == MOVE_COMPLETED:
             completed_moves[move.unit] = (move.reachedTileIdentifier,  self._moveDescriptors[move])
         elif move_state == MOVE_JUST_STARTED:
             just_started[move.unit.playerNumber] = self._moveDescriptors[move]
@@ -388,6 +396,7 @@ class MainLoop(metaclass=ABCMeta):
             moved_unit_number: The number representing the unit that moved 
             move_descriptor: The descriptor of the performed move
         """
+        moved_unit_number = self.game.getControllerUnitForNumber(moved_unit_number).playerNumber
         for wrapper in self._eventsToSend:
             self._eventsToSend[wrapper].append(BotEvent(moved_unit_number, move_descriptor))
 
@@ -408,7 +417,9 @@ class MainLoop(metaclass=ABCMeta):
             if current_move is not None:
                 try:
                     just_started, move_completed, tile_id = current_move.performNextMove()
-                    if move_completed:  # A new tile has been reached by the movement
+                    if just_started and move_completed:
+                        return MOVE_COMPLETED_AND_JUST_STARTED
+                    elif move_completed:  # A new tile has been reached by the movement
                         return MOVE_COMPLETED
                     elif just_started:
                         return MOVE_JUST_STARTED
@@ -510,12 +521,15 @@ class MainLoop(metaclass=ABCMeta):
 
     def _sendEventsToController(self, player_number: int, event: Event=None):
 
-        next_player_wrapper = self._getWrapperFromPlayerNumber(player_number)
-        pipe_conn = self._getPipeConnection(next_player_wrapper)
+        player_wrapper = self._getWrapperFromPlayerNumber(player_number)
+        pipe_conn = self._getPipeConnection(player_wrapper)
         if event is None:
-            event = MultipleEvents(self._eventsToSend[next_player_wrapper])
-        pipe_conn.send(event)
-        self._eventsToSend[next_player_wrapper] = []
+            events = self._eventsToSend[player_wrapper]
+            if len(events) > 0:
+                event = MultipleEvents(events)
+        if event is not None:
+            pipe_conn.send(event)
+            self._eventsToSend[player_wrapper] = []
 
     def _informBotOnPerformedMove(self, moved_unit_number: int, move_descriptor: MoveDescriptor) -> None:
         """
@@ -569,11 +583,14 @@ class MainLoop(metaclass=ABCMeta):
             self.executor.apipe(lambda: None)
         except ValueError:
             self.executor.restart()
-        for linker in self.wrappers:
-            if isinstance(linker, BotControllerWrapper):
-                linker.controller.gameState = self.game.copy()
-            self.executor.apipe(linker.run)
-        time.sleep(2)  # Waiting for the processes to launch correctly
+        for wrapper in self.wrappers:
+            if isinstance(wrapper, BotControllerWrapper):
+                wrapper.controller.gameState = self.game.copy()
+            self.executor.apipe(wrapper.run)
+        for wrapper in self.wrappers:
+            pipe = self._getPipeConnection(wrapper)
+            event = pipe.recv()  # Waiting for the processes to launch correctly
+            assert(isinstance(event, ReadyEvent))
         self._prepared = True
 
     def _addControllerWrapper(self, wrapper: ControllerWrapper, unit: Unit) -> None:

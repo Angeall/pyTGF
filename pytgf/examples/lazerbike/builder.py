@@ -53,7 +53,7 @@ def create_game(player_info: Tuple[Dict[int, Type], Dict[int, int]], width: int=
     board = builder.create()
 
     if speed is None:
-        speed = 0.75 * board.graphics.sideLength
+        speed = 0.33 * board.graphics.sideLength
     game = LazerBikeCore(board)
     main_loop = RealTimeMainLoop(LazerBikeAPI(game))
     player_classes = player_info[0]

@@ -61,8 +61,9 @@ class Core(metaclass=ABCMeta):
         self.winningTeam = None
         self.teams = {}  # type: Dict[int, List[Unit]]
         self.unitsTeam = {}  # type: Dict[Unit, int]
-        self.players = {}  # type: Dict[int, Unit]
-        self.controlledPlayers = {}  # type: Dict[int, Unit]
+        self.units = {}  # type: Dict[int, Unit]
+        self.avatars = {}  # type: Dict[int, Unit]
+        self.controlledBy = {}  # type: Dict[int, int]
         self._activeUnits = {}  # type: Dict[int, Unit]
         self.unitsLocation = {}   # type: Dict[Particle, tuple]
         self._previousUnitsLocation = {}   # type: Dict[Particle, tuple]
@@ -72,22 +73,28 @@ class Core(metaclass=ABCMeta):
     # -------------------- PUBLIC METHODS -------------------- #
 
     def addUnit(self, unit: Particle, team_number: int, origin_tile_id: TileIdentifier,
-                controlled: bool=True, active: bool=True) -> None:
+                is_avatar: bool=True, active: bool=True, controlled_by: int=None) -> None:
         """
         Adds a unit to the game
 
         Args:
+            controlled_by: 
+                The number of the player that controls this unit. Has sense only if it is an "non-controlled" unit 
+                (optional)
             unit: The unit to add
             team_number: The number of the team in which the game will put the given unit
             origin_tile_id: The identifier of the tile on which the unit will be placed on
-            controlled: True if this unit is controlled by a bot or a human
+            is_avatar: True if this unit is controlled by a bot or a human, and hence, is his avatar in the game
             active: True if this unit must count in the "checkIfFinished" method. False if it must not count...
         """
         self.addUnitToTile(origin_tile_id, unit)
-        self.players[unit.playerNumber] = unit
-        if controlled:
-            self.controlledPlayers[unit.playerNumber] = unit
+        self.units[unit.playerNumber] = unit
+        if is_avatar:
+            self.avatars[unit.playerNumber] = unit
             self.playerNumbers.append(unit.playerNumber)
+            self.controlledBy[unit.playerNumber] = unit.playerNumber
+        elif controlled_by is not None:
+            self.controlledBy[unit.playerNumber] = controlled_by
         if active:
             self._activeUnits[unit.playerNumber] = unit
         self.unitsTeam[unit] = team_number
@@ -199,7 +206,7 @@ class Core(metaclass=ABCMeta):
                 self.winningTeam = None
             else:
                 self.winningPlayers = tuple([unit for unit in team_units if unit.playerNumber
-                                             in self.controlledPlayers])
+                                             in self.avatars])
                 self.winningTeam = winning_team
             return True
 
@@ -238,7 +245,16 @@ class Core(metaclass=ABCMeta):
 
         Returns: The unit linked to the given number
         """
-        return self.players[player_number]
+        return self.units[player_number]
+
+    def getControllerUnitForNumber(self, player_number: int) -> Unit:
+        """
+        Args:
+            player_number: The number representing the wanted unit
+
+        Returns: The unit linked to the given number
+        """
+        return self.avatars[self.controlledBy[player_number]]
 
     def getTileIdForUnit(self, unit: Particle) -> Union[tuple, None]:
         """

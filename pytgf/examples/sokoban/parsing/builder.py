@@ -44,7 +44,7 @@ class SokobanBoardBuilder(Builder):
         ending_unit = self._createEndingUnit(winning_tiles)
         self._game = SokobanGame(board, ending_unit, winning_tiles)
         for tile in winning_tiles:
-            self._game.addUnit(ending_unit, team_number=1000, origin_tile_id=tile.identifier, controlled=False,
+            self._game.addUnit(ending_unit, team_number=1000, origin_tile_id=tile.identifier, is_avatar=False,
                                active=True)
         self._mainLoop = RealTimeMainLoop(SokobanAPI(self._game))
         self._addBoxes()

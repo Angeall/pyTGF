@@ -42,7 +42,7 @@ class Connect4Core(Core):
             elif self._checkFinished():
                 team = []
             if team is not None:
-                for _, player_unit in self.players.items():
+                for _, player_unit in self.units.items():
                     if player_unit not in team:
                         player_unit.kill()
 
