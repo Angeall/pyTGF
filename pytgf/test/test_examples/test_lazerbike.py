@@ -39,9 +39,9 @@ class TestLazerbike(unittest.TestCase):
         start = time.time()
         my_copy = self.loop.game.copy()
         print(time.time() - start)
-        my_copy.players[1].kill()
-        self.assertFalse(my_copy.players[1].isAlive())
-        self.assertTrue(self.loop.game.players[1].isAlive())
+        my_copy.avatars[1].kill()
+        self.assertFalse(my_copy.units[1].isAlive())
+        self.assertTrue(self.loop.game.units[1].isAlive())
 
     def test_draw(self):
         self.loop.addUnit(Bike(200, 1, max_trace=-1), LazerBikeBotControllerWrapper(Passive(1)), (15, 25), GO_DOWN,

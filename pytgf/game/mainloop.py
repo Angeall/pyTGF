@@ -320,7 +320,9 @@ class MainLoop(metaclass=ABCMeta):
         for unit, (tile_id, move_descriptor) in completed_moves.items():
             self.game.updateGameState(unit, tile_id, move_descriptor)
         for player_number, move_descriptor in just_started.items():
-            self.game.getControllerUnitForNumber(player_number).setCurrentAction(move_descriptor)
+            controller_unit = self.game.getControllerUnitForNumber(player_number)
+            if controller_unit is not None:
+                controller_unit.setCurrentAction(move_descriptor)
             self._addMessageToSendToAll(player_number, move_descriptor)
             players_to_be_sent_messages = self._getPlayerNumbersToWhichSendEvents()
         for player_number in players_to_be_sent_messages:
@@ -396,9 +398,13 @@ class MainLoop(metaclass=ABCMeta):
             moved_unit_number: The number representing the unit that moved 
             move_descriptor: The descriptor of the performed move
         """
-        moved_unit_number = self.game.getControllerUnitForNumber(moved_unit_number).playerNumber
+        controlled_unit = self.game.getControllerUnitForNumber(moved_unit_number)
+        if controlled_unit is None:
+            controlled_unit_number = moved_unit_number
+        else:
+            controlled_unit_number = controlled_unit.playerNumber
         for wrapper in self._eventsToSend:
-            self._eventsToSend[wrapper].append(BotEvent(moved_unit_number, move_descriptor))
+            self._eventsToSend[wrapper].append(BotEvent(controlled_unit_number, move_descriptor))
 
     @staticmethod
     def _performNextStepOfMove(unit: Unit, current_move: Path) -> int:

@@ -331,7 +331,7 @@ class SimultaneousAlphaBeta:
         Returns: A list containing couples [player_number, move_descriptor]
         """
         moves = []
-        for player_number in [player for player in players if state.game.controlledPlayers[player].isAlive()]:
+        for player_number in [player for player in players if state.game.avatars[player].isAlive()]:
             possible_moves_for_player = self._getPossibleMovesForPlayer(player_number, state)
             moves.append(itertools.product([player_number],
                                            possible_moves_for_player))

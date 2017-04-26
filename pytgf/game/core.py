@@ -247,14 +247,18 @@ class Core(metaclass=ABCMeta):
         """
         return self.units[player_number]
 
-    def getControllerUnitForNumber(self, player_number: int) -> Unit:
+    def getControllerUnitForNumber(self, player_number: int) -> Union[Unit, None]:
         """
         Args:
             player_number: The number representing the wanted unit
 
-        Returns: The unit linked to the given number
+        Returns: 
+            The controlled unit linked to the given number, or None if there is no controlled unit behind the number 
         """
-        return self.avatars[self.controlledBy[player_number]]
+        try:
+            return self.avatars[self.controlledBy[player_number]]
+        except KeyError:
+            return None
 
     def getTileIdForUnit(self, unit: Particle) -> Union[tuple, None]:
         """
