@@ -338,9 +338,7 @@ class API(metaclass=ABCMeta):
         return byte_code
 
     def copy(self):
-        new_api = type(self)(self.game.copy())
-        new_api._actionsHistory = copy.deepcopy(self._actionsHistory)
-        return new_api
+        return copy.deepcopy(self)
 
     def encodeMove(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
         """
@@ -510,3 +508,15 @@ class API(metaclass=ABCMeta):
 
     def _reactToMovePerformed(self, player_number: int, move: Path):
         pass
+
+    def __hash__(self):
+        encoded_board = self.getBoardByteCodes()
+        hashable = tuple([tuple(line) for line in encoded_board])
+        return hashable.__hash__()
+
+    def __eq__(self, other):
+        try:
+            return self.__hash__() == other.__hash__()
+        except TypeError:
+            return False
+

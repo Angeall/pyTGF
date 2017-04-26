@@ -2,7 +2,7 @@
 File containing the definition of an undying AI, its goal is not to die.
 """
 import time
-from typing import Tuple
+from typing import Dict
 
 from pytgf.board.simulation import SimultaneousAlphaBeta
 from pytgf.characters.moves import MoveDescriptor
@@ -36,7 +36,7 @@ class UndyingAI(LazerBikeBotPlayer):
         pass
 
     @staticmethod
-    def eval_fct(state: API) -> Tuple[float, ...]:
+    def eval_fct(state: API) -> Dict[int, float]:
         """
         Just give a score of 1 for a unit that is alive, and -1 for a player that is not alive
 
@@ -46,7 +46,7 @@ class UndyingAI(LazerBikeBotPlayer):
         Returns:
 
         """
-        scores = []
+        scores = {}
         for player_number in state.getPlayerNumbers():
             score = 1
             if not state.game.players[player_number].isAlive():
@@ -56,8 +56,8 @@ class UndyingAI(LazerBikeBotPlayer):
                     if not state.belongsToSameTeam(player_number, other_player_number):
                         if not state.game.players[other_player_number].isAlive():
                             score += 1
-            scores.append(score)
-        return tuple(scores)
+            scores[player_number] = score
+        return scores
 
     def _selectNewMove(self, game_state: API) -> MoveDescriptor:
         """

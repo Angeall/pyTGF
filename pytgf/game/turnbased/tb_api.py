@@ -32,6 +32,14 @@ class TurnBasedAPI(API, metaclass=ABCMeta):
         """
         return self.getCurrentPlayer() == player_number
 
+    def getPlayerNumbersInOrder(self):
+        """
+        
+        Returns: The numbers representing the players, ordered by the playing order
+
+        """
+        return self.game.playerNumbers
+
     def getCurrentPlayer(self) -> int:
         """
         Returns: The number representing the current player

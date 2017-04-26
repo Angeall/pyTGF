@@ -18,13 +18,15 @@ Value = Union[int, float]
 T = TypeVar('T')
 EndState = Tuple[bool, int, bool]
 
+_RetValue = Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None], bool]
+
 
 class SimultaneousAlphaBeta:
     """
     Implementation of a cutoff AlphaBeta algorithm that performs the moves of all the players simultaneously
     """
 
-    def __init__(self, eval_fct: Callable[[API], Tuple[Value, ...]],
+    def __init__(self, eval_fct: Callable[[API], Dict[int, Value]],
                  possible_actions: Union[Tuple[MoveDescriptor, ...], List[MoveDescriptor]],
                  max_depth: int = 6, turn_by_turn: bool = False):
         """
@@ -55,6 +57,7 @@ class SimultaneousAlphaBeta:
         self._playerMapping = {}
         self._prepared = False
         self._currentlyTestedAction = None
+        self._storedStates = {}  # type: Dict[Tuple[Tuple[int, ...]], _RetValue]
 
     # -------------------- PUBLIC METHODS -------------------- #
 
@@ -67,10 +70,11 @@ class SimultaneousAlphaBeta:
         """
         if not self._prepared:
             self._prepare(player_number, state)
-        if self.actions.get(state) is not None:
-            _, actions = self.actions[state]
+        if self._storedStates.get(state.__hash__()) is not None:
+            val = self._storedStates[state.__hash__()]
+            actions = val[1]
         else:
-            _, actions, _, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
+            _, actions, _, _, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
         self.playerNumber = None
         self._prepared = False
         if actions is not None:
@@ -95,8 +99,7 @@ class SimultaneousAlphaBeta:
         """
         return True
 
-    def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None]]:
+    def _maxValue(self, state: API, alpha: float, beta: float, depth: int) -> _RetValue:
         """
         Computes the best step possible for the Player asking this alpha beta
 
@@ -120,43 +123,51 @@ class SimultaneousAlphaBeta:
         # Check if we reached the end of the tree
         if depth > self.maxDepth:
             score = self._getTeamScore(state, self.eval(state))
-            return score, None, (False, depth - 1, False), state
+            return score, None, (False, depth - 1, False), state, False
         # Check if the game state is final
         elif state.isFinished():
             return (self._getTeamScore(state, self.eval(state)), None,
-                    (True, depth - 1, state.hasWon(self.playerNumber)), state)
+                    (True, depth - 1, state.hasWon(self.playerNumber)), state, True)
+        hashed_state = state.__hash__()
+        # If we already made the computations, no need to do more
+        if self._storedStates.get(hashed_state) is not None:
+            return self._storedStates[hashed_state]
+
         # Initializing the best values
         max_value = -float('inf')
-        equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API]]
+        equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API, bool]]
         end_state = (False, 0, False)
         # Explore every possible actions from this point
         actions_combinations = self._generateMovesCombinations(state)
         random.shuffle(actions_combinations)
-        actions_combinations_scores = {}  # type: Dict[float, Tuple[Dict[int, MoveDescriptor], API]]
+        actions_combinations_scores = {}  # type: Dict[float, Tuple[Dict[int, MoveDescriptor], API, bool]]
         for actions in actions_combinations:
             intermediate_state = state
             if depth == 0:
                 self._currentlyTestedAction = actions[0][self.playerNumber]
-            min_value, min_actions, new_end_state, min_game_state = self._minValue(intermediate_state, actions, alpha,
-                                                                                   beta, depth)
+            min_value, min_actions, new_end_state, min_game_state, best_reached_end = \
+                self._minValue(intermediate_state, actions, alpha, beta, depth)
             end_state = self._evaluateEndState(end_state, new_end_state)
-            actions_combinations_scores[min_value] = min_actions, min_game_state
-            if self._mustCutOff and min_value >= beta:  # Cutoff
-                return min_value, min_actions, end_state, min_game_state
+            actions_combinations_scores[min_value] = min_actions, min_game_state, best_reached_end
+            if self._mustCutOff and min_value > beta:  # Cutoff
+                ret_val = min_value, min_actions, end_state, min_game_state, best_reached_end
+                self._storedStates[min_game_state.__hash__()] = ret_val
+                return ret_val
             alpha = max(alpha, min_value)
         for score in actions_combinations_scores:
-            combination, new_game_state = actions_combinations_scores[score]
+            combination, new_game_state, best_reached_end = actions_combinations_scores[score]
             if score > max_value:
                 max_value = score
-                equally_good_choices = [(combination, new_game_state)]
+                equally_good_choices = [(combination, new_game_state, best_reached_end)]
             elif score == max_value:
-                equally_good_choices.append((combination, new_game_state))
+                equally_good_choices.append((combination, new_game_state, best_reached_end))
         if len(equally_good_choices) == 0:  # No choice is good to take...
             return self._getTeamScore(state, self.eval(state)), None, \
-                   (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
-        best_combination, best_game_state = random.choice(equally_good_choices)
-
-        return max_value, best_combination, end_state, best_game_state
+                   (state.isFinished(), depth, state.hasWon(self.playerNumber)), None, False
+        best_combination, best_game_state, best_reached_end = random.choice(equally_good_choices)
+        ret_val = max_value, best_combination, end_state, best_game_state, best_reached_end
+        self._storedStates[end_state.__hash__()] = ret_val
+        return ret_val
 
     @staticmethod
     def _evaluateEndState(current_end_state: EndState, new_end_state: EndState) -> EndState:
@@ -190,7 +201,7 @@ class SimultaneousAlphaBeta:
         return current_end_state
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None]]:
+            -> _RetValue:
         """
         Computes the possibilities of the other players, simulating the action of every players at the same time
 
@@ -213,28 +224,33 @@ class SimultaneousAlphaBeta:
               - The API that represents the game after the best move
         """
         min_value = float('inf')
-        equal_min_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API]]
+        equal_min_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API, bool]]
         end_state = (False, 0, False)
         for combination in actions:
             simulation_combination = combination
-            feasible_moves, new_game_state = state.simulateMoves(simulation_combination)
+            feasible_moves, new_game_state = self._simulateMoves(simulation_combination, state)
             if feasible_moves and new_game_state is not None:
-                value, _, new_end_state, game_state = self._maxValue(new_game_state, alpha, beta, depth + 1)
+                value, _, new_end_state, game_state, best_reached_end = \
+                                        self._maxValue(new_game_state, alpha, beta, depth + 1)
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
-                    equal_min_choices = [(combination, new_game_state)]
+                    equal_min_choices = [(combination, new_game_state, best_reached_end)]
                 elif value == min_value:
-                    equal_min_choices.append((combination, new_game_state))
-                if self._mustCutOff and value <= alpha:  # Cutoff because we are in a min situation
-                    best_combination, new_game_state = random.choice(equal_min_choices)
-                    return value, best_combination, end_state, new_game_state
+                    equal_min_choices.append((combination, new_game_state, best_reached_end))
+                if self._mustCutOff and value < alpha:  # Cutoff because we are in a min situation
+                    best_combination, new_game_state, best_reached_end = random.choice(equal_min_choices)
+                    ret_val = value, best_combination, end_state, new_game_state, best_reached_end
+                    self._storedStates[new_game_state.__hash__()] = ret_val
+                    return ret_val
                 beta = min(beta, value)
-        # if len(equal_min_choices) == 0:  # No choice is good to take...
-        #     return self._getTeamScore(state, self.eval(state)), None, \
-        #            (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
-        min_actions, new_game_state = random.choice(equal_min_choices)
-        return min_value, min_actions, end_state, new_game_state
+        min_actions, new_game_state, best_reached_end = random.choice(equal_min_choices)
+        ret_val = min_value, min_actions, end_state, new_game_state, best_reached_end
+        self._storedStates[new_game_state.__hash__()] = ret_val
+        return ret_val
+
+    def _simulateMoves(self, simulation_combination, state):
+        return state.simulateMoves(simulation_combination)
 
     def _getActionsList(self, actions: Dict[int, MoveDescriptor], state: API) -> np.ndarray:
         """
@@ -252,7 +268,7 @@ class SimultaneousAlphaBeta:
             actions_list[self._playerMapping[player_number]] = state.encodeMove(player_number, move_descriptor)
         return actions_list
 
-    def _getTeamScore(self, state: API, players_score: Tuple[int, ...]) -> float:
+    def _getTeamScore(self, state: API, players_score: Dict[int, Value]) -> float:
         """
         Given a tuple of players individual score for the given state, computes the score for the team of the player
         for which this alpha beta is running.
@@ -264,9 +280,7 @@ class SimultaneousAlphaBeta:
         Returns: The score of the team of the player of this AlphaBeta
         """
         own_team_score = 0
-        player_numbers = state.getPlayerNumbers()
-        for player_index, player_score in enumerate(players_score):
-            player_number = player_numbers[player_index]
+        for player_number, player_score in players_score.items():
             if player_number == self.playerNumber or state.belongsToSameTeam(player_number, self.playerNumber):
                 own_team_score += player_score
         return own_team_score
