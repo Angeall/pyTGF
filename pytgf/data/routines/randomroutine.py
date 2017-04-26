@@ -1,5 +1,5 @@
 import random
-from typing import Tuple, Callable, Union
+from typing import Tuple, Callable, Union, Dict
 
 from ...board.simulation.simultaneous_alphabeta import Value
 from ...characters.moves import MoveDescriptor
@@ -13,7 +13,7 @@ __author__ = "Anthony Rouneau"
 class RandomRoutine(ThroughoutRoutine):
 
     def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
-                 eval_fct: Callable[[API], Tuple[Value, ...]], nb_random_states: int, max_nb_simulated_moves: int,
+                 eval_fct: Callable[[API], Dict[int, Value]], nb_random_states: int, max_nb_simulated_moves: int,
                  max_depth: int = -1, must_write_files: bool=True, must_keep_temp_files: bool=False,
                  max_end_states: int=-1, max_step_per_moves: int=-1):
         super().__init__(gatherer, possible_moves, eval_fct, max_depth, must_write_files, must_keep_temp_files,

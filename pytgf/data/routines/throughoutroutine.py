@@ -11,13 +11,12 @@ import pandas as pd
 
 from ..component import Data, Component
 from ..gatherer import Gatherer
-from ...board.simulation.simultaneous_alphabeta import SimultaneousAlphaBeta, Value, EndState
+from ...board.simulation.simultaneous_alphabeta import SimultaneousAlphaBeta, Value, EndState, _RetValue
 from ...characters.moves import MoveDescriptor
 from ...game import API
 
 __author__ = "Anthony Rouneau"
 ObjID = int
-
 
 MAX_TEMP_VECTORS = 10000
 COLLECTED_DATA_PATH_NAME = "collected_data"
@@ -26,8 +25,8 @@ ACTIONS_SEQUENCES_PATH_NAME = "actions_sequences"
 
 class ThroughoutRoutine(SimultaneousAlphaBeta):
     def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
-                 eval_fct: Callable[[API], Tuple[Value, ...]], max_depth: int = -1, must_write_files: bool=True,
-                 must_keep_temp_files: bool=False, max_end_states: int=-1):
+                 eval_fct: Callable[[API], Dict[int, Value]], max_depth: int = -1, must_write_files: bool = True,
+                 must_keep_temp_files: bool = False, max_end_states: int = -1):
         super().__init__(eval_fct, possible_moves, max_depth)
         self.TEMP_DATA_PATH_NAME = os.path.join(COLLECTED_DATA_PATH_NAME, "temp" + str(id(self)))
         self.fileID = 0
@@ -103,7 +102,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         if current_has_won < new_has_won:  # pessimistic
             return current_target
         else:  # If winning, the pessimistic option is the maximum number of turn 'til we win.
-               # Else, it is the minimum number of turn till we lose.
+            # Else, it is the minimum number of turn till we lose.
             return new_target if new_nb_turns > current_nb_turns else current_target
 
     @property
@@ -114,13 +113,13 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         return False
 
     def _maxValue(self, state: API, alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, Union[API, None]]:
+            -> _RetValue:
         finished = state.isFinished()
 
         # STOCKING A PRIORI DATA AND INIT A POSTERIORI DATA STRUCTURE
         if self._nbStates >= self._maxEndStates:  # We reached the limit
             return self._getTeamScore(state, self.eval(state)), None, \
-                   (state.isFinished(), depth, state.hasWon(self.playerNumber)), None
+                   (state.isFinished(), depth, state.hasWon(self.playerNumber)), None, False
         if not finished:
             while state.id in self._concludedStates or state.id in self._aPrioriDataVectors:
                 state.id += 1
@@ -164,14 +163,15 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         self._actionsSequences = self._actionsSequences.append(pd.DataFrame(actions_histories), ignore_index=True)
 
     def _minValue(self, state: API, actions: List[Dict[int, MoveDescriptor]], alpha: float, beta: float, depth: int) \
-            -> Tuple[Value, Union[Dict[int, MoveDescriptor], None], EndState, API]:
+            -> _RetValue:
         player_move_descriptor = actions[0][self.playerNumber]
         new_actions = np.zeros((len(self._playerMapping), 1))
         new_actions -= 1
 
         # SEARCHING MIN VALUE
-        value, best_actions, end_state, new_game_state = super()._minValue(state, actions,
-                                                                           alpha, beta, depth)  # Simulate the actions
+        value, best_actions, end_state, new_game_state, best_reached_end = super()._minValue(state, actions,
+                                                                                             alpha, beta,
+                                                                                             depth)  # Simulate actions
 
         id_state = state.id
         state = []
@@ -182,7 +182,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
         a_posteriori_data = self._gatherer.getAPosterioriData(new_game_state)
         a_posteriori_data.extend(final_state)
         self._aPosterioriDataVectors[id_state][player_move_descriptor].extend(a_posteriori_data)
-        return value, best_actions, end_state, new_game_state
+        return value, best_actions, end_state, new_game_state, best_reached_end
 
     @staticmethod
     def _computeFinalStateScore(depth: int, end_state: EndState) -> Tuple[int, int]:
@@ -384,7 +384,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
             pass
 
     @staticmethod
-    def _writeToCsv(data: Union[np.ndarray, pd.DataFrame], file_name: str, path: str, column_titles: List[str]=None):
+    def _writeToCsv(data: Union[np.ndarray, pd.DataFrame], file_name: str, path: str, column_titles: List[str] = None):
         """
         Writes the given data into a CSV file
 
@@ -411,7 +411,7 @@ class ThroughoutRoutine(SimultaneousAlphaBeta):
                 if file is not None:
                     file.close()
 
-    def _removeTempFileIfNeeded(self, file_path: str, is_folder: bool=False):
+    def _removeTempFileIfNeeded(self, file_path: str, is_folder: bool = False):
         if self._mustWriteFiles and not self._mustKeepTempFiles:
             if not is_folder:
                 os.remove(file_path)
@@ -423,6 +423,7 @@ class RoutineBuilder:
     """
     Class used to build a Routine
     """
+
     def __init__(self):
         """
         Instantiates a Routine builder
@@ -430,8 +431,8 @@ class RoutineBuilder:
         self._components = []
 
     def addComponent(self, methods: Union[Iterable[Callable[[API], Data]], Callable[[API], Data]],
-                     title: str, description: str="",
-                     reduce_function: Optional[Callable[[Tuple[Data, ...]], Data]]=None) -> None:
+                     title: str, description: str = "",
+                     reduce_function: Optional[Callable[[Tuple[Data, ...]], Data]] = None) -> None:
         """
         Adds a component to the routine being built
 

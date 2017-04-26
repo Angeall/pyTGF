@@ -37,7 +37,7 @@ class TestLazerbikeData(unittest.TestCase):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         cls.gatherer = Gatherer(a_priori_components, a_posteriori_components)
         cls.routine = ThroughoutRoutine(cls.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                                        lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
+                                        lambda api: {player: 100 * api.hasWon(player) for player in (1, 2)},
                                         must_keep_temp_files=True, must_write_files=True)
         cls.api = cls.loop.api
 
@@ -69,7 +69,7 @@ class TestLazerbikeData(unittest.TestCase):
 
     def test_gathering_limited_number(self):
         routine = ThroughoutRoutine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                                    lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
+                                    lambda api: {player: 100*api.hasWon(player) for player in (1, 2)},
                                     must_keep_temp_files=False, must_write_files=False, max_end_states=2)
         a_priori_data, a_posteriori_dict = routine.routine(1, self.api.copy())
         self.assertEqual(len(routine._actionsSequences), 2 * routine._maxEndStates)  # 2 players
@@ -98,7 +98,7 @@ class TestLazerbikeRandomData(unittest.TestCase):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         cls.gatherer = Gatherer(a_priori_components, a_posteriori_components)
         cls.routine = RandomRoutine(cls.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                                    lambda api: tuple([100 * api.hasWon(player) for player in (1, 2)]),
+                                    lambda api: {player: 100 * api.hasWon(player) for player in (1, 2)},
                                     1, 10, max_end_states=100, must_keep_temp_files=False, must_write_files=False)
         cls.api = cls.loop.api
 

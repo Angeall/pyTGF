@@ -34,7 +34,7 @@ class TestConnect4ThoroughData(unittest.TestCase):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         cls.gatherer = Gatherer(a_priori_components, a_posteriori_components)
         cls.routine = ThroughoutRoutine(cls.gatherer, tuple(range(7)),
-                                        lambda api: tuple([100*api.hasWon(player) for player in (1, 2)]),
+                                        lambda api: {player: 100*api.hasWon(player) for player in (1, 2)},
                                         must_keep_temp_files=False, must_write_files=False)
         cls.routine.turnByTurn = True
         cls.api = cls.loop.api
@@ -88,7 +88,7 @@ class TestConnect4RandomData(unittest.TestCase):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         gatherer = Gatherer(a_priori_components, a_posteriori_components)
         cls.routine = RandomRoutine(gatherer, tuple(range(7)),
-                                    lambda api: tuple([100 * api.hasWon(player) for player in (1, 2)]),
+                                    lambda api: {player: 100 * api.hasWon(player) for player in (1, 2)},
                                     1, 15, must_keep_temp_files=False, must_write_files=False, max_end_states=20)
         cls.routine.turnByTurn = True
         cls.api = cls.loop.api
