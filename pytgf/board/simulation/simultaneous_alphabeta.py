@@ -57,7 +57,7 @@ class SimultaneousAlphaBeta:
         self._playerMapping = {}
         self._prepared = False
         self._currentlyTestedAction = None
-        self._storedStates = {}  # type: Dict[Tuple[Tuple[int, ...]], _RetValue]
+        self._storedStates = {}  # type: Dict[Tuple[Tuple[int, ...], ...], _RetValue]
 
     # -------------------- PUBLIC METHODS -------------------- #
 
@@ -70,8 +70,8 @@ class SimultaneousAlphaBeta:
         """
         if not self._prepared:
             self._prepare(player_number, state)
-        if self._storedStates.get(state.__hash__()) is not None:
-            val = self._storedStates[state.__hash__()]
+        if self._storedStates.get(state.getBoardByteCodes()) is not None:
+            val = self._storedStates[state.getBoardByteCodes()]
             actions = val[1]
         else:
             _, actions, _, _, _ = self._maxValue(state, -float('inf'), float('inf'), 0)
@@ -126,13 +126,19 @@ class SimultaneousAlphaBeta:
             return score, None, (False, depth - 1, False), state, False
         # Check if the game state is final
         elif state.isFinished():
-            return (self._getTeamScore(state, self.eval(state)), None,
-                    (True, depth - 1, state.hasWon(self.playerNumber)), state, True)
-        hashed_state = state.__hash__()
+            score = self._getTeamScore(state, self.eval(state))
+            if score == 0:
+                print(depth, (depth + 1) * '-')
+                print('draw?')
+            return score, None, (True, depth - 1, state.hasWon(self.playerNumber)), state, True
+        hashable_state = state.getBoardByteCodes()
         # If we already made the computations, no need to do more
-        if self._storedStates.get(hashed_state) is not None:
-            return self._storedStates[hashed_state]
-
+        if self._storedStates.get(hashable_state) is not None:
+            return self._storedStates[hashable_state]
+        # if depth == 0:
+        #     print("cucu")
+        #     print(state.game._simplifiedBoard)
+        #     print("coco")
         # Initializing the best values
         max_value = -float('inf')
         equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API, bool]]
@@ -151,7 +157,8 @@ class SimultaneousAlphaBeta:
             actions_combinations_scores[min_value] = min_actions, min_game_state, best_reached_end
             if self._mustCutOff and min_value > beta:  # Cutoff
                 ret_val = min_value, min_actions, end_state, min_game_state, best_reached_end
-                self._storedStates[min_game_state.__hash__()] = ret_val
+                if best_reached_end:
+                    self._storedStates[min_game_state.getBoardByteCodes()] = ret_val
                 return ret_val
             alpha = max(alpha, min_value)
         for score in actions_combinations_scores:
@@ -166,7 +173,8 @@ class SimultaneousAlphaBeta:
                    (state.isFinished(), depth, state.hasWon(self.playerNumber)), None, False
         best_combination, best_game_state, best_reached_end = random.choice(equally_good_choices)
         ret_val = max_value, best_combination, end_state, best_game_state, best_reached_end
-        self._storedStates[end_state.__hash__()] = ret_val
+        if best_reached_end:
+            self._storedStates[best_game_state.getBoardByteCodes()] = ret_val
         return ret_val
 
     @staticmethod
@@ -232,6 +240,7 @@ class SimultaneousAlphaBeta:
             if feasible_moves and new_game_state is not None:
                 value, _, new_end_state, game_state, best_reached_end = \
                                         self._maxValue(new_game_state, alpha, beta, depth + 1)
+                # print((depth + 1) * '-', simulation_combination, value)
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
@@ -241,12 +250,18 @@ class SimultaneousAlphaBeta:
                 if self._mustCutOff and value < alpha:  # Cutoff because we are in a min situation
                     best_combination, new_game_state, best_reached_end = random.choice(equal_min_choices)
                     ret_val = value, best_combination, end_state, new_game_state, best_reached_end
-                    self._storedStates[new_game_state.__hash__()] = ret_val
+                    if best_reached_end:
+                        self._storedStates[new_game_state.getBoardByteCodes()] = ret_val
                     return ret_val
                 beta = min(beta, value)
+            # else:
+            #     print(10*'|', 'UNFEASIBLE MOVE', 10*'|')
+            #     print(simulation_combination)
+            #     print(state.game._simplifiedBoard)
         min_actions, new_game_state, best_reached_end = random.choice(equal_min_choices)
         ret_val = min_value, min_actions, end_state, new_game_state, best_reached_end
-        self._storedStates[new_game_state.__hash__()] = ret_val
+        if best_reached_end:
+            self._storedStates[new_game_state.getBoardByteCodes()] = ret_val
         return ret_val
 
     def _simulateMoves(self, simulation_combination, state):

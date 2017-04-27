@@ -26,6 +26,7 @@ class Connect4AlphaBeta(Connect4BotPlayer, metaclass=ABCMeta):
         print("Created")
 
     def _selectNewMove(self, game_state: Connect4API) -> MoveDescriptor:
+        # print(game_state.game._simplifiedBoard)
         value = self._alphaBeta.alphaBetaSearching(self.playerNumber, game_state)
         return value
 

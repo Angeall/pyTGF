@@ -1,7 +1,10 @@
-import connect4_alphabeta as c4ab
+try:
+    from connect4_alphabeta import Connect4AlphaBeta
+except ModuleNotFoundError:
+    from .connect4_alphabeta import Connect4AlphaBeta
 
 
-class ConnectAlphaBeta1(c4ab.Connect4AlphaBeta):
+class Connect4AlphaBeta1(Connect4AlphaBeta):
 
     @property
     def _maxDepth(self):

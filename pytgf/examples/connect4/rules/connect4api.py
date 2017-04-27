@@ -50,7 +50,7 @@ class Connect4API(TurnBasedAPI):
                                 is_step: bool=False) -> Path:
         if isinstance(move_desc, int):
             occupants = self.game.getTileOccupants((0, move_desc))
-            if len(occupants) == 0 or isinstance(occupants[0], Bottom):  # Column not full
+            if self.getTileByteCode((0, move_desc)) == 0:  # Column not full
                 team_number = self.game.unitsTeam[unit]
                 self.discNumber += 1
                 speed = 50
@@ -77,7 +77,7 @@ class Connect4API(TurnBasedAPI):
 
     def getTileByteCode(self, tile_id: tuple) -> int:
         occupants = self.game.getTileOccupants(tile_id)
-        if len(occupants) == 0 or (len(occupants) > 0 and isinstance(occupants[0], Bottom)):
+        if len(occupants) == 0 or (len(occupants) == 1 and isinstance(occupants[0], Bottom)):
             return 0
         else:
             team_number = self.game.unitsTeam[self.game.getTileOccupants(tile_id)[0]]

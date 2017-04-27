@@ -71,7 +71,7 @@ class API(metaclass=ABCMeta):
             - A copy of this GameState in which the moves have been applied (if a move is unfeasible, returns None).
         """
         moves = []
-        for pl_num in self.game.playerNumbers:
+        for pl_num in self._getSequenceOfPlayerNumbers():
             if pl_num in player_moves:
                 moves.append((pl_num, player_moves[pl_num]))
         new_game_state = self.copy()
@@ -383,7 +383,7 @@ class API(metaclass=ABCMeta):
             raise NoMovementException()
         return self._decodeMoveFromPositiveNumber(player_number, encoded_move)
 
-    def getBoardByteCodes(self):
+    def getBoardByteCodes(self) -> Tuple[Tuple[int, ...], ...]:
         """
         Returns: A tab containing the byte code of each tile of the board
         """
@@ -392,8 +392,8 @@ class API(metaclass=ABCMeta):
             tab_line = []
             for j in range(self.game.board.columns):
                 tab_line.append(self.getTileByteCode((i, j)))
-            tab.append(tab_line)
-        return tab
+            tab.append(tuple(tab_line))
+        return tuple(tab)
 
     def convertIntoMoveSequence(self, move_combination: Union[Dict[int, MoveDescriptor],
                                                               List[Dict[int, MoveDescriptor]]]
@@ -474,6 +474,12 @@ class API(metaclass=ABCMeta):
         except UnfeasibleMoveException:
             return False, None
 
+    def _getSequenceOfPlayerNumbers(self):
+        """
+        Returns: A list containing all the player numbers
+        """
+        return self.game.playerNumbers
+
     @abstractmethod
     def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
         """
@@ -510,8 +516,7 @@ class API(metaclass=ABCMeta):
         pass
 
     def __hash__(self):
-        encoded_board = self.getBoardByteCodes()
-        hashable = tuple([tuple(line) for line in encoded_board])
+        hashable = self.getBoardByteCodes()
         return hashable.__hash__()
 
     def __eq__(self, other):
@@ -519,4 +524,3 @@ class API(metaclass=ABCMeta):
             return self.__hash__() == other.__hash__()
         except TypeError:
             return False
-

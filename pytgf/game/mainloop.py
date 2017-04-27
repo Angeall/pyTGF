@@ -149,6 +149,22 @@ class MainLoop(metaclass=ABCMeta):
             unit.setLastAction(initial_action)
             self._handleEvent(unit, initial_action, wrapper.controller.playerNumber)
 
+    def getWrapperFromPlayerNumber(self, player_number: int):
+        """
+        Retrieves the wrapper from the given player number
+
+        Args:
+            player_number: The number representing the player for which we want the wrapper 
+
+        Returns: The wrapper that wraps the controller of the given player
+        """
+        found = None
+        for wrapper in self.wrappersConnection:
+            if wrapper.controller.playerNumber == player_number:
+                found = wrapper
+                break
+        return found
+
     def pause(self) -> None:
         """
         Change the state of the game to "PAUSE"
@@ -329,7 +345,7 @@ class MainLoop(metaclass=ABCMeta):
             self._sendEventsToController(player_number)
         for unit in illegal_moves:
             self.game.unitsLocation[unit] = self.game.board.OUT_OF_BOARD_TILE.identifier
-            self._killUnit(unit, self._getWrapperFromPlayerNumber(unit.playerNumber))
+            self._killUnit(unit, self.getWrapperFromPlayerNumber(unit.playerNumber))
             # self.game.checkIfFinished()
             self._cancelCurrentMoves(unit)
         for unit in impossible_moves:
@@ -500,22 +516,6 @@ class MainLoop(metaclass=ABCMeta):
         """
         return self.wrappersConnection[linker]
 
-    def _getWrapperFromPlayerNumber(self, player_number: int):
-        """
-        Retrieves the wrapper from the given player number
-        
-        Args:
-            player_number: The number representing the player for which we want the wrapper 
-
-        Returns: The wrapper that wraps the controller of the given player
-        """
-        found = None
-        for wrapper in self.wrappersConnection:
-            if wrapper.controller.playerNumber == player_number:
-                found = wrapper
-                break
-        return found
-
     def _getUnitFromControllerWrapper(self, linker: ControllerWrapper) -> Unit:
         """
         Args:
@@ -527,7 +527,7 @@ class MainLoop(metaclass=ABCMeta):
 
     def _sendEventsToController(self, player_number: int, event: Event=None):
 
-        player_wrapper = self._getWrapperFromPlayerNumber(player_number)
+        player_wrapper = self.getWrapperFromPlayerNumber(player_number)
         pipe_conn = self._getPipeConnection(player_wrapper)
         if event is None:
             events = self._eventsToSend[player_wrapper]

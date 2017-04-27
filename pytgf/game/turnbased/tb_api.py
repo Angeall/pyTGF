@@ -50,7 +50,6 @@ class TurnBasedAPI(API, metaclass=ABCMeta):
         """
         Returns: The number representing the current player
         """
-        temp = self.currentPlayerIndex
         self.currentPlayerIndex = self._getNextPlayerIndex()
 
     def getNextPlayer(self, offset: int = 1) -> int:
@@ -89,3 +88,9 @@ class TurnBasedAPI(API, metaclass=ABCMeta):
     def _reactToMovePerformed(self, player_number: int, move: Path):
         self.switchToNextPlayer()
         self.game.checkIfFinished()
+
+    def _getSequenceOfPlayerNumbers(self):
+        player_numbers = [self.getCurrentPlayer()]
+        for i in range(1, len(self.getAlivePlayersNumbers())):
+            player_numbers.append(self.getNextPlayer(offset=i))
+        return player_numbers
