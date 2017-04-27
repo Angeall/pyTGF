@@ -1,4 +1,3 @@
-import time
 from typing import List
 
 from pytgf.controls.events import WakeEvent
@@ -37,7 +36,6 @@ class Benchmark:
 
     def benchmark(self, nb_games: int):
         for i in range(nb_games):
-            start_time = time.time()
             start = True
             self._eventsToSend = self._initDict()
             starting_copy = self._startingApi.copy()
@@ -63,13 +61,14 @@ class Benchmark:
                     for controller, move in moves.items():
                         starting_copy.performMove(controller.playerNumber, move)
             for player_number in starting_copy.getPlayerNumbers():
-                res = DRAW
-                if not starting_copy.isPlayerAlive(player_number):
-                    res = LOSE
                 if starting_copy.hasWon(player_number):
                     res = WIN
+                elif len(starting_copy.game.winningPlayers) == 0:
+                    res = DRAW
+                else:
+                    res = LOSE
                 self._results[player_number].append(res)
-            print('TIME:', time.time() - start_time)
+            print(str(i + 1) + "/" + str(nb_games))
 
         wins = self._results
         self._results = self._initDict()

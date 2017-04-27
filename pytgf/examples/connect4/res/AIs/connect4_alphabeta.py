@@ -23,7 +23,6 @@ class Connect4AlphaBeta(Connect4BotPlayer, metaclass=ABCMeta):
     def __init__(self, player_number: int):
         super().__init__(player_number)
         self._alphaBeta = SimultaneousAlphaBeta(self.evalFct, self.possibleMoves, max_depth=self._maxDepth)
-        print("Created")
 
     def _selectNewMove(self, game_state: Connect4API) -> MoveDescriptor:
         # print(game_state.game._simplifiedBoard)
