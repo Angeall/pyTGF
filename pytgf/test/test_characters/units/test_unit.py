@@ -1,6 +1,6 @@
 import unittest
 
-from ....characters.units import Particle, Unit
+from ....characters.units import Entity, Unit
 
 
 class TestUnit(unittest.TestCase):
@@ -24,21 +24,21 @@ class TestUnit(unittest.TestCase):
         unit.kill()
         self.assertFalse(unit.isAlive())
 
-    def test_has_particle(self):
+    def test_has_entity(self):
         """
-        Tests if a unit contains particle that are added to it
+        Tests if a unit contains entity that are added to it
         """
         unit = Unit(1)
-        particle1 = Particle()
-        particle2 = Particle()
-        unit.addParticle(particle1)
-        self.assertTrue(unit.hasParticle(particle1))
-        unit.addParticle(particle2)
-        self.assertTrue(unit.hasParticle(particle2))
-        unit.removeOldestParticle()
-        self.assertFalse(unit.hasParticle(particle1))
-        unit.removeParticle(particle2)
-        self.assertFalse(unit.hasParticle(particle2))
+        entity1 = Entity()
+        entity2 = Entity()
+        unit.addentity(entity1)
+        self.assertTrue(unit.hasentity(entity1))
+        unit.addentity(entity2)
+        self.assertTrue(unit.hasentity(entity2))
+        unit.removeOldestentity()
+        self.assertFalse(unit.hasentity(entity1))
+        unit.removeentity(entity2)
+        self.assertFalse(unit.hasentity(entity2))
 
 
 

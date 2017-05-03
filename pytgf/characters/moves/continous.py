@@ -6,7 +6,7 @@ from typing import Callable, Dict, Optional, Any
 
 from .path import Path
 from .shortmove import ShortMove
-from ..units import Particle, Unit
+from ..units import Entity, Unit
 from ...board import Tile, TileIdentifier
 
 __author__ = 'Anthony Rouneau'
@@ -21,7 +21,7 @@ class ContinuousPath(Path):
 
     def __init__(self, unit: Unit, source_tile_func: Callable[[Any, Unit], Tile],
                  next_tile_func: Callable[[Any, Tile], Tile], fps: int,
-                 units_location_dict: Dict[Particle, TileIdentifier], pre_action: Optional[Callable[[], None]]=None,
+                 units_location_dict: Dict[Entity, TileIdentifier], pre_action: Optional[Callable[[], None]]=None,
                  post_action: Optional[Callable[[], None]]=None,
                  step_pre_action: Optional[Callable[[Tile, Tile], None]]=None,
                  step_post_action: Optional[Callable[[Tile, Tile], None]]=None, max_moves: int=-1):

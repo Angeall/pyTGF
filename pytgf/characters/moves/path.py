@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable, Tuple, Union
 
 from .shortmove import ShortMove
-from ..units import Particle
+from ..units import Entity
 from ...board import Tile, TileIdentifier
 
 __author__ = 'Anthony Rouneau'
@@ -17,7 +17,7 @@ class Path(metaclass=ABCMeta):
     and at the beginning or the end of a step in the path. When there is no move left in the path, the path ends.
     """
 
-    def __init__(self, unit: Particle, pre_action: Optional[Callable[[], None]]=None,
+    def __init__(self, unit: Entity, pre_action: Optional[Callable[[], None]]=None,
                  post_action: Optional[Callable[[], None]]=None,
                  step_pre_action: Optional[Callable[[Tile, Tile], None]]=None,
                  step_post_action: Optional[Callable[[Tile, Tile], None]]=None, max_moves: int=-1):

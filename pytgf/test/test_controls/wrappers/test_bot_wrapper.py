@@ -9,7 +9,7 @@ except ImportError:
     PipeConnection = object
 
 from ....characters.moves import MoveDescriptor
-from ....characters.units import Particle
+from ....characters.units import Entity
 from ....board import Builder
 from ....characters.moves import Path
 from ....characters.units import Unit
@@ -66,7 +66,7 @@ class ExampleGame(Core):
     def _suicideAllowed(self) -> bool:
         return False
 
-    def _collidePlayers(self, player1, player2, tile_id, frontal: bool = False, particle: Particle=None):
+    def _collidePlayers(self, player1, player2, tile_id, frontal: bool = False, entity: Entity=None):
         pass
 
 

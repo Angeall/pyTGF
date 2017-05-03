@@ -5,7 +5,7 @@ from typing import List
 from ....board import Builder
 from ....characters.moves import MoveDescriptor
 from ....characters.moves import Path
-from ....characters.units import Particle
+from ....characters.units import Entity
 from ....characters.units import Unit
 from ....controls.controllers import Bot, TeammatePayload
 from ....game import Core, API
@@ -37,7 +37,7 @@ class ExampleGame(Core):
     def _suicideAllowed(self) -> bool:
         return False
 
-    def _collidePlayers(self, player1, player2, tile_id, frontal: bool = False, particle: Particle=None):
+    def _collidePlayers(self, player1, player2, tile_id, frontal: bool = False, entity: Entity=None):
         pass
 
 

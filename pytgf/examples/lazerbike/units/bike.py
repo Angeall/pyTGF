@@ -26,8 +26,8 @@ class Bike(Unit):
     def __init__(self, speed: int, player_number: int=default_player_number, max_trace: int=-1, initial_direction=0,
                  graphics: bool=True):
         global default_player_number
-        super().__init__(player_number, BikeSprite(player_number, graphics=graphics), max_particles=max_trace,
-                         speed=speed, surviving_particles=True)
+        super().__init__(player_number, BikeSprite(player_number, graphics=graphics), max_entities=max_trace,
+                         speed=speed, surviving_entities=True)
         default_player_number += 1
         self.playerNumber = player_number
         self.currentAction = 0

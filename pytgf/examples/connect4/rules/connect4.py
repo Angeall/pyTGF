@@ -5,7 +5,7 @@ import numpy as np
 from ..units import Bottom, Disc
 from ....board import Board
 from ....board import TileIdentifier
-from ....characters.units import Particle, Unit
+from ....characters.units import Entity, Unit
 from ....game import Core
 
 
@@ -26,7 +26,7 @@ class Connect4Core(Core):
         return False
 
     def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool = False,
-                        particle: Optional[Particle]=None):
+                        entity: Optional[Entity]=None):
         if isinstance(player2, Bottom) and isinstance(player1, Disc):
             team_number = self.unitsTeam[player1]
             self.tilesOccupants[tile_id] = [player1]
@@ -34,8 +34,8 @@ class Connect4Core(Core):
             self._simplifiedBoard[i][j] = team_number  # Updating the simplified board
             self.tilesOccupants[(i-1, j)] = [player2]  # We put the bottom of the line on the upper case
             self.unitsLocation[player2] = (i-1, j)
-            if particle is not None:
-                particle.kill()
+            if entity is not None:
+                entity.kill()
             team = None
             if self._checkWin(i, j, team_number):
                 team = self.teams[team_number]

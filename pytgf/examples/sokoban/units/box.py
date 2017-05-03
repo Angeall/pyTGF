@@ -12,5 +12,5 @@ class BoxSprite(UnitSprite):
 
 class Box(Unit):
     def __init__(self, speed: int, id_number: int=-1):
-        super().__init__(id_number, BoxSprite(), speed=speed, surviving_particles=True)
+        super().__init__(id_number, BoxSprite(), speed=speed, surviving_entities=True)
         self.playerNumber = id_number

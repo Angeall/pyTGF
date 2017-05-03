@@ -10,7 +10,7 @@ from ..board import Board, Tile
 from ..board import TileIdentifier
 from ..characters.moves import MoveDescriptor
 from ..characters.moves import Path
-from ..characters.units import Particle
+from ..characters.units import Entity
 from ..characters.units import Unit
 from ..characters.utils.units import resize_unit
 from ..controls.events import KeyboardEvent, MouseEvent
@@ -65,14 +65,14 @@ class Core(metaclass=ABCMeta):
         self.avatars = {}  # type: Dict[int, Unit]
         self.controlledBy = {}  # type: Dict[int, int]
         self._activeUnits = {}  # type: Dict[int, Unit]
-        self.unitsLocation = {}   # type: Dict[Particle, tuple]
-        self._previousUnitsLocation = {}   # type: Dict[Particle, tuple]
-        self.tilesOccupants = {}  # type: Dict[tuple, List[Particle]]
-        self.addCustomMoveFunc = None  # type: Callable[[Particle, Path, MoveDescriptor], None]
+        self.unitsLocation = {}   # type: Dict[Entity, tuple]
+        self._previousUnitsLocation = {}   # type: Dict[Entity, tuple]
+        self.tilesOccupants = {}  # type: Dict[tuple, List[Entity]]
+        self.addCustomMoveFunc = None  # type: Callable[[Entity, Path, MoveDescriptor], None]
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def addUnit(self, unit: Particle, team_number: int, origin_tile_id: TileIdentifier,
+    def addUnit(self, unit: Entity, team_number: int, origin_tile_id: TileIdentifier,
                 is_avatar: bool=True, active: bool=True, controlled_by: int=None) -> None:
         """
         Adds a unit to the game
@@ -260,7 +260,7 @@ class Core(metaclass=ABCMeta):
         except KeyError:
             return None
 
-    def getTileIdForUnit(self, unit: Particle) -> Union[tuple, None]:
+    def getTileIdForUnit(self, unit: Entity) -> Union[tuple, None]:
         """
 
         Args:
@@ -271,7 +271,7 @@ class Core(metaclass=ABCMeta):
         if unit in self.unitsLocation:
             return self.unitsLocation[unit]
 
-    def getTileOccupants(self, tile_id: TileIdentifier) -> Tuple[Particle, ...]:
+    def getTileOccupants(self, tile_id: TileIdentifier) -> Tuple[Entity, ...]:
         """
 
         Args:
@@ -299,7 +299,7 @@ class Core(metaclass=ABCMeta):
             except TypeError:
                 pass
 
-    def addUnitToTile(self, new_tile_id: TileIdentifier, unit: Particle) -> None:
+    def addUnitToTile(self, new_tile_id: TileIdentifier, unit: Entity) -> None:
         """
         Adds the given unit to the tile for which the id was given.
         Also removes the tile from its previous tile if needed
@@ -324,26 +324,26 @@ class Core(metaclass=ABCMeta):
 
     # -------------------- PROTECTED METHODS -------------------- #
 
-    def _handleCollision(self, unit: Unit, particles: List[Particle], tile_id: TileIdentifier) -> None:
+    def _handleCollision(self, unit: Unit, entities: List[Entity], tile_id: TileIdentifier) -> None:
         """
         Handles a collision between a unit and other units
 
         Args:
             unit: The moving unit
-            particles: The other units that are on the same tile than the moving unit
+            entity: The other units that are on the same tile than the moving unit
         """
-        for particle in particles:
-            if not (unit is particle):
-                if particle not in self.unitsLocation.keys():  # If the other unit is a Particle
+        for entity in entities:
+            if not (unit is entity):
+                if entity not in self.unitsLocation.keys():  # If the other unit is an Entity
                     other_player = None
                     for player in self.unitsLocation.keys():  # type: Unit
-                        if player.hasParticle(particle):
+                        if player.hasentity(entity):
                             other_player = player
                             break
-                    if other_player is not None:  # If we found the player to which belongs the colliding particle
-                        self._collidePlayers(unit, other_player, tile_id, particle=particle)
+                    if other_player is not None:  # If we found the player to which belongs the colliding entity
+                        self._collidePlayers(unit, other_player, tile_id, entity=entity)
                 else:
-                    self._collidePlayers(unit, particle, tile_id, frontal=True)
+                    self._collidePlayers(unit, entity, tile_id, frontal=True)
 
     def _tileHasTwoOrMoreOccupants(self, tile_id: TileIdentifier) -> bool:
         """
@@ -372,7 +372,7 @@ class Core(metaclass=ABCMeta):
     @abstractmethod
     def _teamKillAllowed(self) -> bool:
         """
-        Returns: True if the team kill is allowed (i.e. A player on of its particle can kill his teammates)
+        Returns: True if the team kill is allowed (i.e. A player on of its entity can kill his teammates)
         """
         return False
 
@@ -380,15 +380,15 @@ class Core(metaclass=ABCMeta):
     @abstractmethod
     def _suicideAllowed(self) -> bool:
         """
-        Returns: True if a unit can kill itself with one of its particles.
+        Returns: True if a unit can kill itself with one of its entities.
         """
         return False
 
     @abstractmethod
-    def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool = False,
-                        particle: Optional[Particle]=None):
+    def _collidePlayers(self, player1: Unit, player2: Union[Unit, Entity], tile_id: TileIdentifier,
+                        frontal: bool = False, entity: Optional[Entity]=None):
         """
-        Makes what it has to be done when the first given player collides with a particle of the second given player
+        Makes what it has to be done when the first given player collides with an entity of the second given player
         (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
         units)
 
@@ -397,9 +397,9 @@ class Core(metaclass=ABCMeta):
             player2: The second given player
             frontal: If true, the collision is frontal and kills the two players
             tile_id: The identifier of the tile on which the collision took place.
-            particle:
-                The particle (belonging to player 2) which caused the collision.
-                Can be None is no particle caused the collision
+            entity:
+                The entity (belonging to player 2) which caused the collision.
+                Can be None is no entity caused the collision
         """
         same_team = self.belongsToSameTeam(player1, player2)
         suicide = player1 is player2

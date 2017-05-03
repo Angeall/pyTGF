@@ -12,5 +12,5 @@ class SokobanPlayerSprite(UnitSprite):
 
 class SokobanDrawstick(Unit):
     def __init__(self, speed: int, player_number: int):
-        super().__init__(player_number, SokobanPlayerSprite(), speed=speed, surviving_particles=True)
+        super().__init__(player_number, SokobanPlayerSprite(), speed=speed, surviving_entities=True)
         self.playerNumber = player_number

@@ -1,7 +1,7 @@
 from typing import Optional
 
 from ....board import Board, TileIdentifier
-from ....characters.units import Particle, Unit
+from ....characters.units import Entity, Unit
 from ....controls.events import KeyboardEvent
 from ....game import Core
 
@@ -23,7 +23,7 @@ class SokobanGame(Core):
         self._winningTiles = winning_tiles
 
     def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool = False,
-                        particle: Optional[Particle]=None):
+                        entity: Optional[Entity]=None):
         """
         Checks if the player1 is colliding with the invisible player
 

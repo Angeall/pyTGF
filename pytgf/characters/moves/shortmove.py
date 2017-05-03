@@ -4,7 +4,7 @@ File containing the definition of a ShortMove between two tiles
 
 from typing import Dict, Any
 
-from ..units import Particle
+from ..units import Entity
 from ...board import Tile
 from ...board import TileIdentifier
 from ...utils.geom import get_hypotenuse_length
@@ -43,8 +43,8 @@ class ShortMove(object):
     This class supposes that the unit comes from the center of the sourceTile.
     """
 
-    def __init__(self, unit: Particle, source_tile: Tile, destination_tile: Tile, fps: int,
-                 units_location: Dict[Particle, TileIdentifier], graphical: bool=True):
+    def __init__(self, unit: Entity, source_tile: Tile, destination_tile: Tile, fps: int,
+                 units_location: Dict[Entity, TileIdentifier], graphical: bool=True):
         """
         Instantiates a move object between two tiles
         Args:

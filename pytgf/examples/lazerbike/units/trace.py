@@ -4,7 +4,7 @@ import pygame
 import pygame.transform as transform
 
 from ..gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN
-from ....characters.units import Particle
+from ....characters.units import Entity
 from ....characters.units.sprite import UnitSprite
 
 TOP_RIGHT = 0
@@ -78,7 +78,7 @@ class TraceSprite(UnitSprite):
         # print("finished rotation")
 
 
-class Trace(Particle):
+class Trace(Entity):
     def __init__(self, player_number: int, graphics: bool=True):
         super().__init__(sprite=TraceSprite(player_number, graphics=graphics))
         self.playerNumber = player_number

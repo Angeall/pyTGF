@@ -142,8 +142,8 @@ class LazerBikeAPI(API):
         for player_number in self.getPlayerNumbers():
             player = self.game.players[player_number]
             deadly_tiles.append(self.game.unitsLocation[player])
-            for player_particle in player.getParticles():
-                deadly_tiles.append(self.game.unitsLocation[player_particle])
+            for player_entity in player.getentitys():
+                deadly_tiles.append(self.game.unitsLocation[player_entity])
         return deadly_tiles
 
     def getSafeAdjacentTiles(self, tile_id: TileIdentifier) -> List[TileIdentifier]:
@@ -248,4 +248,4 @@ class LazerBikeAPI(API):
             trace.moveTo(tile_to_place_trace.center)
         self._previousTraces[unit] = trace
         self.game.addUnitToTile(tile_to_place_trace.identifier, trace)
-        unit.addParticle(trace)
+        unit.addentity(trace)

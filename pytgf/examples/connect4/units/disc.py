@@ -1,6 +1,6 @@
 import os
 
-from ....characters.units import Particle
+from ....characters.units import Entity
 from ....characters.units.sprite import UnitSprite
 
 
@@ -14,6 +14,6 @@ class DiscSprite(UnitSprite):
         return os.path.join(self.resFolder, "disc" + str(self.teamNumber) + ".png")
 
 
-class Disc(Particle):
+class Disc(Entity):
     def __init__(self, player_number: int, team_number: int, speed: int,  graphics: bool=True):
         super().__init__(id_number=player_number, sprite=DiscSprite(team_number, graphics), speed=speed)

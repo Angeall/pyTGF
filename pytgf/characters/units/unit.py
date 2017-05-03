@@ -8,37 +8,37 @@ from typing import List
 
 import pygame
 
-from .particle import Particle
+from .entity import Entity
 from .sprite import UnitSprite
 
 __author__ = 'Anthony Rouneau'
 
 
-class Unit(Particle):
+class Unit(Entity):
     """
-    A unit is a Particle that can have its own Particles. (e.g. a Gunner that owns its fired bullets)
+    A unit is an entity that can have its own entitys. (e.g. a Gunner that owns its fired bullets)
     """
 
-    def __init__(self, player_number: int, sprite: UnitSprite=None, max_particles: int=-1, nb_lives: int=1,
-                 surviving_particles: bool=False, speed: int=150):
+    def __init__(self, player_number: int, sprite: UnitSprite=None, max_entities: int=-1, nb_lives: int=1,
+                 surviving_entities: bool=False, speed: int=150):
         """
         Instantiates a unit in the game
 
         Args:
             sprite: The sprite to draw on the board
-            max_particles: The maximum number of particles for this unit (-1 = infinite)
+            max_entities: The maximum number of entities for this unit (-1 = infinite)
             nb_lives: The number of lives this unit has before it dies
-            surviving_particles: If true, the particles of this unit won't die with this unit
+            surviving_entities: If true, the entities of this unit won't die with this unit
         """
         super().__init__(sprite, nb_lives=nb_lives, speed=speed)
-        self.survivingParticles = surviving_particles
+        self.survivingentitys = surviving_entities
         self.lastAction = None
         self.currentAction = None
         self.playerNumber = player_number
-        self._particlesSpriteGroup = pygame.sprite.Group()
-        self._particlesQueue = Queue()
-        self._particlesList = []
-        self._maxParticles = max_particles
+        self._entitiesSpriteGroup = pygame.sprite.Group()
+        self._entitiesQueue = Queue()
+        self._entitiesList = []
+        self._maxentitys = max_entities
 
     def setLastAction(self, last_action):
         """
@@ -60,103 +60,103 @@ class Unit(Particle):
 
     def draw(self, surface: pygame.Surface) -> None:
         """
-        Draws the unit and its particles
+        Draws the unit and its entities
 
         Args:
-            surface: The surface the unit and its particle will be drawn on
+            surface: The surface the unit and its entity will be drawn on
         """
         super().draw(surface)
-        self._particlesSpriteGroup.draw(surface)
+        self._entitiesSpriteGroup.draw(surface)
 
     def kill(self) -> None:
         """
-        Kills the unit and all its particle if "surviving particles" was set to False at the creation of this unit
+        Kills the unit and all its entity if "surviving entities" was set to False at the creation of this unit
         """
         super().kill()
         if not self.isAlive():
-            if not self.survivingParticles:
-                while len(self._particlesSpriteGroup) != 0:
-                    self.removeOldestParticle()
+            if not self.survivingentitys:
+                while len(self._entitiesSpriteGroup) != 0:
+                    self.removeOldestentity()
 
-    def addParticle(self, particle: Particle) -> None:
+    def addentity(self, entity: Entity) -> None:
         """
-        Adds a particle linked to this unit
+        Adds an entity linked to this unit
 
         Args:
-            particle: the particle to add to this unit
+            entity: the entity to add to this unit
         """
-        if 0 <= self._maxParticles <= len(self._particlesList):
-            self.removeOldestParticle()
-        if self._particlesQueue is not None:
-            self._particlesQueue.put(particle)
-        self._particlesList.append(particle)
-        if particle.sprite is not None:
-            self._particlesSpriteGroup.add(particle.sprite)
+        if 0 <= self._maxentitys <= len(self._entitiesList):
+            self.removeOldestentity()
+        if self._entitiesQueue is not None:
+            self._entitiesQueue.put(entity)
+        self._entitiesList.append(entity)
+        if entity.sprite is not None:
+            self._entitiesSpriteGroup.add(entity.sprite)
 
-    def removeOldestParticle(self) -> None:
+    def removeOldestentity(self) -> None:
         """
-        Removes the oldest particle belonging to this unit-
+        Removes the oldest entity belonging to this unit-
         """
         try:
-            oldest_particle = self._particlesList.pop(0)
-            oldest_particle.kill()
-            if self._particlesQueue is not None:
-                queue_first = self._particlesQueue.get_nowait()  # type: Particle
-                assert queue_first is oldest_particle
-            if oldest_particle.sprite is not None:
-                self._particlesSpriteGroup.remove(oldest_particle.sprite)
+            oldest_entity = self._entitiesList.pop(0)
+            oldest_entity.kill()
+            if self._entitiesQueue is not None:
+                queue_first = self._entitiesQueue.get_nowait()  # type: Entity
+                assert queue_first is oldest_entity
+            if oldest_entity.sprite is not None:
+                self._entitiesSpriteGroup.remove(oldest_entity.sprite)
         except Empty:
             pass
 
-    def removeParticle(self, particle: Particle) -> None:
+    def removeentity(self, entity: Entity) -> None:
         """
-        Removes the given particle from the belongings of this unit
+        Removes the given entity from the belongings of this unit
 
         Args:
-            particle: The particle to remove
+            entity: The entity to remove
         """
         temp_queue = Queue()
         try:
             while True:  # Will stop when the Empty exception comes out from the Queue
-                current = self._particlesQueue.get_nowait()
-                if current is not particle:
+                current = self._entitiesQueue.get_nowait()
+                if current is not entity:
                     temp_queue.put(current)
         except Empty:
             pass
-        self._particlesList.remove(particle)
+        self._entitiesList.remove(entity)
 
-        self._particlesQueue = temp_queue
-        particle.kill()
-        if particle.sprite is not None:
-            self._particlesSpriteGroup.remove(particle.sprite)
+        self._entitiesQueue = temp_queue
+        entity.kill()
+        if entity.sprite is not None:
+            self._entitiesSpriteGroup.remove(entity.sprite)
 
-    def hasParticle(self, particle: Particle) -> bool:
+    def hasentity(self, entity: Entity) -> bool:
         """
-        Checks if the given particle belongs to this unit
+        Checks if the given entity belongs to this unit
 
         Args:
-            particle: The particle to check
+            entity: The entity to check
 
-        Returns: True if the given particle belongs to this unit
+        Returns: True if the given entity belongs to this unit
         """
-        return particle in self._particlesList or (self._particlesSpriteGroup is not None and
-                                                   self._particlesSpriteGroup.has(particle.sprite))
+        return entity in self._entitiesList or (self._entitiesSpriteGroup is not None and
+                                                   self._entitiesSpriteGroup.has(entity.sprite))
 
-    def getParticles(self) -> List[Particle]:
+    def getentitys(self) -> List[Entity]:
         """
-        Returns: A list containing all the particles of this unit
+        Returns: A list containing all the entities of this unit
         """
-        return self._particlesList
+        return self._entitiesList
 
-    def getParticlesSpriteGroup(self) -> pygame.sprite.Group:
+    def getentitysSpriteGroup(self) -> pygame.sprite.Group:
         """
-        Gets the "SpriteGroup" of this unit, including all of its particle. Can be used for pygame's collision check
+        Gets the "SpriteGroup" of this unit, including all of its entity. Can be used for pygame's collision check
         """
-        return self._particlesSpriteGroup
+        return self._entitiesSpriteGroup
 
     def isColliding(self, other_sprite_group) -> bool:
         """
-        Returns True if this unit or any of its particle collide with the other unit or any of its particle.
+        Returns True if this unit or any of its entity collide with the other unit or any of its entity.
         (Uses the pygame collision check)
 
         Args:
@@ -174,7 +174,7 @@ class Unit(Particle):
         result = cls.__new__(cls)
         memo[id(self)] = result
         for k, v in self.__dict__.items():
-            if k != "_drawable" and k != "_particlesQueue":
+            if k != "_drawable" and k != "_entitiesQueue":
                 value = deepcopy(v, memo)
             else:
                 value = None

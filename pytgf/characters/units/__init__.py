@@ -1,3 +1,3 @@
-from .particle import Particle
+from .entity import Entity
 from .unit import Unit
 

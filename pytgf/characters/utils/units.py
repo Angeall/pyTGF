@@ -1,9 +1,9 @@
-from ..units import Particle
+from ..units import Entity
 from ...board import Board
 from ...utils.geom import get_hypotenuse_length, get_polygon_radius
 
 
-def resize_unit(unit: Particle, board: Board) -> None:
+def resize_unit(unit: Entity, board: Board) -> None:
     """
     Resize a unit to fit a tile of the given board
 

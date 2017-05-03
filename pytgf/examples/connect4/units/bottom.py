@@ -1,6 +1,6 @@
-from ....characters.units import Particle
+from ....characters.units import Entity
 
 
-class Bottom(Particle):
+class Bottom(Entity):
     def __init__(self, id_number: int):
         super().__init__(id_number=id_number)
