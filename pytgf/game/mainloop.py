@@ -80,6 +80,7 @@ class MainLoop(metaclass=ABCMeta):
         self._killSent = {}  # Used to maintain the fact that the kill event has been sent
         self.executor = None
         self._prepared = False
+        self._frames = 0
 
     # -------------------- PUBLIC METHODS -------------------- #
 
@@ -107,6 +108,7 @@ class MainLoop(metaclass=ABCMeta):
             self._sendEventsToController(player_number)
         while self._state != END:
             clock.tick(max_fps)
+            self._frames += 1
             self._handleInputs()
             if self._state == FINISH:
                 self.executor.terminate()
@@ -170,6 +172,7 @@ class MainLoop(metaclass=ABCMeta):
         Change the state of the game to "PAUSE"
         """
         self._state = PAUSE
+        print(self._frames, "frames")
 
     def resume(self) -> None:
         """
