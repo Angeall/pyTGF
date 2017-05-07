@@ -6,7 +6,7 @@ import pygame
 from ...controls.controllers import Passive
 from ...data.component import Component
 from ...data.gatherer import Gatherer
-from ...data.routines import ThroughoutRoutine, RandomRoutine
+from ...data.routines import ThoroughRoutine, RandomRoutine
 from ...examples.lazerbike.builder import create_game
 from ...examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
 
@@ -36,9 +36,9 @@ class TestLazerbikeData(unittest.TestCase):
         for i in range(len(a_posteriori_methods)):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         cls.gatherer = Gatherer(a_priori_components, a_posteriori_components)
-        cls.routine = ThroughoutRoutine(cls.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                                        lambda api: {player: 100 * api.hasWon(player) for player in (1, 2)},
-                                        must_keep_temp_files=True, must_write_files=True)
+        cls.routine = ThoroughRoutine(cls.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
+                                      lambda api: {player: 100 * api.hasWon(player) for player in (1, 2)},
+                                      must_keep_temp_files=True, must_write_files=True)
         cls.api = cls.loop.api
 
     def test_gathering_possibility_to_win_in_one_turn(self):
@@ -68,9 +68,9 @@ class TestLazerbikeData(unittest.TestCase):
             self.assertListEqual(self.a_posteriori_dict[0].take((i,)).get_values().ravel().tolist(), [0., -1., 1.])
 
     def test_gathering_limited_number(self):
-        routine = ThroughoutRoutine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
-                                    lambda api: {player: 100*api.hasWon(player) for player in (1, 2)},
-                                    must_keep_temp_files=False, must_write_files=False, max_end_states=2)
+        routine = ThoroughRoutine(self.gatherer, (GO_UP, GO_LEFT, GO_RIGHT, GO_DOWN),
+                                  lambda api: {player: 100*api.hasWon(player) for player in (1, 2)},
+                                  must_keep_temp_files=False, must_write_files=False, max_end_states=2)
         a_priori_data, a_posteriori_dict = routine.routine(1, self.api.copy())
         self.assertEqual(len(routine._actionsSequences), 2 * routine._maxEndStates)  # 2 players
 

@@ -4,13 +4,13 @@ from typing import Tuple, Callable, Union, Dict
 from ...board.simulation.simultaneous_alphabeta import Value
 from ...characters.moves import MoveDescriptor
 from ...data.gatherer import Gatherer
-from ...data.routines.throughoutroutine import ThroughoutRoutine, MAX_TEMP_VECTORS
+from ...data.routines.thoroughroutine import ThoroughRoutine, MAX_TEMP_VECTORS
 from ...game import API
 
 __author__ = "Anthony Rouneau"
 
 
-class RandomRoutine(ThroughoutRoutine):
+class RandomRoutine(ThoroughRoutine):
 
     def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
                  eval_fct: Callable[[API], Dict[int, Value]], nb_random_states: int, max_nb_simulated_moves: int,

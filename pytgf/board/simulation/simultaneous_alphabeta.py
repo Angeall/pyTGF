@@ -127,9 +127,6 @@ class SimultaneousAlphaBeta:
         # Check if the game state is final
         elif state.isFinished():
             score = self._getTeamScore(state, self.eval(state))
-            if score == 0:
-                print(depth, (depth + 1) * '-')
-                print('draw?')
             return score, None, (True, depth - 1, state.hasWon(self.playerNumber)), state, True
         hashable_state = state.getBoardByteCodes()
         # If we already made the computations, no need to do more

@@ -9,6 +9,7 @@ from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 import numpy as np
 import pandas as pd
 
+from .abstractroutine import AbstractRoutine
 from ..component import Data, Component
 from ..gatherer import Gatherer
 from ...board.simulation.simultaneous_alphabeta import SimultaneousAlphaBeta, Value, EndState, _RetValue
@@ -23,7 +24,7 @@ COLLECTED_DATA_PATH_NAME = "collected_data"
 ACTIONS_SEQUENCES_PATH_NAME = "actions_sequences"
 
 
-class ThroughoutRoutine(SimultaneousAlphaBeta):
+class ThoroughRoutine(AbstractRoutine, SimultaneousAlphaBeta):
     def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
                  eval_fct: Callable[[API], Dict[int, Value]], max_depth: int = -1, must_write_files: bool = True,
                  must_keep_temp_files: bool = False, max_end_states: int = -1):
@@ -447,7 +448,7 @@ class RoutineBuilder:
         self._components.append(Component(methods, title, description, reduce_function))
 
     def create(self, possible_moves: Tuple[MoveDescriptor, ...],
-               eval_fct: Callable[[API], Tuple[Union[int, float], ...]]) -> ThroughoutRoutine:
+               eval_fct: Callable[[API], Tuple[Union[int, float], ...]]) -> ThoroughRoutine:
         """
         Raises:
             ValueError: If no component was added to this builder, it cannot create a routine, and hence crash
@@ -457,4 +458,4 @@ class RoutineBuilder:
         if len(self._components) == 0:
             raise ValueError("Cannot create a routine with 0 component")
         gatherer = Gatherer(self._components)
-        return ThroughoutRoutine(gatherer, possible_moves, eval_fct)
+        return ThoroughRoutine(gatherer, possible_moves, eval_fct)

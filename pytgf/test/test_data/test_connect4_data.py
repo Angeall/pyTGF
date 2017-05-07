@@ -5,7 +5,7 @@ import pygame
 from ...controls.controllers import Passive
 from ...data.component import Component
 from ...data.gatherer import Gatherer
-from ...data.routines import ThroughoutRoutine, RandomRoutine
+from ...data.routines import ThoroughRoutine, RandomRoutine
 from ...examples.connect4.builder import create_game
 
 
@@ -33,9 +33,9 @@ class TestConnect4ThoroughData(unittest.TestCase):
         for i in range(len(a_posteriori_methods)):
             a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
         cls.gatherer = Gatherer(a_priori_components, a_posteriori_components)
-        cls.routine = ThroughoutRoutine(cls.gatherer, tuple(range(7)),
-                                        lambda api: {player: 100*api.hasWon(player) for player in (1, 2)},
-                                        must_keep_temp_files=False, must_write_files=False)
+        cls.routine = ThoroughRoutine(cls.gatherer, tuple(range(7)),
+                                      lambda api: {player: 100*api.hasWon(player) for player in (1, 2)},
+                                      must_keep_temp_files=False, must_write_files=False)
         cls.routine.turnByTurn = True
         cls.api = cls.loop.api
 
