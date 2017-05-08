@@ -33,7 +33,7 @@ def gather_data():
         a_posteriori_components.append(Component(a_posteriori_methods[i], a_posteriori_titles[i]))
     gatherer = Gatherer(a_priori_components, a_posteriori_components)
     routine = RandomRoutine(gatherer, possible_moves,
-                            lambda api: tuple([100 * api.hasWon(player) for player in (1, 2)]),
+                            lambda api: {player: 100 * api.hasWon(player) for player in (1, 2)},
                             500000, 15, must_keep_temp_files=True, must_write_files=True, max_end_states=100)
     routine.turnByTurn = True
     game_api = loop.api
