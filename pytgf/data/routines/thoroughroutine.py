@@ -9,6 +9,7 @@ from typing import Iterable, Union, Callable, Optional, Tuple, List, Dict
 import numpy as np
 import pandas as pd
 
+from pytgf.game.turnbased import TurnBasedAPI
 from .abstractroutine import AbstractRoutine
 from ..component import Data, Component
 from ..gatherer import Gatherer
@@ -74,7 +75,7 @@ class ThoroughRoutine(AbstractRoutine, SimultaneousAlphaBeta):
             The DataFrames containing the gathered data as a tuple
                 (A Priori Data, A Posteriori data indexed by actions)
         """
-
+        self.turnByTurn = isinstance(state, TurnBasedAPI)
         self.alphaBetaSearching(player_number, state)
         return self._writeToFinalFile()
 
@@ -276,22 +277,24 @@ class ThoroughRoutine(AbstractRoutine, SimultaneousAlphaBeta):
                                           for action in self.possibleActions}
             a_priori_vectors = np.array(a_priori_vectors).reshape((len(a_priori_vectors), len(a_priori_vectors[0])))
 
-            self._createDirectoryIfNeeded(COLLECTED_DATA_PATH_NAME)
-            self._createDirectoryIfNeeded(self.TEMP_DATA_PATH_NAME)
-
             file_id = str(self.fileID)
-            self._tempFileIDs.append(file_id)
-            self._writeToCsv(a_priori_vectors, self._getDataFileName(file_id),
-                             self.TEMP_DATA_PATH_NAME, self._aPrioriTitles)
+            if self._mustWriteFiles:
+                self._createDirectoryIfNeeded(COLLECTED_DATA_PATH_NAME)
+                self._createDirectoryIfNeeded(self.TEMP_DATA_PATH_NAME)
+
+                self._tempFileIDs.append(file_id)
+                self._writeToCsv(a_priori_vectors, self._getDataFileName(file_id),
+                                 self.TEMP_DATA_PATH_NAME, self._aPrioriTitles)
             data_vectors = None
             for action, data_vectors in a_posteriori_vectors_dicts.items():
                 data_vectors = np.array(data_vectors)
                 data_vectors = data_vectors.reshape((len(data_vectors), len(data_vectors[0])))
-                self._writeToCsv(data_vectors, self._getTargetFileName(file_id, action),
-                                 self.TEMP_DATA_PATH_NAME, self._aPosterioriTitles)
+                if self._mustWriteFiles:
+                    self._writeToCsv(data_vectors, self._getTargetFileName(file_id, action),
+                                     self.TEMP_DATA_PATH_NAME, self._aPosterioriTitles)
 
-            self._createDirectoryIfNeeded(ACTIONS_SEQUENCES_PATH_NAME)
             if self._mustWriteFiles:
+                self._createDirectoryIfNeeded(ACTIONS_SEQUENCES_PATH_NAME)
                 self._writeToCsv(self._actionsSequences, "seq" + file_id,
                                  ACTIONS_SEQUENCES_PATH_NAME)
                 self._actionsSequences = pd.DataFrame()

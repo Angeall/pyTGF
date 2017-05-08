@@ -396,23 +396,26 @@ class API(metaclass=ABCMeta):
         return tuple(tab)
 
     def convertIntoMoveSequence(self, move_combination: Union[Dict[int, MoveDescriptor],
-                                                              List[Dict[int, MoveDescriptor]]]
-                                ) -> List[MoveDescriptor]:
+                                                              List[Dict[int, MoveDescriptor]]],
+                                max_size: int=-1) -> Union[Tuple[MoveDescriptor, ...], List[Tuple[MoveDescriptor]]]:
         """
         Convert a move combination into a move sequence
 
         Args:
             move_combination: The moves that are performed by the players
+            max_size: The maximum size of a move sequence
 
         Returns: A sequence of moves
         """
         if isinstance(move_combination, dict):
-            return [move_combination[player_number] for player_number in self.game.playerNumbers
-                    if self.isPlayerAlive(player_number) and player_number in move_combination]
+            if max_size == -1:
+                max_size = len(move_combination)
+            return tuple([move_combination[player_number] for player_number in self.game.playerNumbers
+                         if self.isPlayerAlive(player_number) and player_number in move_combination][:max_size])
         if isinstance(move_combination, list):
             sequences = []
             for move in move_combination:
-                sequences.append(self.convertIntoMoveSequence(move))
+                sequences.append(self.convertIntoMoveSequence(move, max_size=max_size))
             return sequences
 
     def getOrderOfPlayer(self, player_number: int) -> int:
