@@ -267,7 +267,6 @@ class ThoroughRoutine(AbstractRoutine, SimultaneousAlphaBeta):
         Writes the data stocked in the data structures in temporary files to save the current progress
         """
         self._writtenFiles += MAX_TEMP_VECTORS
-        print(self._writtenFiles)
         a_priori_vectors = [self._aPrioriDataVectors[state_id] for state_id in self._concludedStates
                             if state_id in self._aPosterioriDataVectors]
 

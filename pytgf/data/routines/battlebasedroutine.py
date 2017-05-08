@@ -28,12 +28,16 @@ class BattleBasedRoutine(ThoroughRoutine):
         self._actionsSequences = pd.DataFrame()
         pl_index = state.getPlayerNumbers().index(player_number)
         victories = 0
+        last_size = 0
         while self._actionsSequences.shape[0] < len(state.getPlayerNumbers()) * self._minEndStates\
                 or victories < self._minVictories:
             super().routine(player_number, state.copy())
-            last_rows = list(self._actionsSequences[len(self._actionsSequences) - len(state.getPlayerNumbers()):][0])
-            if last_rows[pl_index] == 1:
-                victories += 1
+            if self._actionsSequences.shape[0] > last_size:
+                last_size = self._actionsSequences.shape[0]
+                last_rows = list(self._actionsSequences[self._actionsSequences.shape[0] -
+                                                        len(state.getPlayerNumbers()):][0])
+                if last_rows[pl_index] == 1:
+                    victories += 1
         return self._actionsSequences
 
     def _generateMovesList(self, state: API):
