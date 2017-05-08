@@ -1,3 +1,4 @@
+import random
 from abc import ABCMeta, abstractmethod
 from typing import Dict
 
@@ -15,6 +16,7 @@ def eval_fct(game_state: Connect4API) -> Dict[int, float]:
             score = 1000
         elif not game_state.isPlayerAlive(player_number):
             score = -1000
+        score += random.randint(0, 100) / 100
         scores[player_number] = score
     return scores
 
