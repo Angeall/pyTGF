@@ -28,7 +28,7 @@ class SimultaneousAlphaBeta:
 
     def __init__(self, eval_fct: Callable[[API], Dict[int, Value]],
                  possible_actions: Union[Tuple[MoveDescriptor, ...], List[MoveDescriptor]],
-                 max_depth: int = 6, turn_by_turn: bool = False):
+                 max_depth: int = 6, turn_based: bool = False, must_hash_states: bool=True):
         """
 
         Args:
@@ -42,6 +42,7 @@ class SimultaneousAlphaBeta:
                 This tuple will then be reworked into team scores.
             possible_actions: The tuple of possible actions accepted in the game for all players
             max_depth: the maximum depth of the tree the algorithm can explore
+            must_hash_states: If True, will store states in order to cut off the already-made computations 
         """
         self.eval = eval_fct
         self.maxDepth = max_depth
@@ -52,11 +53,12 @@ class SimultaneousAlphaBeta:
         self.actions = {}  # Will retain the best action for a given state (will speed up the tree search)
         self.playerNumber = -1
         self.copyTime = 0
-        self.turnByTurn = turn_by_turn
+        self.turnByTurn = turn_based
         self._currentMoveSequence = None  # type: np.ndarray
         self._playerMapping = {}
         self._prepared = False
         self._currentlyTestedAction = None
+        self._mustHash = must_hash_states
         self._storedStates = {}  # type: Dict[Tuple[Tuple[int, ...], ...], _RetValue]
 
     # -------------------- PUBLIC METHODS -------------------- #
@@ -154,7 +156,7 @@ class SimultaneousAlphaBeta:
             actions_combinations_scores[min_value] = min_actions, min_game_state, best_reached_end
             if self._mustCutOff and min_value > beta:  # Cutoff
                 ret_val = min_value, min_actions, end_state, min_game_state, best_reached_end
-                if best_reached_end:
+                if best_reached_end and self._mustHash:
                     self._storedStates[min_game_state.getBoardByteCodes()] = ret_val
                 return ret_val
             alpha = max(alpha, min_value)
@@ -166,11 +168,12 @@ class SimultaneousAlphaBeta:
             elif score == max_value:
                 equally_good_choices.append((combination, new_game_state, best_reached_end))
         if len(equally_good_choices) == 0:  # No choice is good to take...
+            print("no choice is good to take")
             return self._getTeamScore(state, self.eval(state)), None, \
                    (state.isFinished(), depth, state.hasWon(self.playerNumber)), None, False
         best_combination, best_game_state, best_reached_end = random.choice(equally_good_choices)
         ret_val = max_value, best_combination, end_state, best_game_state, best_reached_end
-        if best_reached_end:
+        if best_reached_end and self._mustHash:
             self._storedStates[best_game_state.getBoardByteCodes()] = ret_val
         return ret_val
 
@@ -247,7 +250,7 @@ class SimultaneousAlphaBeta:
                 if self._mustCutOff and value < alpha:  # Cutoff because we are in a min situation
                     best_combination, new_game_state, best_reached_end = random.choice(equal_min_choices)
                     ret_val = value, best_combination, end_state, new_game_state, best_reached_end
-                    if best_reached_end:
+                    if best_reached_end and self._mustHash:
                         self._storedStates[new_game_state.getBoardByteCodes()] = ret_val
                     return ret_val
                 beta = min(beta, value)
@@ -257,7 +260,7 @@ class SimultaneousAlphaBeta:
             #     print(state.game._simplifiedBoard)
         min_actions, new_game_state, best_reached_end = random.choice(equal_min_choices)
         ret_val = min_value, min_actions, end_state, new_game_state, best_reached_end
-        if best_reached_end:
+        if best_reached_end and self._mustHash:
             self._storedStates[new_game_state.getBoardByteCodes()] = ret_val
         return ret_val
 

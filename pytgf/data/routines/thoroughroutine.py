@@ -29,7 +29,7 @@ class ThoroughRoutine(AbstractRoutine, SimultaneousAlphaBeta):
     def __init__(self, gatherer: Gatherer, possible_moves: Tuple[MoveDescriptor, ...],
                  eval_fct: Callable[[API], Dict[int, Value]], max_depth: int = -1, must_write_files: bool = True,
                  must_keep_temp_files: bool = False, max_end_states: int = -1):
-        super().__init__(eval_fct, possible_moves, max_depth)
+        super().__init__(eval_fct, possible_moves, max_depth, must_hash_states=False)
         self.TEMP_DATA_PATH_NAME = os.path.join(COLLECTED_DATA_PATH_NAME, "temp" + str(id(self)))
         self.fileID = 0
         self._gatherer = gatherer
@@ -369,7 +369,7 @@ class ThoroughRoutine(AbstractRoutine, SimultaneousAlphaBeta):
             for action in a_posteriori:
                 self._writeToCsv(a_posteriori[action], self._getTargetFileName(str(id(self)), action),
                                  COLLECTED_DATA_PATH_NAME, self._aPosterioriTitles)
-        self._removeTempFileIfNeeded(self.TEMP_DATA_PATH_NAME, is_folder=True)
+            self._removeTempFileIfNeeded(self.TEMP_DATA_PATH_NAME, is_folder=True)
         return a_priori, a_posteriori
 
     @staticmethod
