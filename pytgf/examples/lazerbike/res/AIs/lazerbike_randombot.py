@@ -7,7 +7,7 @@ import random
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.controls.controllers import TeammateMessage
 from pytgf.examples.lazerbike.control.player import LazerBikeBotPlayer
-from pytgf.game.api import API
+from pytgf.examples.lazerbike.rules import LazerBikeAPI
 
 
 class RandomBot(LazerBikeBotPlayer):
@@ -35,7 +35,7 @@ class RandomBot(LazerBikeBotPlayer):
         """
         pass
 
-    def _selectNewMove(self, game_state: API) -> MoveDescriptor:
+    def _selectNewMove(self, game_state: LazerBikeAPI) -> MoveDescriptor:
         """
         Selects a new random move following a new game state
 
@@ -45,4 +45,9 @@ class RandomBot(LazerBikeBotPlayer):
         Returns:
 
         """
-        return random.choice(self.possibleMoves)
+        move = random.choice(self.possibleMoves)
+        succeeded, _ = game_state.simulateMove(self.playerNumber, move)
+        while not succeeded or game_state.isMoveSuicidal(self.playerNumber, move):
+            move = random.choice(self.possibleMoves)
+            succeeded, _ = game_state.simulateMove(self.playerNumber, move)
+        return move
