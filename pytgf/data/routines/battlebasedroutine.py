@@ -32,7 +32,7 @@ class BattleBasedRoutine(ThoroughRoutine):
         i = 0
         while self._actionsSequences.shape[0] < len(state.getPlayerNumbers()) * self._minEndStates\
                 or victories < self._minVictories:
-            super().routine(player_number, state.copy())
+            print(super().routine(player_number, state.copy()))
             if self._actionsSequences.shape[0] > last_size:
                 last_size = self._actionsSequences.shape[0]
                 last_rows = list(self._actionsSequences[self._actionsSequences.shape[0] -
