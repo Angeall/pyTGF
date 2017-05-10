@@ -29,6 +29,7 @@ class BattleBasedRoutine(ThoroughRoutine):
         pl_index = state.getPlayerNumbers().index(player_number)
         victories = 0
         last_size = 0
+        i = 0
         while self._actionsSequences.shape[0] < len(state.getPlayerNumbers()) * self._minEndStates\
                 or victories < self._minVictories:
             super().routine(player_number, state.copy())
@@ -38,6 +39,8 @@ class BattleBasedRoutine(ThoroughRoutine):
                                                         len(state.getPlayerNumbers()):][0])
                 if last_rows[pl_index] == 1:
                     victories += 1
+            i += 1
+            print("games:", i, "victories:", victories)
         return self._actionsSequences
 
     def _generateMovesList(self, state: API):
