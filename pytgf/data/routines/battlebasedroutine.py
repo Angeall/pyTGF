@@ -68,4 +68,6 @@ class BattleBasedRoutine(ThoroughRoutine):
                 if _succeeded:
                     new_states[sequence] = _state
             states = new_states
+        if not combinations:
+            print("Empty combination")
         return combinations
