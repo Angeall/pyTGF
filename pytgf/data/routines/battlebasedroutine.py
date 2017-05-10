@@ -32,7 +32,6 @@ class BattleBasedRoutine(ThoroughRoutine):
         i = 0
         while self._actionsSequences.shape[0] < len(state.getPlayerNumbers()) * self._minEndStates\
                 or victories < self._minVictories:
-            self._resetValues()
             super().routine(player_number, state.copy())
             if self._actionsSequences.shape[0] > last_size:
                 last_size = self._actionsSequences.shape[0]
@@ -67,6 +66,8 @@ class BattleBasedRoutine(ThoroughRoutine):
                 _succeeded, _state = old_state.simulateMove(past_pl_nums[-1], sequence[-1])
                 if _succeeded:
                     new_states[sequence] = _state
+                else:
+                    print('illagal movement')
             states = new_states
         if not combinations:
             print("Empty combination")
