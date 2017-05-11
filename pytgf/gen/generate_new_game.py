@@ -27,8 +27,8 @@ class GameGenerator:
         self.columns = columns
         self.maxPlayers = max_players if game_type != DUEL_GAME else 2
         self.minPlayers = min_players if game_type != DUEL_GAME else 2
-        self.minTeams = min(min_teams, self.minPlayers) if game_type != PUZZLE_GAME else 1
-        self.maxTeams = min(max_teams, self.maxPlayers) if game_type != PUZZLE_GAME else 1
+        self.minTeams = max(2, min(2, min_teams, self.minPlayers)) if game_type != PUZZLE_GAME else 1
+        self.maxTeams = max(2, min(max_teams, self.maxPlayers)) if game_type != PUZZLE_GAME else 1
 
         self.rulesDir = join(self.gameDir, "rules")
         self.controllersDir = join(self.gameDir, "controllers")
