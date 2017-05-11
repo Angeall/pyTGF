@@ -47,7 +47,12 @@ class RandomBot(LazerBikeBotPlayer):
         """
         move = random.choice(self.possibleMoves)
         succeeded, _ = game_state.simulateMove(self.playerNumber, move)
-        while not succeeded or game_state.isMoveSuicidal(self.playerNumber, move):
+        suicidal_moves = []
+        suicidal = game_state.isMoveSuicidal(self.playerNumber, move)
+        while not succeeded or (suicidal and len(suicidal_moves) < 3):
             move = random.choice(self.possibleMoves)
             succeeded, _ = game_state.simulateMove(self.playerNumber, move)
+            suicidal = game_state.isMoveSuicidal(self.playerNumber, move)
+            if succeeded and suicidal and move not in suicidal_moves:
+                suicidal_moves.append(move)
         return move
