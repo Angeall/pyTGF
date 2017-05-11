@@ -44,3 +44,9 @@
  
  To launch this script, just run the `make.py` file followed by the required arguments. These can be
  listed using `--help` when launching the script.
+ 
+ Three types of games are enumerated in these parameters:
+  - War games -- Games in which multiple players are competing on a team-base.
+  - Duel games -- Subtype of war games, in which only two players fight against each other.
+  - Puzzle games -- Games in which one player or multiple players collaborating try to beat the game.
+ 
