@@ -8,7 +8,6 @@ from ...game import API
 
 __author__ = "Anthony Rouneau"
 
-
 DRAW = 0
 WIN = 1
 LOSE = -1
@@ -18,7 +17,7 @@ class Benchmark:
     def __init__(self, starting_api: API, controllers: List[Bot]):
         """
         Creates a benchmark object which can be used to confront multiple controllers
-        
+
         Args:
             starting_api: The API from which all the game simulation will be started  
             controllers: The controllers (in order if there is one) that will play this game
@@ -44,17 +43,19 @@ class Benchmark:
             while not starting_copy.isFinished():
                 for controller in self._controllers:
                     if start:
-                        start = False
                         events = [WakeEvent()]
                     else:
                         events = self._eventsToSend[controller.playerNumber]
                         self._eventsToSend[controller.playerNumber] = []
+
                     controller.reactToEvents(events)
                     if isinstance(starting_copy, TurnBasedAPI):
+                        start = False
                         move = controller.moves.get()
                         self._addMessageToAll(BotEvent(controller.playerNumber, move))
                         starting_copy.performMove(controller.playerNumber, move)
                 if not isinstance(starting_copy, TurnBasedAPI):
+                    start = False
                     moves = {controller: controller.moves.get() for controller in self._controllers}
                     for controller, move in moves.items():
                         self._addMessageToAll(BotEvent(controller.playerNumber, move))
@@ -68,7 +69,7 @@ class Benchmark:
                 else:
                     res = LOSE
                 self._results[player_number].append(res)
-            print(str(i + 1) + "/" + str(nb_games))
+            print(str(i + 1) + "/" + str(nb_games), sum(self._results[1]), sum(self._results[2]))
 
         wins = self._results
         self._results = self._initDict()
