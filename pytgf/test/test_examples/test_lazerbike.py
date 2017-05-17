@@ -5,7 +5,7 @@ import pygame
 
 from ...board import Builder, Board
 from ...controls.controllers import Passive
-from ...examples.lazerbike.control import LazerBikeBotControllerWrapper
+from ...examples.lazerbike.controllers import LazerBikeBotControllerWrapper
 from ...examples.lazerbike.gamedata import GO_RIGHT, GO_UP, GO_DOWN, GO_LEFT
 from ...examples.lazerbike.rules import LazerBikeAPI
 from ...examples.lazerbike.rules.lazerbike import LazerBikeCore

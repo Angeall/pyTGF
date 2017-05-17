@@ -6,7 +6,7 @@ from typing import Dict
 
 from pytgf.board.simulation import SimultaneousAlphaBeta
 from pytgf.characters.moves import MoveDescriptor
-from pytgf.examples.lazerbike.control import LazerBikeBotPlayer
+from pytgf.examples.lazerbike.controllers import LazerBikeBotPlayer
 from pytgf.game import API
 
 

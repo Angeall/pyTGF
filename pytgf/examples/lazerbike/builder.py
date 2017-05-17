@@ -2,7 +2,7 @@ from typing import Tuple, Dict, Type, Optional
 
 from pygame.locals import *
 
-from .control import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper
+from .controllers import LazerBikeBotControllerWrapper, LazerBikeHumanControllerWrapper
 from .gamedata import GO_RIGHT, GO_UP, GO_LEFT, GO_DOWN, Direction
 from .rules import LazerBikeCore, LazerBikeAPI
 from .units.bike import Bike

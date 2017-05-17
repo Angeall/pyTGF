@@ -6,7 +6,7 @@ import random
 
 from pytgf.characters.moves import MoveDescriptor
 from pytgf.controls.controllers import TeammateMessage
-from pytgf.examples.lazerbike.control.player import LazerBikeBotPlayer
+from pytgf.examples.lazerbike.controllers.player import LazerBikeBotPlayer
 from pytgf.examples.lazerbike.rules import LazerBikeAPI
 
 

@@ -3,7 +3,7 @@ File containing the definition of a human player for the Lazerbike Game
 """
 from pytgf.controls.controllers import Human
 from pytgf.controls.events import KeyboardEvent, MouseEvent
-from pytgf.examples.lazerbike.control.player import LazerBikePlayer
+from pytgf.examples.lazerbike.controllers.player import LazerBikePlayer
 from pytgf.examples.lazerbike.gamedata import GO_LEFT, GO_RIGHT, GO_UP, GO_DOWN
 
 
