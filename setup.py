@@ -16,7 +16,7 @@ setup(
               'pytgf.examples.connect4.res.AIs', 'pytgf.examples.connect4.data', 'pytgf.examples.connect4.rules',
               'pytgf.examples.connect4.units', 'pytgf.examples.connect4.controllers', 'pytgf.examples.lazerbike',
               'pytgf.examples.lazerbike.res.AIs', 'pytgf.examples.lazerbike.data', 'pytgf.examples.lazerbike.rules',
-              'pytgf.examples.lazerbike.units', 'pytgf.examples.lazerbike.control', 'pytgf.characters',
+              'pytgf.examples.lazerbike.units', 'pytgf.examples.lazerbike.controllers', 'pytgf.characters',
               'pytgf.characters.moves', 'pytgf.characters.units', 'pytgf.characters.utils'],
     url='https://github.com/Angeall/pyTGF',
     license='MIT',
