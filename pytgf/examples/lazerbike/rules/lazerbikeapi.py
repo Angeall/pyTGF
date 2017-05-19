@@ -69,11 +69,11 @@ class LazerBikeAPI(API):
             - -1 if the move makes it turn right, relatively to its current direction
             - 0 if the move makes it go straight, relatively to its current direction
             - +1 if the move makes it turn left, relatively to its current direction
-            - -1000 if the move makes it turn back (illegal move...)
+            - -2 if the move makes it turn back (illegal move...)
         """
         diff = move_descriptor - self.game.getUnitForNumber(player_number).lastAction
         if abs(diff) == 2:
-            return -1000
+            return -2
         if diff == 3:
             return -1
         if diff == -3:
@@ -92,6 +92,8 @@ class LazerBikeAPI(API):
         Returns: The decoded move (absolute move, between 0 and 3)
 
         """
+        if encoded_move == -2:
+            return self.getCurrentDirection(player_number)
         new_move = self.getCurrentDirection(player_number) + encoded_move
         if new_move < 0:
             new_move += 4
