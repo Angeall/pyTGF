@@ -1,6 +1,7 @@
 """
 File containing the definition of an undying AI, its goal is not to die.
 """
+import random
 import time
 from typing import Dict
 
@@ -23,7 +24,7 @@ class UndyingAI(LazerBikeBotPlayer):
         """
         super().__init__(player_number)
         self._playersMove = []
-        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, self.possibleMoves, max_depth=3)
+        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, self.possibleMoves, max_depth=1)
 
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message) -> None:
         """
@@ -49,13 +50,14 @@ class UndyingAI(LazerBikeBotPlayer):
         scores = {}
         for player_number in state.getPlayerNumbers():
             score = 1
-            if not state.game.players[player_number].isAlive():
+            if not state.game.units[player_number].isAlive():
                 score = -1000
             for other_player_number in state.getPlayerNumbers():
                 if other_player_number != player_number:
                     if not state.belongsToSameTeam(player_number, other_player_number):
-                        if not state.game.players[other_player_number].isAlive():
+                        if not state.game.units[other_player_number].isAlive():
                             score += 1
+            score += random.random()
             scores[player_number] = score
         return scores
 

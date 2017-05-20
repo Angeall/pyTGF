@@ -134,10 +134,6 @@ class SimultaneousAlphaBeta:
         # If we already made the computations, no need to do more
         if self._storedStates.get(hashable_state) is not None:
             return self._storedStates[hashable_state]
-        # if depth == 0:
-        #     print("cucu")
-        #     print(state.game._simplifiedBoard)
-        #     print("coco")
         # Initializing the best values
         max_value = -float('inf')
         equally_good_choices = []  # type: List[Tuple[Dict[int, MoveDescriptor], API, bool]]
@@ -240,7 +236,6 @@ class SimultaneousAlphaBeta:
             if feasible_moves and new_game_state is not None:
                 value, _, new_end_state, game_state, best_reached_end = \
                                         self._maxValue(new_game_state, alpha, beta, depth + 1)
-                # print((depth + 1) * '-', simulation_combination, value)
                 end_state = self._evaluateEndState(end_state, new_end_state)
                 if value < min_value:
                     min_value = value
@@ -254,10 +249,6 @@ class SimultaneousAlphaBeta:
                         self._storedStates[new_game_state.getBoardByteCodes()] = ret_val
                     return ret_val
                 beta = min(beta, value)
-            # else:
-            #     print(10*'|', 'UNFEASIBLE MOVE', 10*'|')
-            #     print(simulation_combination)
-            #     print(state.game._simplifiedBoard)
         min_actions, new_game_state, best_reached_end = random.choice(equal_min_choices)
         ret_val = min_value, min_actions, end_state, new_game_state, best_reached_end
         if best_reached_end and self._mustHash:
