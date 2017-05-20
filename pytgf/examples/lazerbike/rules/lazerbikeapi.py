@@ -23,32 +23,28 @@ class LazerBikeAPI(API):
 
     def __init__(self, game: LazerBikeCore):
         super().__init__(game)
-        self._unitsPreviousMoves = {}
         self._previousTraces = {}
 
     def createMoveForDescriptor(self, unit: Bike, move_descriptor, force=False, is_step: bool=False) -> Path:
         fct = None
         pre_action = None
-        initial_move = unit not in self._unitsPreviousMoves.keys() or force
         if move_descriptor == GO_RIGHT:
-            if initial_move or (unit.currentAction != GO_LEFT):
+            if force or (unit.currentAction != GO_LEFT):
                 pre_action = partial(unit.turn, GO_RIGHT)
                 fct = self.game.getRightTile
         elif move_descriptor == GO_LEFT:
-            if initial_move or (unit.currentAction != GO_RIGHT):
+            if force or (unit.currentAction != GO_RIGHT):
                 pre_action = partial(unit.turn, GO_LEFT)
                 fct = self.game.getLeftTile
         elif move_descriptor == GO_DOWN:
-            if initial_move or (unit.currentAction != GO_UP):
+            if force or (unit.currentAction != GO_UP):
                 pre_action = partial(unit.turn, GO_DOWN)
                 fct = self.game.getBottomTile
         elif move_descriptor == GO_UP:
-            if initial_move or (unit.currentAction != GO_DOWN):
+            if force or (unit.currentAction != GO_DOWN):
                 pre_action = partial(unit.turn, GO_UP)
                 fct = self.game.getTopTile
         if fct is not None:
-            if initial_move:
-                self._unitsPreviousMoves[unit] = move_descriptor
             return ContinuousPath(unit, self.game.getTileForUnit, fct, MAX_FPS, pre_action=pre_action,
                                   max_moves=-1 if not is_step else 1,
                                   step_post_action=partial(self._letTraceOnPreviousTile, unit=unit),

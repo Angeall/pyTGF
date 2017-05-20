@@ -149,7 +149,7 @@ class MainLoop(metaclass=ABCMeta):
         unit.moveTo(tile.center)
         if initial_action is not None:
             unit.setLastAction(initial_action)
-            self._handleEvent(unit, initial_action, wrapper.controller.playerNumber)
+            self._handleEvent(unit, initial_action, wrapper.controller.playerNumber, force=True)
 
     def getWrapperFromPlayerNumber(self, player_number: int):
         """
@@ -494,7 +494,7 @@ class MainLoop(metaclass=ABCMeta):
             return END
         return CONTINUE
 
-    def _handleEvent(self, unit: Unit, event: MoveDescriptor, player_number: int) -> None:
+    def _handleEvent(self, unit: Unit, event: MoveDescriptor, player_number: int, force: bool=False) -> None:
         """
         The goal of this method is to handle the given event for the given unit
 
@@ -503,7 +503,7 @@ class MainLoop(metaclass=ABCMeta):
             event: The event sent by the controller
         """
         try:
-            move = self.api.createMoveForDescriptor(unit, event)  # may raise: UnfeasibleMoveException
+            move = self.api.createMoveForDescriptor(unit, event, force=force)  # may raise: UnfeasibleMoveException
             self._currentTurnTaken = True
             self._moveDescriptors[move] = event
             self._addMove(unit, move)

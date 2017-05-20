@@ -105,7 +105,6 @@ class API(metaclass=ABCMeta):
             self._reactToMovePerformed(player_number, move)
 
         except UnfeasibleMoveException:
-            print('unfeasible move in perform move')
             return False
         except IllegalMove:
             self._addActionToHistory(move_descriptor, player_number)

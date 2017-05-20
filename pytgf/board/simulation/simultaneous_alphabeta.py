@@ -249,12 +249,6 @@ class SimultaneousAlphaBeta:
                         self._storedStates[new_game_state.getBoardByteCodes()] = ret_val
                     return ret_val
                 beta = min(beta, value)
-            else:
-                print('unfeasible move')
-                print(state.getBoardByteCodes(), '\n', combination)
-        if len(equal_min_choices) == 0:
-            print('no min states')
-            print(state.getBoardByteCodes(), '\n', actions)
         min_actions, new_game_state, best_reached_end = random.choice(equal_min_choices)
         ret_val = min_value, min_actions, end_state, new_game_state, best_reached_end
         if best_reached_end and self._mustHash:
