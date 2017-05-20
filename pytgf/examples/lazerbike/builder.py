@@ -24,8 +24,6 @@ default_initial_positions = {1: (2, 2, GO_RIGHT), 2: (12, 12, GO_LEFT), 3: (12, 
 def add_controller(main_loop: RealTimeMainLoop, player_class, player_number: int, player_team: int, speed: int,
                    max_trace: int, init_positions, graphics):
     global nb_human
-    print(player_class)
-    player_class(player_number)
     if issubclass(player_class, Bot):
         linker = LazerBikeBotControllerWrapper(player_class(player_number))
     elif issubclass(player_class, Human):

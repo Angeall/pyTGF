@@ -166,7 +166,7 @@ class SimultaneousAlphaBeta:
         if len(equally_good_choices) == 0:  # No choice is good to take...
             print("no choice is good to take")
             return self._getTeamScore(state, self.eval(state)), None, \
-                   (state.isFinished(), depth, state.hasWon(self.playerNumber)), None, False
+                (state.isFinished(), depth, state.hasWon(self.playerNumber)), None, False
         best_combination, best_game_state, best_reached_end = random.choice(equally_good_choices)
         ret_val = max_value, best_combination, end_state, best_game_state, best_reached_end
         if best_reached_end and self._mustHash:
@@ -249,6 +249,7 @@ class SimultaneousAlphaBeta:
                         self._storedStates[new_game_state.getBoardByteCodes()] = ret_val
                     return ret_val
                 beta = min(beta, value)
+
         min_actions, new_game_state, best_reached_end = random.choice(equal_min_choices)
         ret_val = min_value, min_actions, end_state, new_game_state, best_reached_end
         if best_reached_end and self._mustHash:
