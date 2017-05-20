@@ -35,3 +35,4 @@ class Controller(metaclass=ABCMeta):
         """
         Methods that can be overridden so that it gets the controller ready
         """
+        pass
