@@ -1,4 +1,4 @@
 from .battlebasedroutine import BattleBasedRoutine
+from .imitationroutine import ImitationRoutine
 from .randomroutine import RandomRoutine
-from .reinforcementroutine import ReinforcementRoutine
 from .thoroughroutine import ThoroughRoutine

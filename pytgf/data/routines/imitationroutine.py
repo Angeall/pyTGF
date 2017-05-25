@@ -9,7 +9,7 @@ from ...controls.controllers import Bot
 from ...game import API
 
 
-class ReinforcementRoutine(BattleBasedRoutine):
+class ImitationRoutine(BattleBasedRoutine):
     def __init__(self, own_controller: Bot, opponent_controllers: List[Bot], gatherer: Gatherer,
                  possible_moves: Tuple[MoveDescriptor, ...], eval_fct: Callable[[API], Dict[int, Value]],
                  max_depth: int = -1, must_write_files: bool = True, must_keep_temp_files: bool = False,
