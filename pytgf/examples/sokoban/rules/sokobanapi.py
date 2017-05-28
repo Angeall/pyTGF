@@ -1,21 +1,17 @@
-import pytgf
-
-from pytgf.board import Tile
-from pytgf.board import pathfinder
-from pytgf.board.pathfinder import UnreachableDestination
-from pytgf.characters.moves import ListPath
-from pytgf.characters.moves import Path
-from pytgf.characters.moves import ShortMove
-from pytgf.characters.units import MovingUnit
-from pytgf.controls.wrappers.wrapper import MAX_FPS
-from pytgf.examples.sokoban.rules.sokoban import FULL_HOLE_COLOR
-from pytgf.examples.sokoban.units.box import Box
-from pytgf.game import API
+from ..rules.sokoban import FULL_HOLE_COLOR
+from ..units.box import Box
+from ....board import Tile, pathfinder
+from ....characters.moves import ListPath, MoveDescriptor, Path, ShortMove
+from ....characters.units import Unit
+from ....controls.wrappers.wrapper import MAX_FPS
+from ....game import UnfeasibleMoveException
+from ....game.realtime import API
 
 
 class SokobanAPI(API):
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor, max_moves: int=-1, force: bool=False) -> Path:
-        if type(move_descriptor) == tuple and len(move_descriptor) == 2:
+    def createMoveForDescriptor(self, unit: Unit, move_descriptor, force: bool=False, is_step: bool=False) \
+            -> Path:
+        if isinstance(move_descriptor, tuple) and len(move_descriptor) == 2:
             destination_tile = self.game.board.getTileById(move_descriptor)
             if destination_tile.walkable:
                 source_tile = self.game.board.getTileById(self.game.getTileForUnit(unit).identifier)
@@ -27,18 +23,24 @@ class SokobanAPI(API):
                                                             lambda tile: tile.walkable and not tile.deadly)
                     current_tile = source_tile
                     tile_ids = self._checkIfBoxInTheWay(source_tile, tile_ids)
-                    if max_moves > 0:
-                        tile_ids = tile_ids[:max_moves]
                     if len(tile_ids) > 0:
                         for next_tile_id in tile_ids:
                             next_tile = self.game.board.getTileById(next_tile_id)
                             moves.append(ShortMove(unit, current_tile, next_tile, MAX_FPS,
                                                    units_location=self.game.unitsLocation))
                             current_tile = next_tile
-                        return ListPath(moves, step_pre_action=self._pushBoxIfNeeded)
-                except UnreachableDestination:
+                        return ListPath(unit, moves, step_pre_action=self._pushBoxIfNeeded)
+                except pathfinder.UnreachableDestination:
                     pass
-        raise pytgf.game.UnfeasibleMoveException()
+        raise UnfeasibleMoveException()
+
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        return move_descriptor[0] + (move_descriptor[1] << 16)
+
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        y = encoded_move >> 16
+        x = encoded_move - (y << 16)
+        return x, y
 
     def _pushBoxIfNeeded(self, previous_tile: Tile, current_tile: Tile):
         box = None
@@ -58,8 +60,8 @@ class SokobanAPI(API):
                 if self.game.board.graphics is not None:
                     self.game.board.graphics.setInternalColor(FULL_HOLE_COLOR, box_next_tile_id[0], box_next_tile_id[1])
             event = box_next_tile_id
-            self.game.addCustomMove(box, ListPath([ShortMove(box, current_tile, box_next_tile, MAX_FPS / 2,
-                                                             units_location=self.game.unitsLocation)]),
+            self.game.addCustomMove(box, ListPath(box, [ShortMove(box, current_tile, box_next_tile, MAX_FPS / 2,
+                                                  units_location=self.game.unitsLocation)]),
                                     event)
 
     def _checkIfBoxInTheWay(self, source_tile: Tile, next_tile_ids: list) -> list:

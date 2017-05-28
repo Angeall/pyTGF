@@ -4,8 +4,8 @@ File containing the definition of a ControllerWrapper that links the game with a
 
 from abc import ABCMeta
 
-from pytgf.controls.events.human import HumanEvent
-from pytgf.controls.wrappers.wrapper import ControllerWrapper
+from .wrapper import ControllerWrapper
+from ..events.human import HumanEvent
 
 __author__ = 'Anthony Rouneau'
 

@@ -10,9 +10,7 @@ import pygame
 from pygame import gfxdraw
 from scipy.spatial import KDTree
 
-import pytgf.utils.geom
-from pytgf.utils.geom import Coordinates
-
+from ..utils.geom import dist, Coordinates, get_convex_hull, get_path
 
 __author__ = 'Anthony Rouneau'
 
@@ -45,6 +43,7 @@ class BoardGraphics:
                  borders: List[Tuple[Coordinates, Coordinates]], tiles_visible: bool):
         """
         Instantiates a BoardGraphics object, representing the graphical part of the board
+
         Args:
             tiles_borders: The points that will serve to draw the tiles
             background_color: The color of the background of the board
@@ -56,7 +55,7 @@ class BoardGraphics:
             tiles_visible: If true, the borders of each tile will be drawn by the "draw" method.
         """
         self.size = size
-        self.sideLength = pytgf.utils.geom.dist(tiles_borders[0][0][-1], tiles_borders[0][0][0])
+        self.sideLength = dist(tiles_borders[0][0][-1], tiles_borders[0][0][0])
         self.nbrOfSides = len(tiles_borders[0][0])
         self._tilesVisible = tiles_visible
         self._borders = borders
@@ -72,6 +71,7 @@ class BoardGraphics:
     def getBorderColor(self, i: int, j: int) -> Color:
         """
         Gets the border color of the tile located at the position (i, j)
+
         Args:
             i: The row index of the wanted tile
             j: The column index of the wanted tile
@@ -98,6 +98,7 @@ class BoardGraphics:
     def getInternalColor(self, i: int, j: int) -> Color:
         """
         Gets the internal color of the tile located at the position (i, j)
+
         Args:
             i: The row index of the wanted tile
             j: The column index of the wanted tile
@@ -124,6 +125,7 @@ class BoardGraphics:
     def draw(self, surface: pygame.Surface) -> None:
         """
         Draw the board on the given surface
+
         Args:
             surface: The surface on which draw the board
         """
@@ -138,6 +140,7 @@ class BoardGraphics:
     def setBordersColor(self, borders_color: Color) -> None:
         """
         Change the color of the board's borders color
+
         Args:
             borders_color: RGB (or RGBA) tuple for the borders color
         """
@@ -146,6 +149,7 @@ class BoardGraphics:
     def setBackgroundColor(self, background_color: Color) -> None:
         """
         Change the background color of the board (default: white)
+
         Args:
             background_color: RGB (or RGBA) tuple for the background color
         """
@@ -154,6 +158,7 @@ class BoardGraphics:
     def setTilesVisible(self, visible: bool) -> None:
         """
         If true, the tiles will be visible when the board is drawn
+
         Args:
             visible: True if the tiles must be visible. False otherwise.
         """
@@ -171,9 +176,24 @@ class BoardGraphics:
         Returns: True if the point is inside and False otherwise
         """
         points = self._drawMatrix[i][j]
-        convex_hull = pytgf.utils.geom.get_convex_hull(points)
-        hull_path = pytgf.utils.geom.get_path(points, convex_hull)
+        convex_hull = get_convex_hull(points)
+        hull_path = get_path(points, convex_hull)
         return hull_path.contains_point(point)
+
+    def getTileIdByPixel(self, pixel: Coordinates) -> Union[Tuple[int, int], None]:
+        """
+        Get the identifier of the tile located on the given pixel
+
+        Args:
+            pixel: The screen coordinates on which we want to get the tile
+
+        Returns: The identifier of the tile located on the pixel, or None if there is no tile at this position
+        """
+        center_index = self._kdTree.query(pixel, 1)[1]
+        i = center_index // self._columns
+        j = center_index - (self._columns * i)
+        if self.containsPoint(pixel, i, j):
+            return i, j
 
     # -------------------- PROTECTED METHODS -------------------- #
 
@@ -276,13 +296,13 @@ class BoardGraphics:
         Returns: A matrix of tuples, containing a center for the tile, followed by the points of the tile's polygon
         """
         draw_matrix = []
-        for i in range(len(points)):
+        for point_line in points:
             line = ()
-            for j in range(len(points[0])):
-                if len(points[i][j]) < 3:
+            for point_column in point_line:
+                if len(point_column) < 3:
                     raise NotAPolygonError("A polygon is made of minimum 3 points")
-                assert self._isEquilateral(points[i][j])
-                line += (tuple(points[i][j]), )
+                assert self._isEquilateral(point_column)
+                line += (tuple(point_column), )
             draw_matrix.append(line)
         return draw_matrix
 
@@ -313,28 +333,14 @@ class BoardGraphics:
 
         Returns: True if all the length are equal with a epsilon-accuracy.
         """
-        length = pytgf.utils.geom.dist(points[0], points[1])
+        length = dist(points[0], points[1])
         if abs(length - self.sideLength) > self._TILE_LENGTH_EPSILON:
             return False
         i = 1
         while i < len(points) - 1:
-            computed_length = pytgf.utils.geom.dist(points[i], points[i + 1])
+            computed_length = dist(points[i], points[i + 1])
             if abs(computed_length - length) > self._TILE_LENGTH_EPSILON:
                 return False
             i += 1
-        return abs(pytgf.utils.geom.dist(points[len(points) - 1], points[0]) - length) < self._TILE_LENGTH_EPSILON
+        return abs(dist(points[len(points) - 1], points[0]) - length) < self._TILE_LENGTH_EPSILON
 
-    def getTileIdByPixel(self, pixel: Coordinates) -> Union[Tuple[int, int], None]:
-        """
-        Get the identifier of the tile located on the given pixel
-
-        Args:
-            pixel: The screen coordinates on which we want to get the tile
-
-        Returns: The identifier of the tile located on the pixel, or None if there is no tile at this position
-        """
-        center_index = self._kdTree.query(pixel, 1)[1]
-        i = center_index // self._columns
-        j = center_index - (self._columns * i)
-        if self.containsPoint(pixel, i, j):
-            return i, j

@@ -14,12 +14,11 @@ main_frame = None
 
 
 def get_selection_frame() -> Frame:
-    global selection_frame
     return selection_frame
 
 
 def buildMainFrame(window: Tk, gui: GUI) -> Frame:
-    global selection_frame, main_frame
+    global main_frame
     builder = ButtonFrameBuilder("Sokoban", window)
     builder.setTitleColor("#FF0000")
     builder.addButton(("Play", lambda: gui.goToFrame(get_selection_frame())))

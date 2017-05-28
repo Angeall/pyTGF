@@ -4,3 +4,5 @@ pygame >= 1.9.3
 numpy >= 1.11.2
 scipy >= 0.18.1
 matplotlib >= 1.5.3
+pandas >= 0.19.2
+docopt >= 0.6.2

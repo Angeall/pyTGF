@@ -4,9 +4,9 @@ File containing the abstract definition of a Path. While the path has a next mov
 from abc import ABCMeta, abstractmethod
 from typing import Optional, Callable, Tuple, Union
 
-from pytgf.board import Tile
-from pytgf.board import TileIdentifier
-from pytgf.characters.moves.shortmove import ShortMove
+from .shortmove import ShortMove
+from ..units import Entity
+from ...board import Tile, TileIdentifier
 
 __author__ = 'Anthony Rouneau'
 
@@ -17,7 +17,8 @@ class Path(metaclass=ABCMeta):
     and at the beginning or the end of a step in the path. When there is no move left in the path, the path ends.
     """
 
-    def __init__(self, pre_action: Optional[Callable[[], None]]=None, post_action: Optional[Callable[[], None]]=None,
+    def __init__(self, unit: Entity, pre_action: Optional[Callable[[], None]]=None,
+                 post_action: Optional[Callable[[], None]]=None,
                  step_pre_action: Optional[Callable[[Tile, Tile], None]]=None,
                  step_post_action: Optional[Callable[[Tile, Tile], None]]=None, max_moves: int=-1):
         """
@@ -36,6 +37,8 @@ class Path(metaclass=ABCMeta):
         self.stopTriggered = False
         self.stopped = False
         self.completed = False
+        self.reachedTileIdentifier = None
+        self.unit = unit
         self._currentMove = None  # type: ShortMove
         self._preAction = pre_action
         self._postAction = post_action
@@ -93,6 +96,7 @@ class Path(metaclass=ABCMeta):
                         new_tile_id = self._newMoveTileId
                     if move_performed:
                         new_tile_id = self._handleStepFinished()
+                        self.reachedTileIdentifier = new_tile_id
                         next_step_got, next_destination_tile_id = self._getNextStepIfNeeded()
                         self._newMoveStarted = next_step_got
                         self._newMoveTileId = next_destination_tile_id

@@ -2,11 +2,11 @@ import unittest
 
 import pygame
 
-from pytgf.controls.controllers import Passive
-from pytgf.examples.sokoban.parsing.builder import SokobanBoardBuilder
-from pytgf.examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
-from pytgf.examples.sokoban.units.box import Box
-from pytgf.game.mainloop import MainLoop
+from ...controls.controllers import Passive
+from ...examples.sokoban.parsing.builder import SokobanBoardBuilder
+from ...examples.sokoban.parsing.parser import wall, hole, box, player_tile, winning, classical_tile
+from ...examples.sokoban.units.box import Box
+from ...game.realtime import RealTimeMainLoop
 
 
 class TestSokoban(unittest.TestCase):
@@ -20,11 +20,11 @@ class TestSokoban(unittest.TestCase):
         builder = SokobanBoardBuilder(self.width, self.height, self.parserResult, [self.controller], 1000)
         builder.setBordersColor((0, 0, 0))
         builder.setTilesVisible(True)
-        self.loop = builder.createGame()  # type: MainLoop
-        self.linker = list(self.loop.linkers.keys())[0]
-        if isinstance(self.loop.linkers[self.linker], Box):
-            linkers_list = list(self.loop.linkers.keys())
-            self.linker = linkers_list[1]
+        self.loop = builder.createGame()  # type: RealTimeMainLoop
+        self.wrapper = list(self.loop.wrappers.keys())[0]
+        if isinstance(self.loop.wrappers[self.wrapper], Box):
+            linkers_list = list(self.loop.wrappers.keys())
+            self.wrapper = linkers_list[1]
 
     def tearDown(self):
         if self.loop.executor is not None:
@@ -32,10 +32,10 @@ class TestSokoban(unittest.TestCase):
 
     def test_push_box_in_hole(self):
         self.loop._prepareLoop()
-        self.linker._sendActionToGame((2, 0))
-        self.linker._sendActionToGame((3, 2))
+        self.wrapper._sendActionToGame((2, 0))
+        self.wrapper._sendActionToGame((3, 2))
         pushed_box = None
-        for unit in self.loop.linkers.values():
+        for unit in self.loop.game.units.values():
             if isinstance(unit, Box):
                 pushed_box = unit
         self.assertTrue(pushed_box is not None)
@@ -46,6 +46,6 @@ class TestSokoban(unittest.TestCase):
 
     def test_win(self):
         self.loop._prepareLoop()
-        self.linker._sendActionToGame((2, 0))
-        self.linker._sendActionToGame((3, 2))
+        self.wrapper._sendActionToGame((2, 0))
+        self.wrapper._sendActionToGame((3, 2))
         self.assertEqual(len(self.loop.run(60)), 1)

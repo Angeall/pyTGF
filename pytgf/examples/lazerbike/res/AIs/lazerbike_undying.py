@@ -1,13 +1,13 @@
 """
 File containing the definition of an undying AI, its goal is not to die.
 """
+import random
 import time
-from typing import Tuple
+from typing import Dict
 
-from pytgf.characters.ai import SimultaneousAlphaBeta
+from pytgf.board.simulation import SimultaneousAlphaBeta
 from pytgf.characters.moves import MoveDescriptor
-from pytgf.examples.lazerbike.control import LazerBikeBotPlayer
-from pytgf.examples.lazerbike.gamedata import GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT
+from pytgf.examples.lazerbike.controllers import LazerBikeBotPlayer
 from pytgf.game import API
 
 
@@ -24,7 +24,7 @@ class UndyingAI(LazerBikeBotPlayer):
         """
         super().__init__(player_number)
         self._playersMove = []
-        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, (GO_RIGHT, GO_DOWN, GO_UP, GO_LEFT), max_depth=4)
+        self.alphabeta = SimultaneousAlphaBeta(self.eval_fct, self.possibleMoves, max_depth=1)
 
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message) -> None:
         """
@@ -37,7 +37,7 @@ class UndyingAI(LazerBikeBotPlayer):
         pass
 
     @staticmethod
-    def eval_fct(state: API) -> Tuple[float, ...]:
+    def eval_fct(state: API) -> Dict[int, float]:
         """
         Just give a score of 1 for a unit that is alive, and -1 for a player that is not alive
 
@@ -47,18 +47,19 @@ class UndyingAI(LazerBikeBotPlayer):
         Returns:
 
         """
-        scores = []
+        scores = {}
         for player_number in state.getPlayerNumbers():
             score = 1
-            if not state.game.players[player_number].isAlive():
+            if not state.game.units[player_number].isAlive():
                 score = -1000
             for other_player_number in state.getPlayerNumbers():
                 if other_player_number != player_number:
                     if not state.belongsToSameTeam(player_number, other_player_number):
-                        if not state.game.players[other_player_number].isAlive():
+                        if not state.game.units[other_player_number].isAlive():
                             score += 1
-            scores.append(score)
-        return tuple(scores)
+            score += random.random()
+            scores[player_number] = score
+        return scores
 
     def _selectNewMove(self, game_state: API) -> MoveDescriptor:
         """

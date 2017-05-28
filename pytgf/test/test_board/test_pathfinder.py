@@ -1,7 +1,7 @@
 import unittest
 
-from pytgf.board import Builder
-from pytgf.board.pathfinder import get_shortest_path, get_shortest_paths, reconstruct_path
+from ...board import Builder
+from ...board.pathfinder import get_shortest_path, get_shortest_paths, reconstruct_path
 
 
 class TestPathfinder(unittest.TestCase):

@@ -1,17 +1,25 @@
 import unittest
 from queue import Empty
+from typing import List
 
-from pytgf.board import Builder
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.characters.moves import Path
-from pytgf.characters.units import MovingUnit
-from pytgf.controls.controllers import Bot, TeammatePayload
-from pytgf.game import Core, API
+from ....board import Builder
+from ....characters.moves import MoveDescriptor
+from ....characters.moves import Path
+from ....characters.units import Entity
+from ....characters.units import Unit
+from ....controls.controllers import Bot, TeammatePayload
+from ....game import Core, API
 
 
 class ExampleAPI(API):
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        pass
+
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        pass
+
+    def createMoveForDescriptor(self, unit: Unit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+                                force: bool = False, is_step: bool=False) -> Path:
         pass
 
     def isItOneTestMethod(self):
@@ -29,11 +37,15 @@ class ExampleGame(Core):
     def _suicideAllowed(self) -> bool:
         return False
 
-    def _collidePlayers(self, player1, player2, frontal: bool = False):
+    def _collidePlayers(self, player1, player2, tile_id, frontal: bool = False, entity: Entity=None):
         pass
 
 
 class ExampleBot(Bot):
+    @property
+    def possibleMoves(self) -> List[MoveDescriptor]:
+        return []
+
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
         pass
 

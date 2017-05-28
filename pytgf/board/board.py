@@ -7,8 +7,8 @@ from typing import Union, Tuple, List
 
 import pygame
 
-from pytgf.board.graphics import BoardGraphics, Width, Height
-from pytgf.utils.geom import Coordinates
+from .graphics import BoardGraphics, Width, Height
+from ..utils.geom import Coordinates
 
 __author__ = 'Anthony Rouneau'
 
@@ -82,6 +82,9 @@ class Board:
 
         Returns: The Tile struct located at the given identifier
         """
+        i, j = identifier
+        if i < 0 or j < 0:
+            return self.OUT_OF_BOARD_TILE
         try:
             return self._tiles[identifier[0]][identifier[1]]
         except IndexError:

@@ -6,7 +6,7 @@ from tkinter import *
 from tkinter.ttk import *
 from typing import Tuple, Callable, List
 
-from pytgf.menu.basicframe import BasicFrameBuilder
+from .basicframe import BasicFrameBuilder
 
 
 class ButtonFrameBuilder(BasicFrameBuilder):

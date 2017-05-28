@@ -1,6 +1,6 @@
 import unittest
 
-from pytgf.board import Builder
+from ...board import Builder
 
 
 class TestBoard(unittest.TestCase):

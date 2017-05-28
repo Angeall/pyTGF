@@ -1,21 +1,22 @@
 """
 File containing the definition of an abstract ControllerWrapper, linking the game with a Controller
 """
-
 from abc import ABCMeta, abstractmethod
 from queue import Empty
-from typing import Any, NewType
+from typing import Any
 
 import pygame
+
+from pytgf.controls.events import ReadyEvent
 
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
-    PipeConnection = NewType("PipeConnection", object)
+    PipeConnection = object
 
-from pytgf.controls.controllers.controller import Controller
-from pytgf.controls.events.event import Event
-from pytgf.controls.events.special import SpecialEvent
+from ..controllers.controller import Controller
+from ..events import Event, WakeEvent, MultipleEvents
+from ..events.special import SpecialEvent
 
 __author__ = 'Anthony Rouneau'
 
@@ -91,14 +92,16 @@ class ControllerWrapper(metaclass=ABCMeta):
         Runs the logical loop of this linker, looking for actions coming from the controller and updating
         the controller's local copy of the game state. The loop runs with a maximum of MAX_FPS iteration/s
         """
+        self.controller.getReady()
         clock = pygame.time.Clock()
+        self.mainPipe.send(ReadyEvent())
         while self._connected:
             try:
                 self._routine()
             except (BrokenPipeError, EOFError, OSError):
+                print("Closing pipes for player", self.controller.playerNumber)
                 self.close()
-            finally:
-                clock.tick(MAX_FPS)
+            clock.tick(MAX_FPS)
 
     def handleNewGameStateChangeIfNeeded(self) -> None:
         """
@@ -107,12 +110,17 @@ class ControllerWrapper(metaclass=ABCMeta):
         """
         events = []
         while self.mainPipe.poll():
-            events.append(self.mainPipe.recv())
-        if len(events) is not None:
+            event = self.mainPipe.recv()
+            if isinstance(event, MultipleEvents):
+                events.extend(event.events)
+            else:
+                events.append(event)
+        if len(events) != 0:
             for event in events:
-                if not isinstance(event, self.typeOfEventFromGame):
-                    raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
-                                    % (str(type(event)), str(self.typeOfEventFromGame)))
+                if not isinstance(event, self.typeOfEventFromGame) and not isinstance(event, WakeEvent):
+                    return
+                    # raise TypeError('The linker received a \'%s\' event and waited a \'%s\' event'
+                    #                 % (str(type(event)), str(self.typeOfEventFromGame)))
             self.controller.reactToEvents(events)
 
     def checkGameInfo(self) -> None:

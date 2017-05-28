@@ -4,17 +4,17 @@ File containing the definition of a Bot ControllerWrapper, linking the game with
 
 from abc import ABCMeta
 from queue import Empty, Queue
-from typing import Dict, NewType
+from typing import Dict
 
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
-    PipeConnection = NewType('PipeConnection', object)
+    PipeConnection = object
 
 
-from pytgf.controls.controllers.bot import Bot, TeammatePayload, TeammateMessage
-from pytgf.controls.events.bot import BotEvent
-from pytgf.controls.wrappers.wrapper import ControllerWrapper
+from ..controllers.bot import Bot, TeammatePayload, TeammateMessage
+from ..events.bot import BotEvent
+from .wrapper import ControllerWrapper
 
 __author__ = 'Anthony Rouneau'
 

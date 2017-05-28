@@ -6,11 +6,10 @@ from typing import List, Tuple
 
 import pygame
 
-from pytgf.board import Board, Tile
-from pytgf.board import TileIdentifier
-from pytgf.board.graphics import Color
-from pytgf.utils.geom import Coordinates
-
+from .board import Board, Tile
+from .board import TileIdentifier
+from .graphics import Color
+from ..utils.geom import Coordinates
 
 __author__ = 'Anthony Rouneau'
 

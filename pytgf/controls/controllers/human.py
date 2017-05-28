@@ -5,9 +5,9 @@ File containing the definition of an abstract Human Controller
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from pytgf.characters.moves import MoveDescriptor
-from pytgf.controls.controllers.controller import Controller
-from pytgf.controls.events import HumanEvent, KeyboardEvent, MouseEvent
+from .controller import Controller
+from ..events import HumanEvent, KeyboardEvent, MouseEvent
+from ...characters.moves import MoveDescriptor
 
 __author__ = 'Anthony Rouneau'
 

@@ -3,30 +3,33 @@ Fie containing the definition of the logical loop of a game, containing all the 
 and the bot controllers handling
 """
 
-import time
+from abc import ABCMeta, abstractmethod
 from queue import Queue, Empty
-from typing import Dict, Optional, NewType
+from typing import Dict, Optional, List
 from typing import Tuple
 from typing import Union
 
 import pygame
 from multiprocess.connection import Pipe
 
+from pytgf.controls.events import ReadyEvent
+
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
-    PipeConnection = NewType("PipeConnection", object)
+    PipeConnection = object
 from pathos.pools import ProcessPool as Pool
 from pygame.constants import DOUBLEBUF, MOUSEBUTTONDOWN, MOUSEBUTTONUP, K_ESCAPE, KEYDOWN, QUIT
 
-from pytgf.board import TileIdentifier
-from pytgf.characters.moves import IllegalMove, ImpossibleMove, Path, MoveDescriptor
-from pytgf.characters.units import MovingUnit, Unit
-from pytgf.controls.events import BotEvent, SpecialEvent
-from pytgf.controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
-from pytgf.game import API, UnfeasibleMoveException
-from pytgf.utils.geom import Coordinates
-from pytgf.utils.unit import resize_unit
+from . import API, UnfeasibleMoveException
+from ..controls.events import MultipleEvents, WakeEvent
+from ..board import TileIdentifier
+from ..characters.moves import IllegalMove, ImpossibleMove, Path, MoveDescriptor
+from ..characters.units import Unit
+from ..controls.events import BotEvent, SpecialEvent, Event
+from ..controls.wrappers import ControllerWrapper, HumanControllerWrapper, BotControllerWrapper
+from ..utils.geom import Coordinates
+from ..characters.utils.units import resize_unit
 
 __author__ = 'Anthony Rouneau'
 
@@ -37,11 +40,21 @@ FINISH = 3
 MAX_FPS = 30
 
 
-class MainLoop:
+MOVE_COMPLETED = 0
+MOVE_JUST_STARTED = 1
+MOVE_COMPLETED_AND_JUST_STARTED = 2
+MOVE_IN_PROGRESS = 3
+MOVE_ILLEGAL = -1
+MOVE_IMPOSSIBLE = -2
+MOVE_FAILED = -3
+
+
+class MainLoop(metaclass=ABCMeta):
     """
     Defines the logical loop of a game, running MAX_FPS times per second, sending the inputs to the HumanControllerWrapper, and the
     game updates to the BotControllerWrappers.
     """
+
     def __init__(self, api: API):
         """
         Instantiates the logical loop
@@ -52,23 +65,26 @@ class MainLoop:
         self.api = api
         self.game = api.game
         self.game.addCustomMoveFunc = self._addCustomMove
+        self._currentTurnTaken = False
         self._screen = None
         self._state = CONTINUE  # The game must go on at start
+        self._eventsToSend = {}  # type: Dict[ControllerWrapper, List[Event]]
 
-        self.linkersConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
-        self.linkersInfoConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
+        self.wrappersConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
+        self.wrappersInfoConnection = {}  # type: Dict[ControllerWrapper, PipeConnection]
 
-        self.linkers = {}  # type: Dict[ControllerWrapper, MovingUnit]
-        self._unitsMoves = {}  # type: Dict[MovingUnit, Tuple[Path, Queue]]
-        self._movesEvent = {}  # type: Dict[Path, MoveDescriptor]
+        self.wrappers = {}  # type: Dict[ControllerWrapper, Unit]
+        self._unitsMoves = {}  # type: Dict[Unit, Tuple[Path, Queue]]
+        self._moveDescriptors = {}  # type: Dict[Path, MoveDescriptor]
         self._otherMoves = {}  # type: Dict[Unit, Path]
         self._killSent = {}  # Used to maintain the fact that the kill event has been sent
         self.executor = None
         self._prepared = False
+        self._frames = 0
 
     # -------------------- PUBLIC METHODS -------------------- #
 
-    def run(self, max_fps: int=MAX_FPS) -> Union[None, Tuple[MovingUnit, ...]]:
+    def run(self, max_fps: int = MAX_FPS) -> Union[None, Tuple[Unit, ...]]:
         """
         Launch the game and its logical loop
 
@@ -88,50 +104,75 @@ class MainLoop:
             pass
         if not self._prepared:
             self._prepareLoop()
+        for player_number in self.api.getPlayerNumbers():
+            self._sendEventsToController(player_number)
         while self._state != END:
-            self._state = self._checkGameState()
             clock.tick(max_fps)
+            self._frames += 1
             self._handleInputs()
-            if self._state == CONTINUE:
-                self._getNextMoveFromControllerWrapperIfAvailable()
-                self._handlePendingMoves()
-                self._refreshScreen()
-            elif self._state == FINISH:
+            if self._state == FINISH:
                 self.executor.terminate()
                 self._prepared = False
                 return None
+            elif self._state != PAUSE:
+                self._state = self._checkGameState()
+                if self._state == CONTINUE:
+                    self._getNextMoveFromControllerWrapperIfAvailable()
+                    self._handlePendingMoves()
+                    self._refreshScreen()
         self.executor.terminate()
         self._prepared = False
         return self.game.winningPlayers
 
-    def addUnit(self, unit: MovingUnit, linker: ControllerWrapper, tile_id: TileIdentifier, initial_action: Path=None,
-                team: int=-1) -> None:
+    def addUnit(self, unit: Unit, wrapper: ControllerWrapper, tile_id: TileIdentifier,
+                initial_action: MoveDescriptor = None, team: int = -1) -> None:
         """
         Adds a unit to the game, located on the tile corresponding
         to the the given tile id and controlled by the given controller
 
         Args:
             unit: The unit to add to the game
-            linker: The linker of that unit
+            wrapper: The linker of that unit
             tile_id: The identifier of the tile it will be placed on
             initial_action: The initial action of the unit
             team: The number of the team this player is in (-1 = no team)
         """
-        self.game.addUnit(unit, team, tile_id)
-        self._addControllerWrapper(linker, unit)
+        is_controlled = wrapper is not None
+        self.game.addUnit(unit, team, tile_id, is_avatar=is_controlled)
+        if is_controlled:
+            self._addControllerWrapper(wrapper, unit)
+            if self._mustSendInitialWakeEvent(initial_action, unit):
+                self._eventsToSend[wrapper].append(WakeEvent())
         self._unitsMoves[unit] = (None, Queue())
         tile = self.game.board.getTileById(tile_id)
         resize_unit(unit, self.game.board)
         unit.moveTo(tile.center)
         if initial_action is not None:
-            unit.currentAction = initial_action
-            self._handleEvent(unit, initial_action)
+            unit.setLastAction(initial_action)
+            self._handleEvent(unit, initial_action, wrapper.controller.playerNumber, force=True)
+
+    def getWrapperFromPlayerNumber(self, player_number: int):
+        """
+        Retrieves the wrapper from the given player number
+
+        Args:
+            player_number: The number representing the player for which we want the wrapper 
+
+        Returns: The wrapper that wraps the controller of the given player
+        """
+        found = None
+        for wrapper in self.wrappersConnection:
+            if wrapper.controller.playerNumber == player_number:
+                found = wrapper
+                break
+        return found
 
     def pause(self) -> None:
         """
         Change the state of the game to "PAUSE"
         """
         self._state = PAUSE
+        print(self._frames, "frames")
 
     def resume(self) -> None:
         """
@@ -149,8 +190,13 @@ class MainLoop:
             if self._screen is None:
                 raise pygame.error("No Video device")
             self.game.board.draw(self._screen)
-            for unit in self.linkers.values():
+            drawn_units = []
+            for unit in self.wrappers.values():
                 if unit.isAlive():
+                    unit.draw(self._screen)
+                    drawn_units.append(unit)
+            for unit in self.game.unitsLocation:
+                if unit.isAlive() and unit not in drawn_units:
                     unit.draw(self._screen)
             pygame.display.flip()
         except pygame.error:  # No video device
@@ -180,7 +226,7 @@ class MainLoop:
             elif event.type == MOUSEBUTTONUP:
                 self._dispatchMouseEventToHumanControllers(None, click_up=True)
 
-    def _addMove(self, unit: MovingUnit, move: Path) -> None:
+    def _addMove(self, unit: Unit, move: Path) -> None:
         """
         Adds a move (cancelling the pending moves)
 
@@ -203,28 +249,29 @@ class MainLoop:
         """
         if unit not in self._otherMoves or self._otherMoves[unit] is None:
             self._otherMoves[unit] = move
-        self._movesEvent[move] = event
+        self._moveDescriptors[move] = event
 
-    def _cancelCurrentMoves(self, unit: MovingUnit) -> None:
+    def _cancelCurrentMoves(self, unit: Unit) -> None:
         """
         Cancel the current movement if there is one and remove all the other pending movements.
 
         Args:
             unit: The unit for which cancel the movements
         """
-        move_tuple = self._unitsMoves[unit]
-        fifo = move_tuple[1]  # type: Queue
-        last_move = move_tuple[0]  # type: Path
-        new_fifo = Queue()
-        if last_move is not None:
-            last_move.stop()
-        while True:
-            try:
-                move = fifo.get_nowait()
-                del self._movesEvent[move]
-            except Empty:
-                break
-        self._unitsMoves[unit] = (last_move, new_fifo)
+        if unit in self._unitsMoves:
+            move_tuple = self._unitsMoves[unit]
+            fifo = move_tuple[1]  # type: Queue
+            last_move = move_tuple[0]  # type: Path
+            new_fifo = Queue()
+            if last_move is not None:
+                last_move.stop()
+            while True:
+                try:
+                    move = fifo.get_nowait()
+                    del self._moveDescriptors[move]
+                except Empty:
+                    break
+            self._unitsMoves[unit] = (last_move, new_fifo)
 
     def _dispatchInputToHumanControllers(self, input_key) -> None:
         """
@@ -233,7 +280,7 @@ class MainLoop:
         Args:
             input_key: The key pressed on the keyboard
         """
-        for linker in self.linkers:  # type: HumanControllerWrapper
+        for linker in self.wrappers:  # type: HumanControllerWrapper
             if issubclass(type(linker), HumanControllerWrapper):
                 self._getPipeConnection(linker).send(
                     self.game.createKeyboardEvent(self._getUnitFromControllerWrapper(linker),
@@ -252,7 +299,7 @@ class MainLoop:
             tile = self.game.board.getTileByPixel(pixel)
         self._previouslyClickedTile = tile
         mouse_state = pygame.mouse.get_pressed()
-        for linker in self.linkers:  # type: ControllerWrapper
+        for linker in self.wrappers:  # type: ControllerWrapper
             if issubclass(type(linker), HumanControllerWrapper):
                 tile_id = None
                 if tile is not None:
@@ -265,11 +312,12 @@ class MainLoop:
         """
         Gets event from the controllers and dispatch them to the right method
         """
-        for linker in self.linkersConnection:
-            pipe_conn = self._getPipeConnection(linker)
+        for current_wrapper in self.wrappersConnection:  # type: ControllerWrapper
+            pipe_conn = self._getPipeConnection(current_wrapper)
             if pipe_conn.poll():
                 move = pipe_conn.recv()
-                self._handleEvent(self.linkers[linker], move)
+                if self._mustRetrieveNextMove(current_wrapper):
+                    self._handleEvent(self.wrappers[current_wrapper], move, current_wrapper.controller.playerNumber)
 
     def _handlePendingMoves(self) -> None:
         """
@@ -277,60 +325,140 @@ class MainLoop:
         """
         moved_units = []
 
-        for unit in self._otherMoves:  # type: MovingUnit
-            unit_linker = None
-            for linker in self.linkers:
-                if self._getUnitFromControllerWrapper(linker) is unit:
-                    unit_linker = linker
-            if unit_linker is not None:
-                if self._otherMoves[unit] is not None:
-                    moved = self._handleMoveForUnit(unit, self._otherMoves[unit], unit_linker)
-                    if moved:
-                        moved_units.append(unit)
-                    if self._otherMoves[unit].finished():
-                        self._otherMoves[unit] = None
+        completed_moves = {}  # type: Dict[Unit, Tuple[TileIdentifier, MoveDescriptor]]
+        just_started = {}  # type: Dict[int, MoveDescriptor]
+        illegal_moves = []  # type: List[Unit]
+        impossible_moves = {}  # type: List[Unit]
 
-        for linker in self.linkers:  # type: ControllerWrapper
-            unit = self._getUnitFromControllerWrapper(linker)
-            if unit not in moved_units:  # Two moves on the same unit cannot be performed at the same time...
-                if not unit.isAlive() and (unit not in self._killSent or not self._killSent[unit]):
-                    self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
-                    self._killSent[unit] = True
-                current_move = self._getNextMoveForUnitIfAvailable(unit)
-                self._handleMoveForUnit(unit, current_move, linker)
+        self._handleOtherMoves(completed_moves, illegal_moves, impossible_moves, just_started, moved_units)
+        self._handleMoves(completed_moves, illegal_moves, impossible_moves, just_started, moved_units)
+        self._updateFromMoves(completed_moves, illegal_moves, impossible_moves, just_started)
+
+    def _updateFromMoves(self, completed_moves, illegal_moves, impossible_moves, just_started):
+        players_to_be_sent_messages = []
+        for unit, (tile_id, move_descriptor) in completed_moves.items():
+            self.game.updateGameState(unit, tile_id, move_descriptor)
+        for player_number, move_descriptor in just_started.items():
+            controller_unit = self.game.getControllerUnitForNumber(player_number)
+            if controller_unit is not None:
+                controller_unit.setCurrentAction(move_descriptor)
+            self._addMessageToSendToAll(player_number, move_descriptor)
+            players_to_be_sent_messages = self._getPlayerNumbersToWhichSendEvents()
+        for player_number in players_to_be_sent_messages:
+            self._sendEventsToController(player_number)
+        for unit in illegal_moves:
+            self.game.unitsLocation[unit] = self.game.board.OUT_OF_BOARD_TILE.identifier
+            self._killUnit(unit, self.getWrapperFromPlayerNumber(unit.playerNumber))
+            # self.game.checkIfFinished()
+            self._cancelCurrentMoves(unit)
+        for unit in impossible_moves:
+            self._cancelCurrentMoves(unit)
         self.game.checkIfFinished()
 
-    def _handleMoveForUnit(self, unit: MovingUnit, current_move: Path, linker: ControllerWrapper):
+    def _handleMoves(self, completed_moves, illegal_moves, impossible_moves, just_started, moved_units):
+        for wrapper in self.wrappers:  # type: ControllerWrapper
+            unit = self._getUnitFromControllerWrapper(wrapper)
+            if unit not in moved_units:  # Two moves on the same unit cannot be performed at the same time...
+                if not unit.isAlive() and (unit not in self._killSent or not self._killSent[unit]):
+                    self.wrappersInfoConnection[wrapper].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
+                    self._killSent[unit] = True
+                current_move = self._getNextMoveForUnitIfAvailable(unit)
+                if current_move is not None:
+                    move_state = self._performNextStepOfMove(current_move.unit, current_move)
+                    self._fillMoveStructures(completed_moves, just_started, illegal_moves, impossible_moves,
+                                             current_move, move_state)
+
+    def _handleOtherMoves(self, completed_moves, illegal_moves, impossible_moves, just_started, moved_units):
+        for unit in self._otherMoves:  # type: Unit
+            move = self._otherMoves[unit]
+            if move is not None:
+                move_state = self._performNextStepOfMove(move.unit, move)
+                if move_state != MOVE_FAILED:
+                    moved_units.append(move.unit)
+                if move.finished():
+                    self._otherMoves[unit] = None
+                self._fillMoveStructures(completed_moves, just_started, illegal_moves, impossible_moves, move,
+                                         move_state)
+
+    def _fillMoveStructures(self, completed_moves: Dict[Unit, Tuple[TileIdentifier, MoveDescriptor]],
+                            just_started: Dict[int, MoveDescriptor], illegal_moves: List[Unit],
+                            impossible_moves: List[Unit], move: Path, move_state: int):
+        """
+        Takes a move's state and the data structures of the performed moves in this iteration an fill them
+         following the state's value
+         
+        Args:
+            completed_moves: The dict containing the units that completed a move along with their new tile_id 
+            just_started: 
+                The dict containing the number of the units that started a move, 
+                along with the descriptor of the started move
+            illegal_moves: The list containing all the units that performed an illegal move this iteration  
+            impossible_moves: The list containing all the units that performed an impossible move this iteration  
+            move: The performed move
+            move_state: The state of the performed move
+        """
+        if move_state == MOVE_COMPLETED_AND_JUST_STARTED:
+            completed_moves[move.unit] = (move.reachedTileIdentifier,  self._moveDescriptors[move])
+            just_started[move.unit.playerNumber] = self._moveDescriptors[move]
+        elif move_state == MOVE_COMPLETED:
+            completed_moves[move.unit] = (move.reachedTileIdentifier,  self._moveDescriptors[move])
+        elif move_state == MOVE_JUST_STARTED:
+            just_started[move.unit.playerNumber] = self._moveDescriptors[move]
+        elif move_state == MOVE_ILLEGAL:
+            illegal_moves.append(move.unit)
+        elif move_state == MOVE_IMPOSSIBLE:
+            impossible_moves.append(move.unit)
+
+    def _addMessageToSendToAll(self, moved_unit_number: int, move_descriptor: MoveDescriptor):
+        """
+        Adds a message to the message queue of each ControllerWrapper
+        
+        Args:
+            moved_unit_number: The number representing the unit that moved 
+            move_descriptor: The descriptor of the performed move
+        """
+        controlled_unit = self.game.getControllerUnitForNumber(moved_unit_number)
+        if controlled_unit is None:
+            controlled_unit_number = moved_unit_number
+        else:
+            controlled_unit_number = controlled_unit.playerNumber
+        for wrapper in self._eventsToSend:
+            self._eventsToSend[wrapper].append(BotEvent(controlled_unit_number, move_descriptor))
+
+    @staticmethod
+    def _performNextStepOfMove(unit: Unit, current_move: Path) -> int:
         """
         Perform the next step of the given move on the given unit
 
         Args:
             unit: The unit that performs the move
             current_move: The current move to perform
-            linker: The linker that controls this move (can be None if the move is not linked with a controller)
+        
+        Returns:
+            A couple of booleans. The first indicating that the move has been completed and the second indicating that
+            the move has just started
         """
         if unit.isAlive():
             if current_move is not None:
                 try:
                     just_started, move_completed, tile_id = current_move.performNextMove()
-                    if move_completed:  # A new tile has been reached by the movement
-                        self.game.updateGameState(unit, tile_id)
+                    if just_started and move_completed:
+                        return MOVE_COMPLETED_AND_JUST_STARTED
+                    elif move_completed:  # A new tile has been reached by the movement
+                        return MOVE_COMPLETED
                     elif just_started:
-                        self._informBotOnPerformedMove(unit.playerNumber, current_move)
-                    return True
+                        return MOVE_JUST_STARTED
+                    return MOVE_IN_PROGRESS
                 except IllegalMove:
-                    self._killUnit(unit, linker)
-                    self.game.checkIfFinished()
-                    self._cancelCurrentMoves(unit)
+                    return MOVE_ILLEGAL
                 except ImpossibleMove:
-                    self._cancelCurrentMoves(unit)
-                return False
+                    return MOVE_IMPOSSIBLE
         else:
             if current_move is not None:
                 current_move.stop(cancel_post_action=True)
-            return False
+        return MOVE_FAILED
 
-    def _getNextMoveForUnitIfAvailable(self, unit: MovingUnit) -> Path:
+    def _getNextMoveForUnitIfAvailable(self, unit: Unit) -> Union[Path, None]:
         """
         Checks if a move is available for the given controller, and if so, returns it
 
@@ -342,10 +470,11 @@ class MainLoop:
         moves = self._unitsMoves[unit]
         current_move = moves[0]  # type: Path
         if current_move is None or current_move.finished():
+            if current_move is not None:
+                if isinstance(current_move, Path):
+                    self._reactToFinishedMove()
+                    del self._moveDescriptors[current_move]
             try:
-                if current_move is not None:
-                    if isinstance(current_move, Path):
-                        del self._movesEvent[current_move]
                 move = moves[1].get_nowait()  # type: Path
                 self._unitsMoves[unit] = (move, moves[1])
                 current_move = move
@@ -365,7 +494,7 @@ class MainLoop:
             return END
         return CONTINUE
 
-    def _handleEvent(self, unit: MovingUnit, event: MoveDescriptor) -> None:
+    def _handleEvent(self, unit: Unit, event: MoveDescriptor, player_number: int, force: bool=False) -> None:
         """
         The goal of this method is to handle the given event for the given unit
 
@@ -374,11 +503,12 @@ class MainLoop:
             event: The event sent by the controller
         """
         try:
-            move = self.api.createMoveForDescriptor(unit, event)  # May raise: UnfeasibleMoveException
-            self._movesEvent[move] = event
+            move = self.api.createMoveForDescriptor(unit, event, force=force)  # may raise: UnfeasibleMoveException
+            self._currentTurnTaken = True
+            self._moveDescriptors[move] = event
             self._addMove(unit, move)
         except UnfeasibleMoveException:
-            pass
+            self._sendEventsToController(player_number, event=WakeEvent())
 
     def _getPipeConnection(self, linker: ControllerWrapper) -> PipeConnection:
         """
@@ -387,32 +517,43 @@ class MainLoop:
 
         Returns: The pipe connection to send and receive game updates
         """
-        return self.linkersConnection[linker]
+        return self.wrappersConnection[linker]
 
-    def _getUnitFromControllerWrapper(self, linker: ControllerWrapper) -> MovingUnit:
+    def _getUnitFromControllerWrapper(self, linker: ControllerWrapper) -> Unit:
         """
         Args:
             linker: The linker for which we want the unit
 
         Returns: The unit for the given linker
         """
-        return self.linkers[linker]
+        return self.wrappers[linker]
 
-    def _informBotOnPerformedMove(self, moved_unit_number: int, move: Path) -> None:
+    def _sendEventsToController(self, player_number: int, event: Event=None):
+
+        player_wrapper = self.getWrapperFromPlayerNumber(player_number)
+        pipe_conn = self._getPipeConnection(player_wrapper)
+        if event is None:
+            events = self._eventsToSend[player_wrapper]
+            if len(events) > 0:
+                event = MultipleEvents(events)
+        if event is not None:
+            pipe_conn.send(event)
+            self._eventsToSend[player_wrapper] = []
+
+    def _informBotOnPerformedMove(self, moved_unit_number: int, move_descriptor: MoveDescriptor) -> None:
         """
         Update the game state of the bot controllers
 
         Args:
             moved_unit_number: The number representing the unit that moved and caused the update
-            move: The move that caused the update
+            move_descriptor: The move that caused the update
         """
-        for linker in self.linkers:
-            if issubclass(type(linker), BotControllerWrapper):
-                event = self._movesEvent[move]
-                pipe_conn = self._getPipeConnection(linker)
-                pipe_conn.send(BotEvent(moved_unit_number, event))
+        for wrapper in self.wrappers:
+            if issubclass(type(wrapper), BotControllerWrapper):
+                pipe_conn = self._getPipeConnection(wrapper)
+                pipe_conn.send(BotEvent(moved_unit_number, move_descriptor))
 
-    def _killUnit(self, unit: MovingUnit, linker: ControllerWrapper) -> None:
+    def _killUnit(self, unit: Unit, linker: ControllerWrapper) -> None:
         """
         Kills the given unit and tells its linker
 
@@ -422,7 +563,7 @@ class MainLoop:
         """
         unit.kill()
         if not unit.isAlive():
-            self.linkersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
+            self.wrappersInfoConnection[linker].send(SpecialEvent(flag=SpecialEvent.UNIT_KILLED))
 
     def _addCollaborationPipes(self, linker: BotControllerWrapper) -> None:
         """
@@ -431,11 +572,11 @@ class MainLoop:
         Args:
             linker: The linker to connect with its teammate
         """
-        for teammate in self.game.teams[self.game.unitsTeam[self.linkers[linker]]]:
-            if teammate is not self.linkers[linker]:
+        for teammate in self.game.teams[self.game.unitsTeam[self.wrappers[linker]]]:
+            if teammate is not self.wrappers[linker]:
                 teammate_linker = None  # type: BotControllerWrapper
-                for other_linker in self.linkers:
-                    if self.linkers[other_linker] is teammate:
+                for other_linker in self.wrappers:
+                    if self.wrappers[other_linker] is teammate:
                         teammate_linker = other_linker
                         break
                 pipe1, pipe2 = Pipe()
@@ -446,32 +587,52 @@ class MainLoop:
         """
         Launches the processes of the AIs
         """
-        self.executor = Pool(len(self.linkers))
+        self.executor = Pool(len(self.wrappers))
         try:
             self.executor.apipe(lambda: None)
         except ValueError:
             self.executor.restart()
-        for linker in self.linkers:
-            if isinstance(linker, BotControllerWrapper):
-                linker.controller.gameState = self.game.copy()
-            self.executor.apipe(linker.run)
-        time.sleep(2)  # Waiting for the processes to launch correctly
+        for wrapper in self.wrappers:
+            if isinstance(wrapper, BotControllerWrapper):
+                wrapper.controller.gameState = self.game.copy()
+            self.executor.apipe(wrapper.run)
+        for wrapper in self.wrappers:
+            pipe = self._getPipeConnection(wrapper)
+            event = pipe.recv()  # Waiting for the processes to launch correctly
+            assert(isinstance(event, ReadyEvent))
         self._prepared = True
 
-    def _addControllerWrapper(self, linker: ControllerWrapper, unit: MovingUnit) -> None:
+    def _addControllerWrapper(self, wrapper: ControllerWrapper, unit: Unit) -> None:
         """
         Adds the linker to the loop, creating the pipe connections
 
         Args:
-            linker: The linker to add
+            wrapper: The linker to add
             unit: The unit, linked by this linker
         """
-        self.linkers[linker] = unit
+        self.wrappers[wrapper] = unit
         parent_conn, child_conn = Pipe()
         parent_info_conn, child_info_conn = Pipe()
-        self.linkersConnection[linker] = parent_conn
-        self.linkersInfoConnection[linker] = parent_info_conn
-        linker.setMainPipe(child_conn)
-        linker.setGameInfoPipe(child_info_conn)
-        if isinstance(linker, BotControllerWrapper):
-            self._addCollaborationPipes(linker)
+        self.wrappersConnection[wrapper] = parent_conn
+        self.wrappersInfoConnection[wrapper] = parent_info_conn
+        self._eventsToSend[wrapper] = []
+        wrapper.setMainPipe(child_conn)
+        wrapper.setGameInfoPipe(child_info_conn)
+        if isinstance(wrapper, BotControllerWrapper):
+            self._addCollaborationPipes(wrapper)
+
+    @abstractmethod
+    def _mustSendInitialWakeEvent(self, initial_action: MoveDescriptor, unit: Unit) -> bool:
+        pass
+
+    @abstractmethod
+    def _mustRetrieveNextMove(self, current_wrapper: ControllerWrapper) -> bool:
+        pass
+
+    @abstractmethod
+    def _getPlayerNumbersToWhichSendEvents(self) -> List[int]:
+        pass
+
+    @abstractmethod
+    def _reactToFinishedMove(self):
+        pass

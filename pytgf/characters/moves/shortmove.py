@@ -4,12 +4,10 @@ File containing the definition of a ShortMove between two tiles
 
 from typing import Dict, Any
 
-from pytgf.board import Tile
-from pytgf.board import TileIdentifier
-from pytgf.characters.units import MovingUnit
-from pytgf.characters.units import Particle
-from pytgf.utils.geom import get_hypotenuse_length
-
+from ..units import Entity
+from ...board import Tile
+from ...board import TileIdentifier
+from ...utils.geom import get_hypotenuse_length
 
 __author__ = 'Anthony Rouneau'
 
@@ -45,8 +43,8 @@ class ShortMove(object):
     This class supposes that the unit comes from the center of the sourceTile.
     """
 
-    def __init__(self, unit: MovingUnit, source_tile: Tile, destination_tile: Tile, fps: int,
-                 units_location: Dict[Particle, TileIdentifier], graphical: bool=True):
+    def __init__(self, unit: Entity, source_tile: Tile, destination_tile: Tile, fps: int,
+                 units_location: Dict[Entity, TileIdentifier], graphical: bool=True):
         """
         Instantiates a move object between two tiles
         Args:
@@ -74,6 +72,8 @@ class ShortMove(object):
             pixels_to_go = get_hypotenuse_length(pixels_to_go_x, pixels_to_go_y)
             seconds_needed = pixels_to_go / unit.speed
             self._frameNeeded = int(seconds_needed * fps)
+        if self._frameNeeded == 0:
+            self._frameNeeded += 1
         self._totalFrameNeeded = self._frameNeeded
         self._pixelsPerFrame = (pixels_to_go_x / self._frameNeeded, pixels_to_go_y / self._frameNeeded)
 
@@ -92,6 +92,10 @@ class ShortMove(object):
             InconsistentMove: When the unit is not located on the source tile at the beginning of this move
             ImpossibleMove: When the destination is not walkable
         """
+        if self.destinationTile is self.sourceTile:
+            self._handleLastStep()
+            return
+
         if not self.destinationTile.walkable:
             self.cancelMove()
             raise ImpossibleMove("The destination is not walkable")
@@ -105,9 +109,6 @@ class ShortMove(object):
             raise InconsistentMove("The tile %s does not contain the given unit" % (str(self.sourceTile.identifier)))
         if not self.isPerformed:
             if self._frameNeeded <= 1:  # Last step => Complete the move (kill precision error)
-                if self._graphical:
-                    self.unit.moveTo(self.destinationTile.center)
-                self.isPerformed = True
                 self._handleLastStep()
             else:
                 if backward:
@@ -150,4 +151,7 @@ class ShortMove(object):
         """
         Uses the dictionary linking the unit to the tile_id to update the location of the unit at the end of this move
         """
+        if self._graphical:
+            self.unit.moveTo(self.destinationTile.center)
+        self.isPerformed = True
         self._unitsLocation[self.unit] = self.destinationTile.identifier

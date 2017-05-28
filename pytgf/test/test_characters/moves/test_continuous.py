@@ -1,8 +1,8 @@
 import unittest
 
-from pytgf.board import Tile
-from pytgf.characters.moves import ContinuousPath
-from pytgf.characters.units import MovingUnit
+from ....board import Tile
+from ....characters.moves import ContinuousPath
+from ....characters.units import Unit
 
 
 class Touchable:
@@ -20,7 +20,7 @@ class TestContinuousPath(unittest.TestCase):
         """
         Makes sure each step is working correctly
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
@@ -42,7 +42,7 @@ class TestContinuousPath(unittest.TestCase):
         """
         Makes sure the "complete" function is working correctly
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0), (0, 2)), walkable=True,
                                 deadly=False)
@@ -62,7 +62,7 @@ class TestContinuousPath(unittest.TestCase):
         """
         Makes sure the stop method is working correctly
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         unit_loc = {unit: source_tile.identifier}
@@ -80,7 +80,7 @@ class TestContinuousPath(unittest.TestCase):
         """
         Makes sure the actions are done right on time
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         unit_loc = {unit: source_tile.identifier}
@@ -92,10 +92,10 @@ class TestContinuousPath(unittest.TestCase):
         unit_tile = source_tile
         next_tile = destination_tile
         path = ContinuousPath(unit, lambda x: unit_tile, lambda tile: next_tile, fps=60,
-                              pre_action=lambda: pre_action_touchable.touch(),
-                              post_action=lambda: post_action_touchable.touch(),
-                              step_pre_action=lambda: pre_step_action_touchable.touch(),
-                              step_post_action=lambda: post_step_action_touchable.touch(),
+                              pre_action=pre_action_touchable.touch,
+                              post_action=post_action_touchable.touch,
+                              step_pre_action=pre_step_action_touchable.touch,
+                              step_post_action=post_step_action_touchable.touch,
                               units_location_dict=unit_loc)
         path.performNextMove()
         self.assertTrue(pre_action_touchable.touched)

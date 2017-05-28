@@ -1,8 +1,8 @@
 import unittest
 
-from pytgf.board import Tile
-from pytgf.characters.moves import ListPath, ShortMove
-from pytgf.characters.units import MovingUnit
+from ....board import Tile
+from ....characters.moves import ListPath, ShortMove
+from ....characters.units import Unit
 
 
 class Touchable:
@@ -20,7 +20,7 @@ class TestListPath(unittest.TestCase):
         """
         Makes sure each step is working correctly
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
@@ -28,7 +28,7 @@ class TestListPath(unittest.TestCase):
         move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location=unit_loc)
         move2 = ShortMove(unit, destination_tile, source_tile, fps=60, units_location=unit_loc)
 
-        path = ListPath([move, move2])
+        path = ListPath(unit, [move, move2])
         for _ in range(60):
             path.performNextMove()
         self.assertTrue(unit_loc[unit] is destination_tile.identifier)
@@ -45,13 +45,13 @@ class TestListPath(unittest.TestCase):
         """
         Makes sure the "complete" is working correctly
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         # Distance separating the two tiles is 30 pixels
         move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location={unit: source_tile.identifier})
 
-        path = ListPath([move])
+        path = ListPath(unit, [move])
         path.complete()
         self.assertTrue(path.completed)
 
@@ -59,7 +59,7 @@ class TestListPath(unittest.TestCase):
         """
         Makes sure the stop method is working correctly
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         unit_loc = {unit: source_tile.identifier}
@@ -67,7 +67,7 @@ class TestListPath(unittest.TestCase):
         move = ShortMove(unit, source_tile, destination_tile, fps=60, units_location=unit_loc)
         move2 = ShortMove(unit, destination_tile, source_tile, fps=60, units_location=unit_loc)
 
-        path = ListPath([move, move2])
+        path = ListPath(unit, [move, move2])
         for _ in range(59):
             path.performNextMove()
         path.stop()
@@ -80,7 +80,7 @@ class TestListPath(unittest.TestCase):
         """
         Makes sure the actions are done right on time
         """
-        unit = MovingUnit(1, speed=30)  # Speed = 30 pixels per second
+        unit = Unit(1, speed=30)  # Speed = 30 pixels per second
         source_tile = Tile(identifier=(0, 0), center=(15, 15), neighbours=((0, 1),), walkable=True, deadly=False)
         destination_tile = Tile(identifier=(0, 1), center=(45, 15), neighbours=((0, 0),), walkable=True, deadly=False)
         unit_loc = {unit: source_tile.identifier}
@@ -93,11 +93,11 @@ class TestListPath(unittest.TestCase):
         post_action_touchable = Touchable()
         pre_step_action_touchable = Touchable()
         post_step_action_touchable = Touchable()
-        path = ListPath([move, move2],
-                        pre_action=lambda: pre_action_touchable.touch(),
-                        post_action=lambda: post_action_touchable.touch(),
-                        step_pre_action=lambda: pre_step_action_touchable.touch(),
-                        step_post_action=lambda: post_step_action_touchable.touch())
+        path = ListPath(unit, [move, move2],
+                        pre_action=pre_action_touchable.touch,
+                        post_action=post_action_touchable.touch,
+                        step_pre_action=pre_step_action_touchable.touch,
+                        step_post_action=post_step_action_touchable.touch)
         path.performNextMove()
         self.assertTrue(pre_action_touchable.touched)
         self.assertEqual(pre_step_action_touchable.touchCount, 1)

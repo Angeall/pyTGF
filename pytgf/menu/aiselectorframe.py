@@ -11,9 +11,9 @@ from tkinter import *
 from tkinter.ttk import *
 from typing import Callable, Dict, Tuple
 
-import pytgf.utils.gui
-from pytgf.controls.controllers import Controller
-from pytgf.menu.basicframe import BasicFrameBuilder
+from .basicframe import BasicFrameBuilder
+from ..controls.controllers import Controller
+from ..utils.gui import center_popup
 
 
 class AISelectorFrameBuilder(BasicFrameBuilder):
@@ -225,15 +225,16 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         self.aiClasses = {}
         sys.path.insert(0, folder)
         for file in files:
-            file_name = splitext(file)[0]
+            file_name, ext = splitext(file)
             try:
-                module = __import__(file_name)
-                for name, cls in inspect.getmembers(module):  # Explore the classes inside the file
-                    if inspect.isclass(cls):
-                        if not inspect.isabstract(cls):  # The abstract type cannot be instantiated as it is
-                            if issubclass(cls, self._aiType):
-                                self.aiClasses[name] = cls
-                                self.ais.append(name)
+                if ext == ".py":
+                    _module = __import__(file_name)
+                    for name, cls in inspect.getmembers(_module):  # Explore the classes inside the file
+                        if inspect.isclass(cls):
+                            if not inspect.isabstract(cls):  # The abstract type cannot be instantiated as it is
+                                if issubclass(cls, self._aiType):
+                                    self.aiClasses[name] = cls
+                                    self.ais.append(name)
             except ImportError:
                 print("Error while listings AIs:")
                 traceback.print_exc()
@@ -286,7 +287,7 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         label.grid(row=0, column=0, columnspan=3)
         bt = Button(popup, text="OK", command=popup.destroy)
         bt.grid(row=1, column=1)
-        pytgf.utils.gui.center_popup(popup, self.parent)
+        center_popup(popup, self.parent)
 
     def _showIncorrectTeamsPopup(self):
         """
@@ -300,4 +301,4 @@ class AISelectorFrameBuilder(BasicFrameBuilder):
         label.grid(row=0, column=0, columnspan=3)
         bt = Button(popup, text="OK", command=popup.destroy)
         bt.grid(row=1, column=1)
-        pytgf.utils.gui.center_popup(popup, self.parent)
+        center_popup(popup, self.parent)

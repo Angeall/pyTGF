@@ -1,3 +1,3 @@
-from pytgf.game.api import API
-from pytgf.game.core import Core, UnfeasibleMoveException
+from .api import API
+from .core import Core, UnfeasibleMoveException
 

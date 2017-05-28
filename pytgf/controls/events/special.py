@@ -3,7 +3,7 @@ File containing the definition of a Special Event, meant to be sent to Controlle
 information
 """
 
-from pytgf.controls.events.event import Event
+from .event import Event
 
 __author__ = 'Anthony Rouneau'
 

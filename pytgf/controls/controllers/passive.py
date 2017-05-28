@@ -1,9 +1,11 @@
 """
 File containing the definition of a testing controller that does nothing
 """
+from typing import List
 
-from pytgf.controls.controllers.bot import Bot
-from pytgf.controls.events import Event
+from .bot import Bot
+from ..events import Event
+from ...characters.moves import MoveDescriptor
 
 __author__ = 'Anthony Rouneau'
 
@@ -12,6 +14,10 @@ class Passive(Bot):
     """
     Controller that does literally nothing. Used for testing purpose
     """
+
+    @property
+    def possibleMoves(self) -> List[MoveDescriptor]:
+        return []
 
     def selectMoveFollowingTeammateMessage(self, teammate_number: int, message):
         pass

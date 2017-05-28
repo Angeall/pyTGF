@@ -3,7 +3,7 @@ File containing the definition of a Keyboard Event, to send to Human Controllers
 """
 from typing import Tuple
 
-from pytgf.controls.events import HumanEvent
+from ..events import HumanEvent
 
 __author__ = 'Anthony Rouneau'
 

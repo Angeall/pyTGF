@@ -1,7 +1,7 @@
 import os
 
-from pytgf.characters.units import MovingUnit
-from pytgf.characters.units.sprite import UnitSprite
+from ....characters.units import Unit
+from ....characters.units.sprite import UnitSprite
 
 
 class SokobanPlayerSprite(UnitSprite):
@@ -10,7 +10,7 @@ class SokobanPlayerSprite(UnitSprite):
         return os.path.join(self.resFolder, "player.png")
 
 
-class SokobanDrawstick(MovingUnit):
+class SokobanDrawstick(Unit):
     def __init__(self, speed: int, player_number: int):
-        super().__init__(player_number, SokobanPlayerSprite(), speed=speed, surviving_particles=True)
+        super().__init__(player_number, SokobanPlayerSprite(), speed=speed, surviving_entities=True)
         self.playerNumber = player_number

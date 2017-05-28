@@ -1,22 +1,22 @@
 import unittest
-from typing import Tuple, List, NewType
+from typing import Tuple, List
 
 from multiprocess.connection import Pipe
-
-from pytgf.characters.moves import MoveDescriptor
 
 try:
     from multiprocess.connection import PipeConnection
 except ImportError:
-    PipeConnection = NewType("PipeConnection", object)
+    PipeConnection = object
 
-from pytgf.board import Builder
-from pytgf.characters.moves import Path
-from pytgf.characters.units import MovingUnit
-from pytgf.controls.controllers import Bot
-from pytgf.controls.events import BotEvent, SpecialEvent
-from pytgf.controls.wrappers.bot import BotControllerWrapper
-from pytgf.game import Core, UnfeasibleMoveException, API
+from ....characters.moves import MoveDescriptor
+from ....characters.units import Entity
+from ....board import Builder
+from ....characters.moves import Path
+from ....characters.units import Unit
+from ....controls.controllers import Bot
+from ....controls.events import BotEvent, SpecialEvent
+from ....controls.wrappers.bot import BotControllerWrapper
+from ....game import Core, UnfeasibleMoveException, API
 
 MOVE1 = "MOVE1"
 MOVE2 = "MOVE2"
@@ -30,8 +30,14 @@ class ExampleBotControllerWrapper(BotControllerWrapper):
 
 
 class ExampleAPI(API):
-    def createMoveForDescriptor(self, unit: MovingUnit, move_descriptor: MoveDescriptor, max_moves: int = -1,
-                                force: bool = False) -> Path:
+    def _decodeMoveFromPositiveNumber(self, player_number: int, encoded_move: int) -> MoveDescriptor:
+        pass
+
+    def _encodeMoveIntoPositiveNumber(self, player_number: int, move_descriptor: MoveDescriptor) -> int:
+        pass
+
+    def createMoveForDescriptor(self, unit: Unit, move_descriptor: MoveDescriptor, max_moves: int = -1,
+                                force: bool = False, is_step: bool=False) -> Path:
         raise UnfeasibleMoveException()
 
     def __init__(self, game: Core):
@@ -60,11 +66,15 @@ class ExampleGame(Core):
     def _suicideAllowed(self) -> bool:
         return False
 
-    def _collidePlayers(self, player1, player2, frontal: bool = False):
+    def _collidePlayers(self, player1, player2, tile_id, frontal: bool = False, entity: Entity=None):
         pass
 
 
 class ExampleBot(Bot):
+    @property
+    def possibleMoves(self) -> List[MoveDescriptor]:
+        return []
+
     def _getGameStateAPI(self, game: Core):
         return ExampleAPI(game)
 
@@ -99,11 +109,11 @@ class ExampleBot(Bot):
 class TestBotControllerWrapper(unittest.TestCase):
     def setUp(self):
         self.game = ExampleGame(Builder(10, 10, 7, 6).create())
-        self.game.addUnit(MovingUnit(1), 1, (0, 0))
+        self.game.addUnit(Unit(1), 1, (0, 0))
         self.bot1 = ExampleBot(1)
         self.bot1.gameState = self.game.copy()
         self.linker1 = ExampleBotControllerWrapper(self.bot1)
-        self.game.addUnit(MovingUnit(2), 1, (0, 0))
+        self.game.addUnit(Unit(2), 1, (0, 0))
         self.bot2 = ExampleBot(2)
         self.bot2.gameState = self.game.copy()
         self.linker2 = ExampleBotControllerWrapper(self.bot2)

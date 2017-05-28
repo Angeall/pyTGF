@@ -1,17 +1,20 @@
 """
 File containing the rules of the Lazerbike game
 """
+from typing import Optional
 
-from pytgf.board import Tile
-from pytgf.characters.units import MovingUnit
-from pytgf.examples.lazerbike.gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
-from pytgf.game.core import Core
+from ..gamedata import GO_UP, GO_DOWN, GO_LEFT, GO_RIGHT
+from ....board import Tile
+from ....board import TileIdentifier
+from ....characters.units import Entity, Unit
+from ....game.core import Core
 
 
 class LazerBikeCore(Core):
     """
     Defines the rules for the Lazerbike game
     """
+
     @property
     def _suicideAllowed(self) -> bool:
         """
@@ -26,9 +29,10 @@ class LazerBikeCore(Core):
         """
         return True
 
-    def _collidePlayers(self, player1: MovingUnit, player2: MovingUnit, frontal: bool=False) -> None:
+    def _collidePlayers(self, player1: Unit, player2: Unit, tile_id: TileIdentifier, frontal: bool=False,
+                        entity: Optional[Entity]=None) -> None:
         """
-        Makes what it has to be done when the first given player collides with a particle of the second given player
+        Makes what it has to be done when the first given player collides with an entity of the second given player
         (Careful : two moving units (alive units) colliding each other causes a frontal collision that hurts both
         units)
 
@@ -37,7 +41,7 @@ class LazerBikeCore(Core):
             player2: The second given player
             frontal: If true, the collision is frontal and kills the two players
         """
-        return super()._collidePlayers(player1, player2, frontal)
+        return super()._collidePlayers(player1, player2, tile_id, frontal=frontal, entity=entity)
 
     @staticmethod
     def _determineCurrentDirection(previous_tile: Tile, current_tile: Tile) -> int:

@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 from queue import Queue
 from typing import List
 
-from pytgf.controls.events import Event
+from ..events import Event
 
 __author__ = 'Anthony Rouneau'
 
@@ -28,5 +28,11 @@ class Controller(metaclass=ABCMeta):
 
         Args:
             events: The new event to which this controller must react if needed
+        """
+        pass
+
+    def getReady(self):
+        """
+        Methods that can be overridden so that it gets the controller ready
         """
         pass
