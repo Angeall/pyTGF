@@ -6,6 +6,7 @@
  - This module was made in the context of a master's thesis made at the University of Mons
   (UMONS) for a Master degree in Computer Sciences.
  - The project was made under the direction of the Professor Tom Mens.
+ - Every technical detail of the project are written in	the file `pyTGF-MasterThesis.pdf`
 
 ### Goal
  The goal of this solution is to provide a stable framework to test AIs on grid-based games. 
